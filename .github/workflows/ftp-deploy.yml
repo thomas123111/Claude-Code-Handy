@@ -8,35 +8,51 @@ on:
       - 'docs/**'
 
 jobs:
-  deploy-smartfix:
-    name: Deploy SmartFix
+  detect-changes:
+    name: Detect changed sites
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
+    outputs:
+      sites: ${{ steps.find-sites.outputs.sites }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: Check for changes in smartfix
-        id: changes
+      - name: Find changed site folders
+        id: find-sites
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q '^docs/smartfix-versicherung.de/'; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+          # Get all changed docs/ subdirectories (top-level = domain folders)
+          SITES=$(git diff --name-only HEAD~1 HEAD \
+            | grep '^docs/' \
+            | cut -d'/' -f2 \
+            | sort -u \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "sites=$SITES" >> $GITHUB_OUTPUT
+          echo "Changed sites: $SITES"
 
-      - name: Deploy SmartFix via FTP
-        if: steps.changes.outputs.changed == 'true'
+  deploy:
+    name: Deploy ${{ matrix.site }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.sites != '[]' && needs.detect-changes.outputs.sites != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        site: ${{ fromJson(needs.detect-changes.outputs.sites) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy ${{ matrix.site }} via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./docs/smartfix-versicherung.de/
-          server-dir: /github-pages/smartfix-versicherung.de/
+          local-dir: ./docs/${{ matrix.site }}/
+          server-dir: /${{ matrix.site }}/
           dangerous-clean-slate: false
           protocol: ftps
           port: 21
