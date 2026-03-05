@@ -1,0 +1,107 @@
+Bereich;Leistung;BS;BSP;Besonders relevant für;Was bedeutet das?
+Allgemein;Unterversicherungsverzicht;10 % der VS max. 100.000 EUR;20 % der VS min. 100.000 EUR max. 500.000 EUR;Alle;Auch wenn die Versicherungssumme zu niedrig angesetzt ist wird im Schadenfall nicht gekürzt
+Allgemein;Vorsorge;10 % der VS max. 50.000 EUR;10 % der VS max. 50.000 EUR;Alle;Neuanschaffungen sind automatisch mitversichert auch wenn die VS noch nicht angepasst wurde
+Allgemein;Grobe Fahrlässigkeit;Verzicht auf Kürzung bis 100.000 EUR;Verzicht bis 100.000 EUR / darüber bis 1 Mio. EUR max. 20 % Kürzung;Alle;Bsp.: Herdplatte vergessen auszuschalten - Versicherung zahlt trotzdem
+Allgemein;Grob fahrlässige Obliegenheitsverletzung;--;Verzicht bis 100.000 EUR / darüber bis 1 Mio. EUR max. 20 % Kürzung;Alle;Bsp.: Alarmanlage nicht scharf gestellt - Versicherung kürzt trotzdem nicht
+Allgemein;Regressverzicht;bei Ersatzanspruch gg. Mitarbeiter;bis 500.000 EUR auf Wunsch des VN;Alle;Verursacht ein Mitarbeiter einen Schaden wird das Geld nicht von ihm zurückgefordert
+Allgemein;Garagenklausel;--;inkl.;Alle;Sachen in einer betriebseigenen Garage sind mitversichert
+Allgemein;Besitzstandsgarantie;--;5 Jahre;Alle;Waren Sie vorher besser versichert gelten die besseren Bedingungen bis zu 5 Jahre weiter
+Allgemein;Bedingungsgarantie GdV;inkl.;inkl.;Alle;Mindeststandard des Gesamtverbands der Versicherungswirtschaft ist garantiert
+Allgemein;Bedingungs-Update-Garantie;inkl.;inkl.;Alle;Werden die Bedingungen verbessert profitieren Sie automatisch davon
+Allgemein;Forderungsmanagement;inkl.;inkl.;Alle;Hilfe beim Eintreiben offener Rechnungen Ihrer Kunden
+Allgemein;Forderungsmanagement Plus;--;inkl.;Alle;Erweitertes Inkasso inkl. gerichtlichem Mahnverfahren
+Allgemein;JuraTel;--;inkl.;Alle;Telefonische Rechtsberatung bei geschäftlichen Rechtsfragen
+Allgemein;Neuwertentschädigung (Verzicht auf Zeitwertvorbehalt);inkl.;inkl.;Alle;Beschädigte Gegenstände werden zum Neupreis ersetzt nicht zum gebrauchten Zeitwert
+Allgemein;Zeitwertentschädigung Handel gebrauchte Waren;inkl.;inkl.;Handyreparatur / Optiker;Gebrauchte Handelsware wird zum aktuellen Marktwert erstattet
+Allgemein;Verkaufspreis für Tabake;inkl.;inkl.;E-Zigarettenhandel;Liquids und Tabakwaren werden zum Verkaufspreis erstattet
+Allgemein;Verkaufspreis für lieferungsfertige eigene Erzeugnisse;inkl.;inkl.;Alle;Fertige Eigenprodukte werden zum vollen Verkaufspreis erstattet
+Allgemein;Betriebsräume;inkl.;inkl.;Alle;Alle genutzten Geschäftsräume am Versicherungsort sind geschützt
+Allgemein;Abhängige Außenversicherung (EU / CH / etc.);50.000 EUR;50.000 EUR;Alle;Sachen die sich vorübergehend außerhalb Ihres Betriebs befinden z.B. auf einer Messe
+Allgemein;Neu hinzukommende Betriebsgrundstücke (bis 6 Monate);50.000 EUR;100.000 EUR;Alle;Neuer Standort ist automatisch 6 Monate mitversichert
+Allgemein;Versicherungsschutz bei Betriebsverlegung;3 Monate;3 Monate;Alle;Beim Umzug besteht 3 Monate Schutz an beiden Standorten gleichzeitig
+Allgemein;Höchstentschädigung versicherte Kosten (summarisch);1.000.000 EUR;1.000.000 EUR;Alle;Maximalbetrag für alle mitversicherten Kosten wie Aufräumung oder Abbruch
+Allgemein;Schadenabwendungs- und -minderungsmaßnahmen;inkl.;inkl.;Alle;Kosten für Sofortmaßnahmen zur Schadensbegrenzung z.B. Sandsäcke bei Hochwasser
+Allgemein;Aufräumungs- / Abbruch- / Bewegungs- und Schutzmaßnahmen;inkl.;inkl.;Alle;Kosten für Aufräumen und Sicherung nach einem Schaden
+Allgemein;Mehraufwand durch Technologiefortschritt;inkl.;inkl.;Akustiker / Optiker / Handyreparatur;Altes Gerät kaputt? Die Versicherung zahlt auch das aktuelle Nachfolgemodell
+Allgemein;Wiederherstellungskosten Geschäftsunterlagen / Daten / Programme;inkl.;inkl.;Alle;Kosten für Wiederherstellung von Akten und digitalen Daten nach einem Schaden
+Allgemein;Provisorische Sicherungsmaßnahmen;10.000 EUR;inkl.;Alle;Bsp.: Kosten für eine Notverbarrikadierung nach einem Einbruch
+Allgemein;Rückreisekosten ab Schäden > 10.000 EUR;5.000 EUR;inkl.;Alle;Sie sind im Urlaub und es passiert ein größerer Schaden - Rückreise wird bezahlt
+Versicherte Sachen;Kaufm. Betriebseinrichtung;inkl.;inkl.;Alle;Möbel, Kassen, Regale, Computer - alles für den Geschäftsbetrieb
+Versicherte Sachen;Technische Betriebseinrichtung;inkl.;inkl.;Alle;Spezialgeräte wie Messgeräte, Schleifmaschinen, Lötkolben oder Friseurstühle
+Versicherte Sachen;Waren & Vorräte inkl. auf Datenträgern;inkl.;inkl.;Alle;Ihr gesamter Warenbestand z.B. Brillen, Hörgeräte, Liquids, Pflegeprodukte
+Versicherte Sachen;Vom Mieter eingebrachte Gebäudebestandteile;inkl.;inkl.;Alle;Selbst eingebaute Böden, Trennwände oder Waschbecken in gemieteten Räumen
+Versicherte Sachen;Außen am Gebäude angebrachte Sachen (Feuer / LW / Sturm / Hagel);10.000 EUR;20.000 EUR;Alle;Bsp.: Markisen, Außenleuchten oder Klimaanlagen an der Fassade
+Versicherte Sachen;Fest montierte Firmenschilder und Werbeanlagen;2.000 EUR;2.000 EUR;Alle;Ihr Firmenschild oder Leuchtbuchstaben an der Hauswand
+Versicherte Sachen;Ausstellungsware im fremden Eigentum;inkl.;inkl.;Handyreparatur;Kundengeräte die zur Reparatur bei Ihnen liegen
+Versicherte Sachen;Tabakwaren ohne Verschluss;5.000 EUR;5.000 EUR;E-Zigarettenhandel;Liquids und Zubehör die frei zugänglich im Laden stehen
+Versicherte Sachen;Tabakwaren unter Verschluss (erhöhte Sicherheit);7.500 EUR;7.500 EUR;E-Zigarettenhandel;Liquids und Zubehör die im verschlossenen Schrank aufbewahrt werden
+Versicherte Sachen;Sachen von Betriebsangehörigen / Besuchern / Kunden;inkl.;inkl.;Alle;Bsp.: Die Jacke eines Kunden die während des Termins gestohlen wird
+Versicherte Sachen;davon Wertsachen / Bargeld;--;500 EUR;Alle;Bargeld und Wertsachen von Mitarbeitern oder Kunden (z.B. Handy)
+Versicherte Sachen;Schaukästen und Vitrinen (ED);5.000 EUR;10.000 EUR;Optiker / E-Zigarettenhandel;Beleuchtete Vitrinen und Ausstellungsschränke bei Einbruchdiebstahl
+Versicherte Sachen;Bargeld ohne Verschluss 24 h (Tageseinnahmen);1.000 EUR;2.000 EUR;Alle;Tageseinnahmen die z.B. noch in der offenen Kasse liegen
+Versicherte Sachen;Bargeld unter Verschluss in Behältnissen (erhöhte Sicherheit);5.000 EUR;5.000 EUR;Alle;Bargeld in einer verschlossenen Kassette oder Schublade
+Versicherte Sachen;Bargeld in gepanzerten Geldschränken / Stahlschränken Stufe B;10.000 EUR;10.000 EUR;Alle;Bargeld in einem einfachen Tresor
+Versicherte Sachen;Bargeld in Wertschutzschränken Euro/VDS I;20.000 EUR;20.000 EUR;Alle;Bargeld in einem zertifizierten Wertschutzschrank (Grundschutz)
+Versicherte Sachen;Bargeld in Wertschutzschränken Euro/VDS II;50.000 EUR;50.000 EUR;Alle;Bargeld in einem zertifizierten Wertschutzschrank (mittlerer Schutz)
+Versicherte Sachen;Bargeld in Wertschutzschränken Euro/VDS III;100.000 EUR;100.000 EUR;Alle;Bargeld in einem zertifizierten Wertschutzschrank (hoher Schutz)
+Feuer;Brand / Blitzschlag / Explosion / Verpuffung / Implosion;inkl.;inkl.;Alle;Schäden durch Feuer, Blitzeinschlag oder Explosionen
+Feuer;Überspannung durch Blitz;inkl.;inkl.;Alle;Ein Blitz beschädigt Ihre Elektronik über die Stromleitung
+Feuer;Seng- und Schmorschäden;2.000 EUR;inkl.;Handyreparatur / Friseur;Bsp.: Lötkolben hinterlässt Brandstelle am Tisch ohne dass ein Feuer entsteht
+Feuer;Rauch- oder Russschäden;inkl.;inkl.;Alle;Bsp.: Rußablagerungen an Waren nach einem Brand in der Nachbarschaft
+Feuer;Böswillige Beschädigung;inkl.;inkl.;Alle;Jemand legt absichtlich Feuer in Ihrem Geschäft (Brandstiftung)
+Feuer;Tierbiss an elektrischen Leitungen;10.000 EUR;10.000 EUR;Alle;Bsp.: Ein Marder zerbeißt Kabel und verursacht einen Kurzschluss
+Feuer;Feuerlöschkosten;inkl.;inkl.;Alle;Kosten für den Feuerwehreinsatz oder eigene Löschmaßnahmen
+Feuer;Dekontamination von Erdreich;inkl.;inkl.;Alle;Reinigung des Bodens von Schadstoffen nach einem Brand
+Feuer;Fehlalarm durch Rauchwarnmelder;3.000 EUR;inkl.;Alle;Rauchmelder löst versehentlich aus und die Feuerwehr rückt an - Kosten sind gedeckt
+Einbruchdiebstahl / Vandalismus;Einbruchdiebstahl;inkl.;inkl.;Alle;Jemand bricht in Ihr Geschäft ein und stiehlt Waren oder Einrichtung
+Einbruchdiebstahl / Vandalismus;Vandalismus infolge eines Einbruchs;inkl.;inkl.;Alle;Einbrecher verwüsten Ihren Laden auch wenn nichts gestohlen wird
+Einbruchdiebstahl / Vandalismus;Raub innerhalb Geschäft (ohne Wertsachen);inkl.;inkl.;Alle;Sie werden im Geschäft unter Androhung von Gewalt ausgeraubt
+Einbruchdiebstahl / Vandalismus;Raub innerhalb Geschäft (Bargeld / Vorräte / sonstige Sachen);50.000 EUR;50.000 EUR;Alle;Bargeld und Waren die bei einem Überfall im Laden entwendet werden
+Einbruchdiebstahl / Vandalismus;Raub auf Transporten (EU);20.000 EUR;20.000 EUR;Alle;Sie werden z.B. auf dem Weg zur Bank überfallen
+Einbruchdiebstahl / Vandalismus;Erpressung und Betrug (Transporte);2.000 EUR;10.000 EUR;Handyreparatur / Optiker;Bsp.: Sie werden bei einer Warenlieferung durch einen Trick betrogen
+Einbruchdiebstahl / Vandalismus;Diebstahl Schaufensterinhalte;5.000 EUR;10.000 EUR;Optiker / Akustiker / Handyreparatur / E-Zigarettenhandel;Ein Dieb greift in die Auslage und stiehlt Ware aus dem Schaufenster
+Einbruchdiebstahl / Vandalismus;Diebstahl Firmenschilder / Werbeanlagen;2.000 EUR;2.000 EUR;Alle;Ihr Werbeschild wird gestohlen oder mutwillig beschädigt
+Einbruchdiebstahl / Vandalismus;Diebstahl Bewirtschaftungsmöbel;10.000 EUR;20.000 EUR;Alle;Outdoor-Möbel wie Stühle oder Tische vor dem Geschäft werden gestohlen
+Einbruchdiebstahl / Vandalismus;Diebstahl Bargeld (einfach);250 EUR;1.000 EUR;Alle;Bargeld wird ohne Einbruch entwendet z.B. durch Trickdiebstahl
+Einbruchdiebstahl / Vandalismus;Diebstahl Fahrradständer und Werbeaufsteller;--;3.000 EUR;Alle;Kundenstopper oder Fahrradständer vor dem Laden werden gestohlen
+Einbruchdiebstahl / Vandalismus;Beseitigung von Gebäudeschäden / Schaukästen / Vitrinen;inkl.;inkl.;Alle;Reparaturkosten für aufgebrochene Türen, Fenster oder Vitrinen nach Einbruch
+Einbruchdiebstahl / Vandalismus;Schlossänderungskosten;inkl.;inkl.;Alle;Kosten für neue Schlösser und Schlüssel nach einem Einbruch
+Einbruchdiebstahl / Vandalismus;Erweiterte Schlossänderungskosten (Tresor / Behältnisse);15.000 EUR;inkl.;Alle;Zusätzlich Schlossaustausch an Tresoren und Wertbehältnissen
+Einbruchdiebstahl / Vandalismus;Provisorische Sicherungsmaßnahmen;10.000 EUR;inkl.;Alle;Bsp.: Notverbarrikadierung einer aufgebrochenen Tür über Nacht
+Einbruchdiebstahl / Vandalismus;Bewachung versicherter Sachen bis 48 h;2.500 EUR;inkl.;Alle;Wachschutz wenn Ihr Geschäft nach einem Einbruch nicht sofort gesichert werden kann
+Leitungswasser;Nässeschäden;inkl.;inkl.;Alle;Bsp.: Ein Rohrbruch überflutet Ihr Lager und beschädigt Waren
+Leitungswasser;Bruchschäden Zu-/Ableitungsrohre;inkl.;inkl.;Alle;Kosten für die Reparatur geplatzter Wasserleitungen
+Leitungswasser;Sonstige Bruchschäden an Armaturen;1.000 EUR;inkl.;Alle;Bsp.: Ein Wasserhahn bricht ab und verursacht einen Wasserschaden
+Leitungswasser;Frostbedingte Bruchschäden (Waschbecken / Armaturen);inkl.;inkl.;Alle;Im Winter frieren Leitungen ein und platzen - Schäden sind abgedeckt
+Leitungswasser;Mehraufwendungen bei Wasser- und Gasverlust;10.000 EUR;inkl.;Alle;Wasserrechnung steigt durch unentdeckten Rohrbruch - Mehrkosten sind versichert
+Weitere Gefahren;Sturm / Hagel (ab Windstärke 8);inkl.;inkl.;Alle;Schäden durch Sturm oder Hagelschlag z.B. beschädigtes Dach oder Schaufenster
+Weitere Gefahren;Elementar (Überschwemmung / Rückstau / Erdbeben / Erdsenkung / Erdrutsch / Schneedruck / Lawinen);ZÜRS 1+2 (SB 1.000 EUR);ZÜRS 1+2 (SB 1.000 EUR);Alle;Naturgefahren wie Hochwasser oder Erdbeben - nur in Risikozone 1+2 versicherbar
+Weitere Gefahren;Elementar - Wartezeit;4 Wochen;4 Wochen;Alle;Elementarschutz greift erst 4 Wochen nach Versicherungsbeginn
+Weitere Gefahren;Unbenannte Gefahren;2.000.000 EUR / SB 10 % min. 1.000 EUR;2.000.000 EUR / SB 10 % min. 1.000 EUR;Alle;Auffangschutz für Schäden die keiner klassischen Gefahr zuzuordnen sind
+Glas;Außen- und Innenverglasung (Schaufenster);inkl.;inkl.;Alle;Schaufenster oder Ladentürglas zerbricht
+Glas;Glasscheiben von Schränken / Vitrinen;inkl.;inkl.;Optiker / E-Zigarettenhandel;Glasscheiben Ihrer Ausstellungsvitrinen zerbrechen
+Glas;Schrank- / Wand- und Standspiegel;inkl.;inkl.;Friseur / Nagelstudio;Wand- und Standspiegel im Salon zerbrechen
+Glas;Glasplatten (Arbeitstische);inkl.;inkl.;Friseur / Nagelstudio;Bsp.: Glasplatte am Nageldesign-Tisch zerbricht
+Glas;Waren und Dekorationsmittel;5.000 EUR;5.000 EUR;Optiker / Akustiker / E-Zigarettenhandel;Ware in der Vitrine die durch den Glasbruch beschädigt wird
+Glas;Werbeanlagen / Firmenschilder / Transparente;inkl.;inkl.;Alle;Beleuchtete Werbeschilder oder Leuchtkästen mit Glasscheiben
+Glas;Kosten Notverschalung und -verglasung;inkl.;inkl.;Alle;Sofortige provisorische Sicherung wenn eine Scheibe nachts zu Bruch geht
+Glas;Sonderkosten (Gerüste / Schriften / Folien / Beschläge);10.000 EUR;10.000 EUR;Alle;Bsp.: Gerüstkosten, Neubeschriftung oder Folierung nach Scheibentausch
+Ertragsausfall;Ertragsausfall;inkl. (SB 48 h);inkl. (SB 48 h);Alle;Geschäft kann nach einem Schaden nicht öffnen - entgangener Gewinn wird ersetzt
+Ertragsausfall;Haftzeit;12 Monate;12 Monate;Alle;Maximaler Zeitraum für den der Ertragsausfall gezahlt wird
+Ertragsausfall;Weiterzahlung von Gehältern und Löhnen;inkl.;inkl.;Alle;Löhne Ihrer Mitarbeiter laufen weiter auch wenn der Betrieb stillsteht
+Ertragsausfall;Überspannung durch Blitz;inkl.;inkl.;Alle;Ertragsausfall weil ein Blitz Ihre Elektronik lahmgelegt hat
+Ertragsausfall;Ertragsausfall durch Datenverlust;--;10.000 EUR / SB 250 EUR;Akustiker / Optiker / Handyreparatur;Umsatzeinbußen weil wichtige Geschäftsdaten verloren gegangen sind
+Ertragsausfall;Vertragsstrafen;10.000 EUR / SB 1.000 EUR;10.000 EUR / SB 250 EUR;Alle;Liefertermine nicht eingehalten? Vertragsstrafen werden übernommen
+Ertragsausfall;Rückwirkungsschäden (Zulieferer);--;10.000 EUR / SB 250 EUR;Akustiker / Optiker / E-Zigarettenhandel;Ihr Zulieferer hat einen Schaden und kann nicht liefern - Ihr Ausfall ist versichert
+Ertragsausfall;Mehrkostenversicherung (zeitabhängig);optional / 25.000 EUR / SB 48 h;optional / 25.000 EUR / SB 48 h;Alle;Laufende Mehrkosten z.B. Anmietung von Ersatzräumen während der Reparatur
+Ertragsausfall;Mehrkostenversicherung (zeitunabhängig);optional / 25.000 EUR / SB 10 %;optional / 25.000 EUR / SB 10 %;Alle;Einmalige Mehrkosten z.B. Expresslieferung von Ersatzgeräten
+Ertragsausfall;Fortlaufende Kosten & Betriebsgewinn (BU);inkl. (SB 48 h);inkl. (SB 48 h);Alle;Miete und Fixkosten laufen weiter auch wenn kein Umsatz gemacht wird
+Ertragsausfall;Weiterzahlung Gehälter / Löhne (BU);inkl.;inkl.;Alle;Lohnfortzahlung für Mitarbeiter während der Betriebsunterbrechung
+Ertragsausfall;Haftzeit (BU);12 Monate (erweiterbar);12 Monate (erweiterbar);Alle;Maximaler Zeitraum für den fortlaufende Kosten gezahlt werden
+Ertragsausfall;Höchstentschädigung versicherte Kosten (BU);1.000.000 EUR;1.000.000 EUR;Alle;Maximalbetrag für alle Kosten der Betriebsunterbrechung
+Ertragsausfall;Rückwirkungsschäden Zulieferer (BU);100.000 EUR / SB 10.000 EUR;100.000 EUR / SB 10.000 EUR;Alle;Zulieferer fällt aus und Sie können nicht arbeiten - fortlaufende Kosten sind gedeckt
+Technische Betriebseinrichtung;Allgefahrendeckung techn. Betriebseinrichtung;vereinbarte Erstrisikosumme / SB 250 EUR;vereinbarte Erstrisikosumme / SB 250 EUR;Akustiker / Optiker / Handyreparatur;Umfassender Schutz für Ihre Technik - auch bei Bedienungsfehlern oder Kurzschluss
+Technische Betriebseinrichtung;Wiederherstellung Daten Betriebssystem;vereinbarte Erstrisikosumme / SB 250 EUR;vereinbarte Erstrisikosumme / SB 250 EUR;Akustiker / Optiker / Handyreparatur;Kosten für Neuinstallation und Datenrettung Ihres Kassensystems oder PCs
+Technische Betriebseinrichtung;Mobiles Risiko (Laptops / Smartphones bis 2 Jahre);optional / 10 % Erstrisikosumme / SB 250 EUR;optional / 10 % Erstrisikosumme / SB 250 EUR;Handyreparatur;Schutz für mobile Geräte auch unterwegs z.B. Laptop fällt beim Kundentermin
+Technische Betriebseinrichtung;Softwareversicherung - Datenwiederherstellung;5.000 EUR / SB 250 EUR;5.000 EUR / SB 250 EUR;Akustiker / Optiker / Handyreparatur;Kosten für die Wiederherstellung verlorener Geschäftsdaten und Programme
+Technische Betriebseinrichtung;Softwareversicherung - Lizenzkosten;2.000 EUR / SB 250 EUR;2.000 EUR / SB 250 EUR;Akustiker / Optiker / Handyreparatur;Neuanschaffung von Softwarelizenzen wenn Programme neu installiert werden müssen
