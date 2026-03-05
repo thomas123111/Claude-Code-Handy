@@ -273,37 +273,38 @@ Email: info@fixversichert.de
 - Grey: `wp-content/uploads/2026/02/LogoGrey-svg-smartfix.svg`
 
 ### Color Palette
-> ⚠️ **NOTE:** Exact hex values could not be extracted from live CSS (rendered by WordPress/JavaScript). The following are inferred from the site's visual design and should be verified and updated by the client.
+*Bestätigt aus Live-CSS (brand_assets/website_style_css.md)*
 
-**Inferred / approximate palette:**
-
-| Role | Color | Hex (approx.) | Notes |
+| Role | Color | Hex | Notes |
 |---|---|---|---|
-| **Primary / Header BG** | Dark Navy / Charcoal | `#1a1a2e` or `#0d1b2a` | Background of header and hero section |
-| **Accent / CTA** | Bright Green or Teal | `#00c896` or `#22c55e` | CTA buttons ("Jetzt vergleichen") — **needs client confirmation** |
+| **Primary / Accent / CTA** | Blau | `#2ea3f2` | CTA buttons, Links, primäre Akzentfarbe |
+| **Header BG** | Dunkel (mit Hintergrundbild) | — | Header-Smartfix-scaled.png als Background |
 | **Body Background** | White | `#ffffff` | Main content areas |
-| **Secondary BG** | Light Grey | `#f5f5f5` or `#f8f9fa` | Section alternating backgrounds |
-| **Text Primary** | Near-Black | `#1a1a1a` or `#111827` | Main body text |
-| **Text Secondary** | Medium Grey | `#6b7280` | Subheadings, meta info |
+| **Secondary BG** | Light Grey | `#f5f5f5` | Section alternating backgrounds |
+| **Text Primary** | Medium Grey | `#666666` | Body text und Headings |
+| **Text Secondary** | Dark Grey | `#555555` | Dialog-Texte, Subheadings |
 | **Error / Alert** | Red | `#ef4444` | "Kein Cent." shock elements |
 | **Success / Check** | Green | `#22c55e` | Checkmark bullet points in USP lists |
 | **Footer BG** | Light Grey / White | `#f9fafb` | Footer background |
 
-> 🔴 **Action Required:** Please provide the exact hex color codes for Primary, Accent/CTA, and any other brand colors so this section can be finalized.
-
 ### Typography
-> ⚠️ **NOTE:** Font files not confirmed from live site. The following are inferred.
+*Bestätigt aus Live-CSS (Open Sans via Divi/WordPress)*
 
-| Role | Font | Weight | Size (approx.) |
+| Role | Font | Weight | Size |
 |---|---|---|---|
-| **Body** | Modern sans-serif (likely Inter, Poppins, or similar) | 400 | 16–18px |
-| **Headings H1** | Same family, bold | 700–800 | 36–48px |
-| **Headings H2** | Same family, bold | 700 | 28–32px |
-| **Headings H3** | Same family, semibold | 600 | 20–24px |
-| **CTA Buttons** | Same family, bold | 700 | 16–18px |
-| **Nav links** | Same family | 500 | 15–16px |
+| **Body** | Open Sans, Arial, sans-serif | 500 | 14px |
+| **Headings (global)** | Open Sans | 500 | — |
+| **Headings H1** | Open Sans, bold | 700–800 | 36–48px |
+| **Headings H2** | Open Sans, bold | 700 | 28–32px |
+| **Headings H3** | Open Sans, semibold | 600 | 20–24px |
+| **CTA Buttons** | Open Sans, bold | 700 | 16–18px |
+| **Nav links** | Open Sans | 500 | 15–16px |
 
-> 🔴 **Action Required:** Please confirm the exact font family used on the website.
+### Button & Layout
+- **Button Border-Radius:** 4px (leicht abgerundet)
+- **Content-Breite:** max 1080px
+- **Section Padding:** 56px
+- **CMS:** WordPress mit Divi Builder
 
 ---
 
@@ -494,16 +495,14 @@ The following questions and answers appear on the website and can be reused:
 
 ## 19. OPEN QUESTIONS FOR CLIENT
 
-The following information was **not found on the website** and should be confirmed before finalizing any new pages:
-
-1. 🔴 **Exact brand color hex codes** (Primary, Accent/CTA, Background, Text)
-2. 🔴 **Font family name** (e.g., Inter, Poppins, Lato, or custom)
-3. 🔴 **Button border-radius** (rounded vs. slightly rounded vs. pill-shaped)
+1. ✅ ~~**Exact brand color hex codes**~~ — Bestätigt: `#2ea3f2` (Primary/CTA), `#666666` (Text)
+2. ✅ ~~**Font family name**~~ — Bestätigt: Open Sans
+3. ✅ ~~**Button border-radius**~~ — Bestätigt: 4px (leicht abgerundet)
 4. 🔴 **Does the comparison tool link to an external provider** or is it hosted on-site? (URL: `/zum-vergleichsrechner/`)
-5. 🔴 **Are there additional insurance products planned** beyond the current three?
+5. ✅ ~~**Additional insurance products**~~ — Nein, nur Betriebshaftpflicht + Inhaltsversicherung
 6. 🔴 **Is there a blog section** active? (Footer mentions "Blog" but no URL found)
-7. 🔴 **What is the logo wordmark font** (if different from body font)?
-8. 🔴 **Are there specific brand guidelines PDF or design files** (Figma, Adobe, etc.)?
+7. ✅ ~~**Logo wordmark font**~~ — Open Sans (gleich wie Body)
+8. ✅ ~~**Brand guidelines / design files**~~ — Vorhanden: brand_assets/ + Design Elemente.zip
 
 ---
 

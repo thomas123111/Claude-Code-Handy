@@ -120,6 +120,68 @@ Ein einziger Schadensfall pro Jahr macht die Versicherung rentabel. Ohne Versich
 
 ---
 
+## H2: Leistungsübersicht — Basis-Schutz (BS) vs. Best Performance (BSP)
+
+Die folgende Tabelle zeigt die wichtigsten Leistungen für Handywerkstätten im Vergleich der zwei Tarifstufen:
+
+### Deckungssumme & Allgemein
+
+| Leistung | Basis-Schutz (BS) | Best Performance (BSP) |
+|---|---|---|
+| **Deckungssumme** (Personen-, Sach-, Vermögensschäden) | 3, 5 oder 10 Mio. EUR pauschal | 3, 5 oder 10 Mio. EUR pauschal |
+| Maximierung pro Versicherungsjahr | 2-fach | 2-fach |
+| Regressverzicht | — | 2.000 EUR |
+| Grob fahrlässige Obliegenheitsverletzung | — | Verzicht bis 100.000 EUR |
+| Besitzstandsgarantie | — | 250.000 EUR, max. 3 Jahre |
+| Nachthaftung | bis 5 Jahre | bis 5 Jahre |
+| Forderungsmanagement | ARAG Online | ARAG Online Plus |
+| JuraTel (telefonische Rechtsberatung) | — | inkl. |
+
+### Tätigkeitsschäden — das Herzstück für Handywerkstätten
+
+| Leistung | BS | BSP |
+|---|---|---|
+| **Tätigkeitsschäden allgemein** | inkl. | inkl. |
+| **Schäden an fremden Sachen** (z.B. Kundenhandy zerkratzt) | inkl. (SB 250 EUR) | inkl. (SB 250 EUR) |
+| **Erweiterte Tätigkeitsschäden** (Gerät bei Bearbeitung beschädigt) | 10.000 EUR (SB 10% min. 250 EUR) | 50.000 EUR (SB 10% min. 250 EUR) |
+| Nachbesserungsbegleitschäden | 50.000 EUR (SB 1.000 EUR) | 100.000 EUR (SB 250 EUR) |
+| **Obhutsschäden Verwaltungsvertrag** (Kundengerät in Obhut beschädigt/gestohlen) | 50.000 EUR (SB 250 EUR) | 50.000 EUR (SB 250 EUR) |
+| Mängelbeseitigungsnebenkosten | inkl. | inkl. |
+
+### Betriebshaftpflicht & Mietsachschäden
+
+| Leistung | BS | BSP |
+|---|---|---|
+| Haus- und Grundbesitzerhaftpflicht | bis 50.000 EUR SJM | bis 100.000 EUR SJM |
+| Mietsachschäden durch Leitungswasser | 1.000.000 EUR | 3.000.000 EUR |
+| Mietsachschäden sonstige Ursachen | 100.000 EUR (SB 250 EUR) | 250.000 EUR (SB 250 EUR) |
+| Abhandenkommen Sachen Betriebsangehörige/Besucher | 1.000.000 EUR | 1.000.000 EUR |
+| Abhandenkommen fremder Schlüssel | inkl. (SB 250 EUR) + 14 Tage Objektschutz | inkl. (SB 250 EUR) + 14 Tage Objektschutz |
+
+### Vermögensschäden & Produktrisiko
+
+| Leistung | BS | BSP |
+|---|---|---|
+| **Vermögensschäden aus Arbeiten und Leistungen** | 100.000 EUR | 100.000 EUR |
+| **Aktive Werklohnklage** (Kunde verweigert Zahlung) | 100.000 EUR (ab 1.000 EUR Streitwert) | 100.000 EUR (ab 1.000 EUR Streitwert) |
+| Gesetzliche Produkthaftpflicht | inkl. | inkl. |
+| Aus- und Einbaukosten (fehlerhaftes Ersatzteil) | 200.000 EUR | 200.000 EUR |
+| Verlängerung Gewährleistungsfrist | bis 3 Jahre | bis 3 Jahre |
+
+### Cyber / Daten
+
+| Leistung | BS | BSP |
+|---|---|---|
+| Schäden aus elektronischem Datenaustausch | 1.000.000 EUR | 1.000.000 EUR |
+| Vermögensschäden Datenschutz (DSGVO) | inkl. | inkl. |
+| Verletzung von Persönlichkeitsrechten | inkl. | inkl. |
+
+> **Tipp:** Die Selbstbeteiligung (SB) ist der Betrag, den du im Schadensfall selbst trägst. Je niedriger die SB, desto weniger Risiko für dich.
+
+**CTA:** [Jetzt BS vs. BSP vergleichen und Tarif wählen](/zum-vergleichsrechner/)
+
+---
+
 ## H2: Versicherer im Vergleich
 
 SmartFix vergleicht Tarife folgender Versicherer speziell für Handywerkstätten:
