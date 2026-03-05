@@ -952,4 +952,29 @@ tbody tr:hover {
     padding: 14px 28px;
     font-size: 16px;
   }
+
+  .trust-bar {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+/* === TRUST BAR === */
+.trust-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding: 24px 0;
+}
+
+.trust-bar__item {
+  text-align: center;
+}
+
+.trust-bar__stars {
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
 }
