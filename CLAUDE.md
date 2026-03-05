@@ -20,7 +20,7 @@ Ein **SEO Content Generation & Optimization System** für eine Marketing-Agentur
 ### Seitenstruktur pro Website
 Jede Website hat ca. **10 Unterseiten**:
 1. **Startseite** — Sales-Landingpage mit Trust-Aufbau (für Cold Outreach)
-2. **Produkt-Seiten** (3–4) — Betriebshaftpflicht, Inhaltsversicherung, Cyberversicherung etc.
+2. **Produkt-Seiten** (2) — Betriebshaftpflicht, Inhaltsversicherung
 3. **SEO-Content-Seiten** (4–5) — Thematisch auf Zielgruppe abgestimmte Ratgeber-Artikel
 4. **Über Uns** — Vertrauensaufbau, Makler-Lizenz, Team
 5. **Kontakt** — E-Mail-Formular (info@fixversichert.de)

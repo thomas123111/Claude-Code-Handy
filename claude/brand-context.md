@@ -87,7 +87,6 @@
 |---|---|
 | "Mehr zur Betriebshaftpflicht >" | Product card links |
 | "Mehr zur Inhaltsversicherung >" | Product card links |
-| "Mehr zur Cyberversicherung >" | Product card links |
 | "Zum Vergleichsrechner" | Navigation |
 
 ### CTA Design Rules
@@ -138,7 +137,6 @@ Used in trust-building sections (e.g., "Versicherungen nerven. Wir nicht."):
 **The 3 shock moments (used to agitate):**
 - 🔴 Displaybruch beim Einbau → "Kein Cent."
 - 🔴 Gestohlenes Kundengerät aus deinem Lager → "Kein Cent."
-- 🔴 Datenverlust durch Mitarbeiterfehler → "Kein Cent."
 
 **Resolution:** "Smartfix macht Schluss damit."
 
@@ -159,17 +157,15 @@ Used in trust-building sections (e.g., "Versicherungen nerven. Wir nicht."):
 - **Coverage tiers:**
   - Basis-Schutz: 30–40 €/Monat (Personenschäden, keine Obhutsschäden)
   - Standard-Schutz: 50–65 €/Monat (inkl. Obhutsschäden bis 5.000 €)
-  - Premium-Schutz: 70–90 €/Monat (inkl. Obhutsschäden & Cyber-Schutz)
 - **Minimum Deckungssumme recommended:** 3–5 Mio. € (Personenschäden)
 - **URL slug:** `/handywerkstatt/betriebshaftpflicht/`
 
-**Top 6 covered risks:**
+**Top 5 covered risks:**
 1. Bearbeitungsschäden (Display bricht beim Einbau)
 2. Brandrisiken durch Lithium-Ionen-Akkus
-3. Verlust/Beschädigung von Kundendaten
-4. Diebstahl von Kundengeräten aus Geschäftsräumen
-5. Folgeschäden nach Reparaturen am Logicboard
-6. Personenschäden im Ladenlokal (Stolperfallen)
+3. Diebstahl von Kundengeräten aus Geschäftsräumen
+4. Folgeschäden nach Reparaturen am Logicboard
+5. Personenschäden im Ladenlokal (Stolperfallen)
 
 ---
 
@@ -194,21 +190,6 @@ Used in trust-building sections (e.g., "Versicherungen nerven. Wir nicht."):
 - Regressverzicht bei Mitarbeiterschäden
 
 ---
-
-### Product 3: Cyberversicherung
-- **What it does:** Springt bei Cyberangriffen, Datenverlusten und DSGVO-Verstößen ein
-- **Price:** ab ~35 € / Monat; Jahrestarif ab ~350 € (Einzelunternehmer)
-- **URL slug:** `/handywerkstatt/cyberversicherung/`
-
-**Coverage matrix by business size:**
-| Betriebsart | Jahresumsatz | Mitarbeiter | Deckungssumme | Ca. Jahresbeitrag |
-|---|---|---|---|---|
-| Einzelunternehmer | bis 100.000 € | 0 | 250.000 € | 350 € |
-| Kleine Werkstatt | bis 250.000 € | 2 | 500.000 € | 580 € |
-| Mittlere Werkstatt | bis 500.000 € | 4 | 1.000.000 € | 850 € |
-| Größerer Betrieb | bis 1.000.000 € | 6 | 1.500.000 € | 1.150 € |
-
-**Top 7 coverage areas:** Datendiebstahl-Haftung, Softwareangriffe, Ransomware/Erpressung, PR-Krisenmanagement, digitale Forensik, Phishing/Social Engineering, Rechtsschutz bei Cloud-Hacks
 
 ---
 
@@ -253,7 +234,7 @@ Used on homepage and landing pages. Always presented as a numbered, linear flow:
 
 ### Primary Navigation (Header)
 ```
-[Logo]   Zum Vergleichsrechner | Betriebshaftpflicht | Inhaltsversicherung | Cyberversicherung   [Tarif berechnen ← CTA Button]
+[Logo]   Zum Vergleichsrechner | Betriebshaftpflicht | Inhaltsversicherung   [Tarif berechnen ← CTA Button]
 ```
 
 ### Footer Navigation
@@ -271,7 +252,6 @@ Email: info@fixversichert.de
 | Comparison Tool | `/zum-vergleichsrechner/` |
 | Betriebshaftpflicht | `/handywerkstatt/betriebshaftpflicht/` |
 | Inhaltsversicherung | `/handywerkstatt/inhaltsversicherung/` |
-| Cyberversicherung | `/handywerkstatt/cyberversicherung/` |
 | Handywerkstatt Hub | `/handywerkstatt/` |
 | Über Uns | `/ueber-uns/` |
 | Kontakt | `/kontakt/` |
@@ -403,14 +383,12 @@ Email: info@fixversichert.de
 
 ### SEO Title Patterns
 - "Betriebshaftpflicht für Handywerkstätten: Kosten, Leistung, Deckung"
-- "Cyberversicherung für Handywerkstatt: So schützt du deinen Betrieb vor teuren Hacker-Angriffen"
 - "Inhaltsversicherung Handywerkstatt: Inventar & Kunden"
 
 ### Common SEO Keywords
 - Handywerkstatt Versicherung
 - Betriebshaftpflicht Handywerkstatt
 - Inhaltsversicherung Handywerkstatt
-- Cyberversicherung Handywerkstatt
 - Bearbeitungsschäden versichern
 - Obhutsschäden Versicherung
 - Smartphone Reparaturbetrieb versichern
@@ -432,7 +410,6 @@ Email: info@fixversichert.de
 |---|---|---|
 | Betriebshaftpflicht | ab ~35 €/Monat | ab ~100–400 €/Jahr |
 | Inhaltsversicherung | unter 25 €/Monat | — |
-| Cyberversicherung | ab ~35 €/Monat | ab ~350 €/Jahr |
 | **Complete Bundle** | — | 500–900 €/Jahr |
 
 ---
@@ -492,7 +469,6 @@ The following questions and answers appear on the website and can be reused:
 | Was kostet eine Betriebshaftpflicht? | 100 – 400 € / Jahr für kleine Betriebe |
 | Kann ich meinen alten Tarif kündigen? | Ja — wir begleiten den Wechsel |
 | Bin ich versichert wenn ich das Handy kaputt mache? | Nur wenn deine Police explizit Bearbeitungsschäden abdeckt |
-| Was passiert mit Kundendaten? | Standard deckt Datenverlust nicht ab — Cyberversicherung nötig |
 | Kann ich direkt abschließen ohne Rückruf? | Ja — vollständig digitaler Prozess, Bestätigung sofort per E-Mail |
 | Brauche ich Produkthaftpflicht? | Ja, wenn du Ersatzteile einbaust — Vergleichsrechner zeigt Kombitarife |
 | Was deckt die Inhaltsversicherung ab? | Werkzeug, Ersatzteile, Maschinen, Kundengeräte gegen Feuer, Einbruch, Wasser, Vandalismus |
@@ -532,4 +508,4 @@ The following information was **not found on the website** and should be confirm
 ---
 
 *Document compiled by AI analysis of smartfix-versicherung.de — February 2026*
-*Covers: Homepage, Betriebshaftpflicht, Inhaltsversicherung, Cyberversicherung, Über Uns, Kontakt*
+*Covers: Homepage, Betriebshaftpflicht, Inhaltsversicherung, Über Uns, Kontakt*

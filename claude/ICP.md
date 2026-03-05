@@ -138,7 +138,6 @@ Diese Aussagen sind direkte Stimmen des ICPs – aus Foren, Reddit, Facebook-Gru
 **Gegenargument für die Website:** Zeige konkrete Rechenbeispiele:
 - Tätigkeitsschaden (gebricktes iPhone): 700–1.500 €
 - Einbruch Lagerbestand: 3.000–8.000 €
-- DSGVO-Bußgeld + Anwaltskosten: 2.000–10.000 €
 - Monatliche Prämie: ~30–80 € je nach Umsatz und Deckungssumme
 
 ### "Meine Kunden haben ja selbst eine Handyversicherung"
@@ -228,12 +227,7 @@ Diese Aussagen sind direkte Stimmen des ICPs – aus Foren, Reddit, Facebook-Gru
 - Kundengeräte in der Werkstatt (Einbruchdiebstahl)
 - Feuer, Wasser, Vandalismus
 
-**3. Datenschutz-Baustein (DSGVO)**
-- Unbeabsichtigter Zugriff auf persönliche Daten bei Reparatur
-- Verlust oder Weitergabe von Kundendaten
-- Bußgelder und Anwaltskosten
-
-**4. Optional: Rechtsschutzversicherung für Gewerbetreibende**
+**3. Optional: Rechtsschutzversicherung für Gewerbetreibende**
 - Für Streitigkeiten mit Kunden, Vermietern oder Lieferanten
 
 ### Was NICHT abgedeckt ist (wichtig für ehrliche Kommunikation):
