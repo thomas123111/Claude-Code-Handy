@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impressum | SmartFix Versicherung</title>
+  <meta name="description" content="Impressum der SmartFix Versicherung — Ein Service der MH Online Media GmbH, Berlin.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://smartfix-versicherung.de/impressum/">
+  <link rel="icon" href="../assets/FavIconWhite-svg-SmartFix.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header__inner">
+      <a href="/" class="header__logo">
+        <img src="../assets/LogoWhite-svg-smartfix.svg" alt="SmartFix Versicherung Logo" width="180" height="40">
+      </a>
+      <nav class="nav" aria-label="Hauptnavigation">
+        <button class="nav__toggle" aria-expanded="false" aria-label="Menü öffnen">☰</button>
+        <ul class="nav__list">
+          <li><a href="/handywerkstatt/">Handywerkstatt</a></li>
+          <li><a href="/ueber-uns/">Über uns</a></li>
+          <li><a href="/kontakt/">Kontakt</a></li>
+          <li><a href="/zum-vergleichsrechner/" class="btn btn--primary btn--small">Tarife vergleichen</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" style="padding-top: 120px;">
+      <div class="container">
+        <div class="article">
+          <h1>Impressum</h1>
+
+          <p><strong>Gültig für:</strong> smartfix-versicherung.de</p>
+
+          <h2>Angaben gemäß § 5 DDG</h2>
+          <p>
+            MH Online Media GmbH<br>
+            Helweg 10<br>
+            13465 Berlin
+          </p>
+
+          <h2>Vertreten durch</h2>
+          <p>Thomas Giessmann (Geschäftsführer)</p>
+
+          <h2>Kontakt</h2>
+          <p>
+            E-Mail: <a href="mailto:info@fixversichert.de">info@fixversichert.de</a>
+          </p>
+
+          <h2>Registereintrag</h2>
+          <p>
+            Eintragung im Handelsregister.<br>
+            Registergericht: Amtsgericht Charlottenburg<br>
+            Registernummer: HRB 265254 B
+          </p>
+
+          <h2>Umsatzsteuer-ID</h2>
+          <p>
+            Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:<br>
+            DE326342813
+          </p>
+
+          <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+          <p>
+            Thomas Giessmann<br>
+            Helweg 10<br>
+            13465 Berlin
+          </p>
+
+          <h2>Verbraucherstreitbeilegung</h2>
+          <p>Wir sind bereit, an Streitbeilegungsverfahren bei einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <img src="../assets/LogoWhite-svg-smartfix.svg" alt="SmartFix Versicherung" width="160" height="36">
+          <p>Der erste Online-Versicherungsvergleich speziell für Handy- und Smartphone-Werkstätten.</p>
+        </div>
+        <div>
+          <h4>Versicherungen</h4>
+          <ul class="footer__links">
+            <li><a href="/handywerkstatt/">Handywerkstatt</a></li>
+            <li><a href="/handywerkstatt/betriebshaftpflicht/">Betriebshaftpflicht</a></li>
+            <li><a href="/handywerkstatt/inhaltsversicherung/">Inhaltsversicherung</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Unternehmen</h4>
+          <ul class="footer__links">
+            <li><a href="/ueber-uns/">Über uns</a></li>
+            <li><a href="/kontakt/">Kontakt</a></li>
+            <li><a href="../impressum/">Impressum</a></li>
+            <li><a href="../datenschutz/">Datenschutz</a></li>
+          </ul>
+        </div>
+        <div class="footer__contact">
+          <h4>Kontakt</h4>
+          <p>MH Online Media GmbH<br>Helweg 10, 13465 Berlin</p>
+          <p class="mt-2"><a href="mailto:info@fixversichert.de">info@fixversichert.de</a></p>
+          <p class="mt-2"><a href="/zum-vergleichsrechner/" class="btn btn--primary" style="font-size: 14px; padding: 10px 20px;">Jetzt vergleichen</a></p>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2026 SmartFix Versicherung — Ein Service der MH Online Media GmbH</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      var toggle = document.querySelector('.nav__toggle');
+      var navList = document.querySelector('.nav__list');
+      if (toggle && navList) {
+        toggle.addEventListener('click', function() {
+          navList.classList.toggle('active');
+          var expanded = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', !expanded);
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>
