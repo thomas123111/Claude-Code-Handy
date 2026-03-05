@@ -268,9 +268,9 @@ Email: info@fixversichert.de
 | White logo | `LogoWhite-svg-smartfix.svg` | Header (on dark background) |
 | Grey logo | `LogoGrey-svg-smartfix.svg` | Footer (on light background) |
 
-**Logo path (WordPress):**
-- White: `wp-content/uploads/2026/01/LogoWhite-svg-smartfix.svg`
-- Grey: `wp-content/uploads/2026/02/LogoGrey-svg-smartfix.svg`
+**Logo path (statische Website):**
+- White: `assets/LogoWhite-svg-smartfix.svg`
+- Grey: `assets/LogoGrey-svg-smartfix.svg`
 
 ### Color Palette
 *Bestätigt aus Live-CSS (brand_assets/website_style_css.md)*
@@ -288,7 +288,7 @@ Email: info@fixversichert.de
 | **Footer BG** | Light Grey / White | `#f9fafb` | Footer background |
 
 ### Typography
-*Bestätigt aus Live-CSS (Open Sans via Divi/WordPress)*
+*Bestätigt aus Live-CSS (Open Sans via Google Fonts)*
 
 | Role | Font | Weight | Size |
 |---|---|---|---|
@@ -304,7 +304,7 @@ Email: info@fixversichert.de
 - **Button Border-Radius:** 4px (leicht abgerundet)
 - **Content-Breite:** max 1080px
 - **Section Padding:** 56px
-- **CMS:** WordPress mit Divi Builder
+- **Tech-Stack:** Statisches HTML/CSS (kein CMS)
 
 ---
 
