@@ -8,20 +8,33 @@ on:
       - 'docs/**'
 
 jobs:
-  deploy:
-    name: Deploy to FTP Server
+  deploy-smartfix:
+    name: Deploy SmartFix
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      - name: Deploy via FTP
+      - name: Check for changes in smartfix
+        id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^docs/smartfix-versicherung.de/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy SmartFix via FTP
+        if: steps.changes.outputs.changed == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./docs/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          local-dir: ./docs/smartfix-versicherung.de/
+          server-dir: /github-pages/smartfix-versicherung.de/
           dangerous-clean-slate: false
