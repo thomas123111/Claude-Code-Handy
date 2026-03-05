@@ -38,3 +38,5 @@ jobs:
           local-dir: ./docs/smartfix-versicherung.de/
           server-dir: /github-pages/smartfix-versicherung.de/
           dangerous-clean-slate: false
+          protocol: ftps
+          port: 21
