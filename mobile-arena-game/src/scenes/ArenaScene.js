@@ -511,26 +511,26 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const halfW = width / 2;
 
-    // Joystick visuals (left side)
-    this.joystickBase = this.add.image(100, height - 120, 'joystick_base')
+    // Joystick visuals (right side = movement)
+    this.joystickBase = this.add.image(width - 100, height - 120, 'joystick_base')
       .setDepth(100).setAlpha(0);
-    this.joystickThumb = this.add.image(100, height - 120, 'joystick_thumb')
+    this.joystickThumb = this.add.image(width - 100, height - 120, 'joystick_thumb')
       .setDepth(101).setAlpha(0);
 
-    // Shoot indicator (right side)
-    this.shootIndicator = this.add.circle(width - 70, height - 120, 30, 0xff4444, 0)
+    // Shoot indicator (left side = shoot)
+    this.shootIndicator = this.add.circle(70, height - 120, 30, 0xff4444, 0)
       .setDepth(100);
 
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.x < halfW) {
-        // LEFT HALF: Movement joystick
+      if (pointer.x >= halfW) {
+        // RIGHT HALF: Movement joystick
         this.joystickActive = true;
         this.joystickPointerId = pointer.id;
         this.joystickBase.setPosition(pointer.x, pointer.y).setAlpha(1);
         this.joystickThumb.setPosition(pointer.x, pointer.y).setAlpha(1);
         this.joystickOrigin = { x: pointer.x, y: pointer.y };
       } else {
-        // RIGHT HALF: Shoot in facing direction (hold to keep firing)
+        // LEFT HALF: Shoot in facing direction (hold to keep firing)
         this.shootHeld = true;
         this.shootPointerId = pointer.id;
         this.shootIndicator.setPosition(pointer.x, pointer.y).setAlpha(0.3);
