@@ -186,6 +186,19 @@ export class BootScene extends Phaser.Scene {
     pg.strokeCircle(14, 14, 14);
     pg.generateTexture('switch_error', 28, 28);
 
+    // Arena wall block
+    pg.clear();
+    pg.fillStyle(0x445566, 1);
+    pg.fillRect(0, 0, 40, 40);
+    pg.fillStyle(0x556677, 1);
+    pg.fillRect(2, 2, 36, 36);
+    pg.lineStyle(1, 0x334455, 1);
+    pg.strokeRect(0, 0, 40, 40);
+    pg.lineStyle(1, 0x667788, 0.3);
+    pg.lineBetween(0, 20, 40, 20);
+    pg.lineBetween(20, 0, 20, 40);
+    pg.generateTexture('arena_wall', 40, 40);
+
     // Maze wall segment
     pg.clear();
     pg.fillStyle(0x4466aa, 0.7);
