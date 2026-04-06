@@ -42,11 +42,21 @@ export class ArenaScene extends Phaser.Scene {
     this.arenaStartTime = this.time.now;
     this.lastFireTime = 0;
 
+    // Portal unlock tracking - 3 ways to open portal:
+    // 1) Collect all loot crates
+    // 2) Kill all enemies (all waves)
+    // 3) Timer runs out
+    this.cratesCollected = 0;
+    this.cratesTotal = this.arenaConfig.crateCount;
+    this.portalTimerDone = false;
+    this.clearMethod = null; // 'crates', 'kills', 'timer'
+
     // Groups
     this.bullets = this.physics.add.group({ maxSize: 50, classType: Phaser.Physics.Arcade.Image });
     this.enemyBullets = this.physics.add.group({ maxSize: 30, classType: Phaser.Physics.Arcade.Image });
     this.enemies = this.physics.add.group();
     this.lootItems = this.physics.add.group();
+    this.crates = this.physics.add.group();
 
     // Player
     this.player = this.physics.add.image(width / 2, height - 100, `mech_${this.mechId}`);
@@ -67,6 +77,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.lootItems, this.onCollectLoot, null, this);
     this.physics.add.overlap(this.player, this.enemies, this.onEnemyTouchPlayer, null, this);
     this.physics.add.overlap(this.player, this.portal, this.onEnterPortal, null, this);
+    this.physics.add.overlap(this.player, this.crates, this.onCollectCrate, null, this);
 
     // Input - keyboard
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -85,8 +96,98 @@ export class ArenaScene extends Phaser.Scene {
     // HUD
     this.createHUD();
 
+    // Spawn loot crates across the arena
+    this.spawnCrates();
+
+    // Portal timer - opens portal after X seconds regardless
+    this.portalTimerEvent = this.time.delayedCall(
+      this.arenaConfig.portalTimerSeconds * 1000,
+      () => {
+        if (!this.arenaCleared) {
+          this.portalTimerDone = true;
+          this.clearMethod = 'timer';
+          this.clearArena();
+        }
+      }
+    );
+
     // Start first wave
     this.startWave();
+  }
+
+  spawnCrates() {
+    const { width } = this.scale;
+    for (let i = 0; i < this.cratesTotal; i++) {
+      const x = Phaser.Math.Between(40, width - 40);
+      const y = Phaser.Math.Between(100, 550);
+      const crate = this.physics.add.image(x, y, 'loot_crate');
+      crate.setScale(1.3);
+      crate.setDepth(6);
+      crate.body.setImmovable(true);
+      this.crates.add(crate);
+
+      // Gentle float animation
+      this.tweens.add({
+        targets: crate,
+        y: y - 5,
+        duration: Phaser.Math.Between(800, 1200),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  onCollectCrate(player, crate) {
+    if (this.arenaCleared) return;
+
+    this.cratesCollected++;
+
+    // Crate collect effect
+    const x = crate.x;
+    const y = crate.y;
+    crate.destroy();
+
+    // Burst effect
+    const flash = this.add.circle(x, y, 12, 0xffaa00, 0.9).setDepth(50);
+    this.tweens.add({
+      targets: flash,
+      scale: { from: 1, to: 3 },
+      alpha: { from: 0.9, to: 0 },
+      duration: 300,
+      onComplete: () => flash.destroy(),
+    });
+
+    // Drop loot from crate
+    const lootCount = Phaser.Math.Between(2, 4);
+    for (let i = 0; i < lootCount; i++) {
+      const offX = Phaser.Math.Between(-25, 25);
+      const offY = Phaser.Math.Between(-25, 25);
+      if (Math.random() < 0.6) {
+        this.spawnLoot(x + offX, y + offY, 'credit', Phaser.Math.Between(3, 8 + this.arenaIndex));
+      } else {
+        this.spawnLoot(x + offX, y + offY, 'scrap', Phaser.Math.Between(1, 4));
+      }
+    }
+
+    // Show progress
+    const { width } = this.scale;
+    const msg = this.add.text(width / 2, 180, `Crate ${this.cratesCollected}/${this.cratesTotal}`, {
+      fontSize: '14px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(200);
+    this.tweens.add({
+      targets: msg,
+      alpha: { from: 1, to: 0 },
+      y: 160,
+      duration: 800,
+      onComplete: () => msg.destroy(),
+    });
+
+    // Check if all crates collected
+    if (this.cratesCollected >= this.cratesTotal && !this.arenaCleared) {
+      this.clearMethod = 'crates';
+      this.clearArena();
+    }
   }
 
   setupTouchJoystick() {
@@ -159,16 +260,34 @@ export class ArenaScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'monospace', color: '#aaaaaa',
     }).setOrigin(0.5).setDepth(100);
 
+    // Crate progress bar background
+    this.add.rectangle(width / 2, 72, width - 40, 10, 0x333333, 0.6).setDepth(100);
+    this.crateBar = this.add.rectangle(20, 72, 0, 10, 0xffaa00, 0.8)
+      .setOrigin(0, 0.5).setDepth(101);
+    this.crateText = this.add.text(width / 2, 72, '', {
+      fontSize: '8px', fontFamily: 'monospace', color: '#ffffff',
+    }).setOrigin(0.5).setDepth(102);
+
+    // Timer display
+    this.timerText = this.add.text(width - 10, 55, '', {
+      fontSize: '11px', fontFamily: 'monospace', color: '#888888',
+    }).setOrigin(1, 0).setDepth(100);
+
     // Run loot display
-    this.lootText = this.add.text(10, 65, '', {
+    this.lootText = this.add.text(10, 85, '', {
       fontSize: '10px', fontFamily: 'monospace', color: '#ffdd00',
     }).setDepth(100);
   }
 
   startWave() {
+    if (this.arenaCleared) return;
+
     this.currentWave++;
     if (this.currentWave > this.arenaConfig.totalWaves) {
-      this.clearArena();
+      if (!this.arenaCleared) {
+        this.clearMethod = 'kills';
+        this.clearArena();
+      }
       return;
     }
 
@@ -261,7 +380,13 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   clearArena() {
+    if (this.arenaCleared) return;
     this.arenaCleared = true;
+
+    // Cancel portal timer if still running
+    if (this.portalTimerEvent) {
+      this.portalTimerEvent.remove(false);
+    }
 
     // Show portal
     this.portal.setVisible(true);
@@ -279,18 +404,37 @@ export class ArenaScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    // Time bonus calculation
+    // Time bonus - only for crates/kills (not for timer-out)
     const elapsed = (this.time.now - this.arenaStartTime) / 1000;
     const parTime = this.arenaConfig.parTimeSeconds;
-    this.timeBonus = elapsed < parTime ? Math.floor((parTime - elapsed) * 5) : 0;
+    if (this.clearMethod === 'timer') {
+      this.timeBonus = 0;
+    } else {
+      this.timeBonus = elapsed < parTime ? Math.floor((parTime - elapsed) * 5) : 0;
+    }
 
-    const { width, height } = this.scale;
-    const portalText = this.add.text(width / 2, 120, 'ARENA CLEARED!\nEnter Portal →', {
-      fontSize: '16px', fontFamily: 'monospace', color: '#cc88ff', align: 'center', fontStyle: 'bold',
+    const { width } = this.scale;
+    const methodLabels = {
+      crates: 'ALL CRATES COLLECTED!',
+      kills: 'ALL ENEMIES DEFEATED!',
+      timer: 'TIME UP - PORTAL OPEN!',
+    };
+    const methodColors = {
+      crates: '#ffaa00',
+      kills: '#ff4444',
+      timer: '#8888aa',
+    };
+
+    this.add.text(width / 2, 110, methodLabels[this.clearMethod] || 'CLEARED!', {
+      fontSize: '14px', fontFamily: 'monospace', color: methodColors[this.clearMethod] || '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(200);
+
+    this.add.text(width / 2, 132, 'Enter Portal →', {
+      fontSize: '16px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(200);
 
     if (this.timeBonus > 0) {
-      this.add.text(width / 2, 160, `Speed Bonus: +${this.timeBonus} credits!`, {
+      this.add.text(width / 2, 155, `Speed Bonus: +${this.timeBonus} credits!`, {
         fontSize: '12px', fontFamily: 'monospace', color: '#ffdd00',
       }).setOrigin(0.5).setDepth(200);
     }
@@ -612,6 +756,23 @@ export class ArenaScene extends Phaser.Scene {
         ? 'CLEARED - Enter Portal!'
         : `Wave ${this.currentWave}/${this.arenaConfig.totalWaves} | Enemies: ${aliveEnemies}`
     );
+
+    // Crate progress
+    const cratePercent = this.cratesTotal > 0 ? this.cratesCollected / this.cratesTotal : 0;
+    this.crateBar.width = (width - 40) * cratePercent;
+    this.crateText.setText(`Crates: ${this.cratesCollected}/${this.cratesTotal}`);
+
+    // Timer countdown
+    if (!this.arenaCleared) {
+      const elapsed = (this.time.now - this.arenaStartTime) / 1000;
+      const remaining = Math.max(0, this.arenaConfig.portalTimerSeconds - elapsed);
+      this.timerText.setText(`${Math.ceil(remaining)}s`);
+      if (remaining < 10) {
+        this.timerText.setColor('#ff6644');
+      }
+    } else {
+      this.timerText.setText('');
+    }
 
     this.lootText.setText(`Credits: ${this.runCredits}  Scrap: ${this.runScrap}`);
   }

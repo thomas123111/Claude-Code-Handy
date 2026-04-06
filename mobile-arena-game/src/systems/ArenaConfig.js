@@ -31,10 +31,14 @@ export function getArenaConfig(arenaIndex) {
     creditsReward: Math.floor(20 + arenaIndex * 15),
     scrapReward: Math.floor(5 + arenaIndex * 5),
     xpReward: Math.floor(30 + arenaIndex * 20),
+    // Loot crates - collect all to open portal early
+    crateCount: Math.min(3 + Math.floor(arenaIndex * 0.5), 8),
+    // Timer portal - portal opens after this many seconds regardless
+    portalTimerSeconds: Math.max(25, 60 - arenaIndex * 2),
     // Arena size
     width: 390,
     height: 700,
-    // Time bonus: seconds under this = bonus credits
+    // Time bonus: seconds under this = bonus credits (only for crate/kill clear)
     parTimeSeconds: Math.max(15, 45 - arenaIndex * 2),
   };
 }
