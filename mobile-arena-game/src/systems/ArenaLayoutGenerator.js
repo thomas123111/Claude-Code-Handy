@@ -264,8 +264,9 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
   const cols = Math.floor(arenaWidth / CELL);
   const rows = Math.floor((arenaHeight - topMargin) / CELL);
 
-  // Pick layout based on arena index (cycles through all layouts)
-  const layoutIdx = arenaIndex % LAYOUTS.length;
+  // Shuffled layout order - deterministic but not sequential
+  // Uses a seeded shuffle so arena 0 doesn't always get layout 0
+  const layoutIdx = getShuffledLayoutIndex(arenaIndex, LAYOUTS.length);
   const rawWalls = LAYOUTS[layoutIdx](topMargin).flat();
 
   // Filter walls within playable area
@@ -341,6 +342,23 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
     cellSize: CELL,
     topMargin,
   };
+}
+
+// Deterministic shuffle: maps arenaIndex to a layout index
+// Each "cycle" of 20 arenas uses a different permutation
+function getShuffledLayoutIndex(arenaIndex, layoutCount) {
+  const cycle = Math.floor(arenaIndex / layoutCount);
+  const posInCycle = arenaIndex % layoutCount;
+
+  // Build a shuffled order for this cycle using a simple seed
+  const order = Array.from({ length: layoutCount }, (_, i) => i);
+  let seed = (cycle + 1) * 2654435761; // different shuffle per cycle
+  for (let i = layoutCount - 1; i > 0; i--) {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff;
+    const j = (seed >>> 0) % (i + 1);
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order[posInCycle];
 }
 
 export function getRandomOpenPositions(layout, count, rng, minRow, maxRow) {

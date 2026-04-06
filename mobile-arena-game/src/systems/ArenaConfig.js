@@ -43,12 +43,14 @@ export function getArenaConfig(arenaIndex) {
   };
 }
 
-// Determine arena type: every 5th arena (index 4, 9, 14...) is a maze
+// Determine arena type: maze arenas appear at varied intervals
+// Pattern per 7 arenas: 5 combat, 1 maze, 1 combat (then repeat)
+// First maze at arena 3, then 7, 10, 14, 17, 21...
+const ARENA_TYPE_PATTERN = ['combat', 'combat', 'combat', 'maze', 'combat', 'combat', 'combat'];
+
 export function getArenaType(arenaIndex) {
-  if (arenaIndex >= 4 && (arenaIndex + 1) % 5 === 0) {
-    return 'maze';
-  }
-  return 'combat';
+  if (arenaIndex < 2) return 'combat'; // first 2 arenas always combat
+  return ARENA_TYPE_PATTERN[(arenaIndex - 2) % ARENA_TYPE_PATTERN.length];
 }
 
 export function getArenaSceneName(arenaIndex) {
