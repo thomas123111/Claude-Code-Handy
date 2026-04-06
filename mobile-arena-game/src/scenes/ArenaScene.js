@@ -70,12 +70,16 @@ export class ArenaScene extends Phaser.Scene {
     this.crates = this.physics.add.group();
     this.ghostLootGroup = this.physics.add.group();
 
-    // Player
-    this.player = this.physics.add.image(width / 2, height - 100, `mech_${this.mechId}`);
+    // Player - starts at very bottom
+    this.player = this.physics.add.image(width / 2, height - 40, `mech_${this.mechId}`);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
     this.player.setScale(1.5);
     this.player.body.setSize(20, 20);
+
+    // 1 second freeze at start
+    this.startFrozen = true;
+    this.player.body.enable = false;
 
     // Portal (hidden until arena cleared)
     this.portal = this.physics.add.image(width / 2, 80, 'portal');
@@ -105,6 +109,32 @@ export class ArenaScene extends Phaser.Scene {
     this.joystickActive = false;
     this.joystickDir = { x: 0, y: 0 };
     this.setupTouchJoystick();
+
+    // Manual shoot - tap top half of screen to shoot in that direction
+    this.manualShootTarget = null;
+    this.input.on('pointerdown', (pointer) => {
+      if (pointer.y < this.scale.height * 0.4) {
+        // Top half tap = manual shoot toward that position
+        this.manualShootTarget = { x: pointer.x, y: pointer.y };
+      }
+    });
+
+    // Unfreeze after 1 second
+    const { width: w2 } = this.scale;
+    const readyText = this.add.text(w2 / 2, height / 2, 'GET READY...', {
+      fontSize: '24px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(200);
+    this.time.delayedCall(1000, () => {
+      this.startFrozen = false;
+      this.player.body.enable = true;
+      readyText.setText('GO!');
+      this.tweens.add({
+        targets: readyText,
+        alpha: 0, scale: 2,
+        duration: 400,
+        onComplete: () => readyText.destroy(),
+      });
+    });
 
     // HUD
     this.createHUD();
@@ -228,22 +258,17 @@ export class ArenaScene extends Phaser.Scene {
       this.ghostLootGroup.add(ghost);
       this.ghostLoots.push(ghost);
 
-      // Visible for 3 seconds with pulsing, then fade to invisible
+      // Visible for 1 second with pulsing, then completely invisible
       this.tweens.add({
         targets: ghost,
         alpha: { from: 0.9, to: 0.5 },
         scale: { from: 1.0, to: 1.3 },
         duration: 500,
         yoyo: true,
-        repeat: 2, // 3 cycles = ~3 seconds
+        repeat: 0, // 1 cycle = ~1 second
         onComplete: () => {
           ghost.setData('revealed', false);
-          // Completely invisible - must remember position and shoot
-          this.tweens.add({
-            targets: ghost,
-            alpha: 0,
-            duration: 400,
-          });
+          ghost.setAlpha(0);
         },
       });
     }
@@ -690,22 +715,22 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   killEnemy(enemy) {
-    // Drop loot
     const x = enemy.x;
     const y = enemy.y;
 
-    // Always drop credits
-    this.spawnLoot(x, y, 'credit', Phaser.Math.Between(2, 5 + this.arenaIndex));
+    // Enemies give XP only, no loot drops
+    this.runXp += Phaser.Math.Between(5, 10 + this.arenaIndex * 2);
 
-    // Sometimes drop scrap
-    if (Math.random() < 0.3) {
-      this.spawnLoot(x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15), 'scrap', Phaser.Math.Between(1, 3));
-    }
-
-    // Rare health drop
-    if (Math.random() < 0.15) {
-      this.spawnLoot(x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15), 'health', Math.floor(this.maxHp * 0.15));
-    }
+    // XP popup
+    const xpMsg = this.add.text(x, y - 10, `+XP`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#aaffaa', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(50);
+    this.tweens.add({
+      targets: xpMsg,
+      y: y - 30, alpha: 0,
+      duration: 600,
+      onComplete: () => xpMsg.destroy(),
+    });
 
     // Death particles (simple flash)
     const flash = this.add.circle(x, y, 15, 0xffffff, 0.8).setDepth(50);
@@ -721,8 +746,10 @@ export class ArenaScene extends Phaser.Scene {
     this.enemiesKilled++;
     this.waveEnemiesLeft--;
 
-    // Check wave complete
-    if (this.waveEnemiesLeft <= 0 && (!this.spawnTimer || !this.spawnTimer.getRemaining())) {
+    // Check wave complete - all enemies in this wave killed and all spawned
+    const allSpawned = !this.spawnTimer || this.spawnTimer.getRepeatCount() === 0;
+    const allDead = this.enemies.getChildren().filter((e) => e.active).length === 0;
+    if (allDead && allSpawned) {
       this.time.delayedCall(800, () => this.startWave());
     }
   }
@@ -882,6 +909,30 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
+  fireAt(targetX, targetY) {
+    if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.7) return;
+    this.lastFireTime = this.time.now;
+
+    const bullet = this.bullets.get(this.player.x, this.player.y - 10, 'bullet');
+    if (!bullet) return;
+
+    bullet.setActive(true).setVisible(true);
+    bullet.body.enable = true;
+    bullet.setDepth(8);
+
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+    const speed = 450;
+    bullet.body.velocity.x = Math.cos(angle) * speed;
+    bullet.body.velocity.y = Math.sin(angle) * speed;
+
+    this.time.delayedCall(2000, () => {
+      if (bullet.active) {
+        bullet.setActive(false).setVisible(false);
+        bullet.body.enable = false;
+      }
+    });
+  }
+
   enemyAI(enemy, delta) {
     if (!enemy.active || !this.player.active) return;
 
@@ -892,8 +943,8 @@ export class ArenaScene extends Phaser.Scene {
     enemy.body.velocity.x = Math.cos(angle) * speed;
     enemy.body.velocity.y = Math.sin(angle) * speed;
 
-    // Enemy shooting (only for basic/tank type at higher arenas)
-    if (this.arenaIndex >= 2) {
+    // Enemy shooting - starts from arena 1
+    if (this.arenaIndex >= 1) {
       const timer = enemy.getData('shootTimer') + delta;
       enemy.setData('shootTimer', timer);
       if (timer >= enemy.getData('shootInterval')) {
@@ -924,6 +975,7 @@ export class ArenaScene extends Phaser.Scene {
 
   update(time, delta) {
     if (!this.player || !this.player.active) return;
+    if (this.startFrozen) return;
 
     // Player movement
     let vx = 0;
@@ -956,7 +1008,13 @@ export class ArenaScene extends Phaser.Scene {
       this.player.rotation = Phaser.Math.Angle.RotateTo(this.player.rotation, targetAngle, 0.15);
     }
 
-    // Auto fire
+    // Manual shoot (tap top half of screen)
+    if (this.manualShootTarget) {
+      this.fireAt(this.manualShootTarget.x, this.manualShootTarget.y);
+      this.manualShootTarget = null;
+    }
+
+    // Auto fire at enemies
     this.autoFire();
 
     // Enemy AI
