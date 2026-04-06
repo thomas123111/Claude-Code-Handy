@@ -147,10 +147,6 @@ export class MazeArenaScene extends Phaser.Scene {
 
     this.arenaStartTime = this.time.now;
     this.transitioning = false;
-
-    // Wall bump counter - reveal walls briefly after too many bumps
-    this.bumpCount = 0;
-    this.bumpHintThreshold = 5;
   }
 
   buildMazeWalls() {
@@ -217,24 +213,8 @@ export class MazeArenaScene extends Phaser.Scene {
   }
 
   onHitWall() {
-    // Brief flash to show nearby walls
-    this.bumpCount++;
+    // Just a small screen shake - no hints, memorize the layout!
     this.cameras.main.shake(50, 0.003);
-
-    // After several bumps, briefly reveal walls as help
-    if (this.bumpCount >= this.bumpHintThreshold) {
-      this.bumpCount = 0;
-      this.revealWallsBriefly(500);
-    }
-  }
-
-  revealWallsBriefly(duration) {
-    this.wallSprites.forEach((w) => w.setAlpha(0.4));
-    this.time.delayedCall(duration, () => {
-      if (!this.wallsVisible) {
-        this.wallSprites.forEach((w) => w.setAlpha(0));
-      }
-    });
   }
 
   onReachGoal(player, goal) {
