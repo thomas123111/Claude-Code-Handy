@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, getSelectedMech, getMechStats } from '../systems/SaveSystem.js';
 import { getArenaConfig } from '../systems/ArenaConfig.js';
+import { generateArenaLayout, getRandomOpenPositions } from '../systems/ArenaLayoutGenerator.js';
 
 export class ArenaScene extends Phaser.Scene {
   constructor() {
@@ -70,6 +71,22 @@ export class ArenaScene extends Phaser.Scene {
     this.crates = this.physics.add.group();
     this.ghostLootGroup = this.physics.add.group();
 
+    // Generate arena layout with walls
+    const topMargin = 95; // space for HUD
+    this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin);
+    this.arenaRng = this.seedRng(this.arenaIndex * 3571 + 13);
+
+    // Build wall physics
+    this.walls = this.physics.add.staticGroup();
+    this.arenaLayout.walls.forEach((w) => {
+      const wall = this.walls.create(w.x, w.y, 'arena_wall');
+      wall.setDisplaySize(w.w, w.h);
+      wall.setTint(this.arenaConfig.theme.color);
+      wall.body.setSize(w.w, w.h);
+      wall.refreshBody();
+      wall.setDepth(3);
+    });
+
     // Player - starts at very bottom
     this.player = this.physics.add.image(width / 2, height - 40, `mech_${this.mechId}`);
     this.player.setCollideWorldBounds(true);
@@ -81,8 +98,9 @@ export class ArenaScene extends Phaser.Scene {
     this.startFrozen = true;
     this.player.body.enable = false;
 
-    // Portal (hidden until arena cleared)
-    this.portal = this.physics.add.image(width / 2, 80, 'portal');
+    // Portal at random position (hidden until arena cleared)
+    const pp = this.arenaLayout.portalPosition;
+    this.portal = this.physics.add.image(pp.x, pp.y, 'portal');
     this.portal.setVisible(false);
     this.portal.setActive(false);
     this.portal.body.enable = false;
@@ -95,6 +113,18 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.portal, this.onEnterPortal, null, this);
     this.physics.add.overlap(this.player, this.crates, this.onCollectCrate, null, this);
     this.physics.add.overlap(this.bullets, this.ghostLootGroup, this.onShootGhostLoot, null, this);
+
+    // Wall collisions - block player, enemies, and destroy bullets
+    this.physics.add.collider(this.player, this.walls);
+    this.physics.add.collider(this.enemies, this.walls);
+    this.physics.add.collider(this.bullets, this.walls, (bullet) => {
+      bullet.setActive(false).setVisible(false);
+      bullet.body.enable = false;
+    });
+    this.physics.add.collider(this.enemyBullets, this.walls, (bullet) => {
+      bullet.setActive(false).setVisible(false);
+      bullet.body.enable = false;
+    });
 
     // Input - keyboard
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -166,11 +196,18 @@ export class ArenaScene extends Phaser.Scene {
     this.startWave();
   }
 
+  seedRng(seed) {
+    let s = seed;
+    return function () {
+      s = (s * 1664525 + 1013904223) & 0xffffffff;
+      return (s >>> 0) / 0xffffffff;
+    };
+  }
+
   spawnCrates() {
-    const { width } = this.scale;
-    for (let i = 0; i < this.cratesTotal; i++) {
-      const x = Phaser.Math.Between(40, width - 40);
-      const y = Phaser.Math.Between(100, 550);
+    const positions = getRandomOpenPositions(this.arenaLayout, this.cratesTotal, this.arenaRng, 1, this.arenaLayout.rows - 3);
+    for (let i = 0; i < positions.length; i++) {
+      const { x, y } = positions[i];
       const crate = this.physics.add.image(x, y, 'loot_crate');
       crate.setScale(1.3);
       crate.setDepth(6);
@@ -243,12 +280,11 @@ export class ArenaScene extends Phaser.Scene {
 
   // === GHOST LOOT ===
   spawnGhostLoot() {
-    const { width } = this.scale;
     const count = 3 + Math.floor(this.arenaIndex * 0.3);
+    const positions = getRandomOpenPositions(this.arenaLayout, count, this.arenaRng, 1, this.arenaLayout.rows - 3);
 
-    for (let i = 0; i < count; i++) {
-      const x = Phaser.Math.Between(40, width - 40);
-      const y = Phaser.Math.Between(120, 500);
+    for (let i = 0; i < positions.length; i++) {
+      const { x, y } = positions[i];
       const ghost = this.physics.add.image(x, y, 'ghost_loot');
       ghost.setDepth(5);
       ghost.setScale(1.2);
@@ -329,12 +365,11 @@ export class ArenaScene extends Phaser.Scene {
     const { width } = this.scale;
     const count = Math.min(3 + Math.floor((this.arenaIndex - 2) / 3), 6);
 
-    // Place switches in a pattern
+    // Place switches in open spaces
+    const switchPositions = getRandomOpenPositions(this.arenaLayout, count, this.arenaRng, 3, this.arenaLayout.rows - 4);
     for (let i = 0; i < count; i++) {
-      const x = 50 + ((width - 100) / (count - 1 || 1)) * i;
-      const y = Phaser.Math.Between(250, 450);
-
-      const sw = this.add.image(x, y, 'switch_off').setScale(1.3).setDepth(7);
+      const pos = switchPositions[i] || { x: 50 + ((width - 100) / (count - 1 || 1)) * i, y: 350 };
+      const sw = this.add.image(pos.x, pos.y, 'switch_off').setScale(1.3).setDepth(7);
       sw.setInteractive({ useHandCursor: true });
       sw.setData('index', i);
       this.switches.push(sw);
@@ -608,19 +643,19 @@ export class ArenaScene extends Phaser.Scene {
       size = 20;
     }
 
-    // Spawn position - top or sides
-    let x, y;
-    const side = Math.random();
-    if (side < 0.6) {
-      x = Phaser.Math.Between(30, width - 30);
-      y = -20;
-    } else if (side < 0.8) {
-      x = -20;
-      y = Phaser.Math.Between(60, 300);
-    } else {
-      x = width + 20;
-      y = Phaser.Math.Between(60, 300);
-    }
+    // Spawn in open space, preferring spots far from player
+    const spawnPositions = getRandomOpenPositions(this.arenaLayout, 5, () => Math.random(), 0, Math.floor(this.arenaLayout.rows * 0.7));
+    let bestPos = { x: Phaser.Math.Between(30, width - 30), y: 30 }; // fallback
+    let bestDist = 0;
+    spawnPositions.forEach((pos) => {
+      const d = Phaser.Math.Distance.Between(pos.x, pos.y, this.player.x, this.player.y);
+      if (d > bestDist) {
+        bestDist = d;
+        bestPos = pos;
+      }
+    });
+    const x = bestPos.x;
+    const y = bestPos.y;
 
     const enemy = this.physics.add.image(x, y, texture);
     enemy.setTint(config.theme.enemyTint);
