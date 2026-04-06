@@ -238,10 +238,10 @@ export class ArenaScene extends Phaser.Scene {
         repeat: 2, // 3 cycles = ~3 seconds
         onComplete: () => {
           ghost.setData('revealed', false);
-          // Fade to nearly invisible
+          // Completely invisible - must remember position and shoot
           this.tweens.add({
             targets: ghost,
-            alpha: 0.04,
+            alpha: 0,
             duration: 400,
           });
         },
