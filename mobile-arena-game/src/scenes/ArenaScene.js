@@ -136,19 +136,18 @@ export class ArenaScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
     });
 
-    // Virtual joystick for touch
+    // Split-screen touch controls:
+    // Left half = movement joystick, Right half = shoot (fires in facing direction)
     this.joystickActive = false;
     this.joystickDir = { x: 0, y: 0 };
-    this.setupTouchJoystick();
+    this.shootHeld = false;
+    this.playerFacingAngle = -Math.PI / 2; // facing up initially
+    this.joystickPointerId = null;
+    this.shootPointerId = null;
+    this.setupDualControls();
 
-    // Manual shoot - tap anywhere that's not the joystick area to shoot
-    this.manualShootTarget = null;
-    this.input.on('pointerdown', (pointer) => {
-      // Bottom 40% is joystick zone, rest is shoot zone
-      if (pointer.y < this.scale.height * 0.6) {
-        this.manualShootTarget = { x: pointer.x, y: pointer.y };
-      }
-    });
+    // Keyboard shoot: Space bar
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     // Unfreeze after 1 second
     const { width: w2 } = this.scale;
@@ -508,24 +507,39 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  setupTouchJoystick() {
-    const { height } = this.scale;
+  setupDualControls() {
+    const { width, height } = this.scale;
+    const halfW = width / 2;
+
+    // Joystick visuals (left side)
     this.joystickBase = this.add.image(100, height - 120, 'joystick_base')
       .setDepth(100).setAlpha(0);
     this.joystickThumb = this.add.image(100, height - 120, 'joystick_thumb')
       .setDepth(101).setAlpha(0);
 
+    // Shoot indicator (right side)
+    this.shootIndicator = this.add.circle(width - 70, height - 120, 30, 0xff4444, 0)
+      .setDepth(100);
+
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.y > height * 0.4) {
+      if (pointer.x < halfW) {
+        // LEFT HALF: Movement joystick
         this.joystickActive = true;
+        this.joystickPointerId = pointer.id;
         this.joystickBase.setPosition(pointer.x, pointer.y).setAlpha(1);
         this.joystickThumb.setPosition(pointer.x, pointer.y).setAlpha(1);
         this.joystickOrigin = { x: pointer.x, y: pointer.y };
+      } else {
+        // RIGHT HALF: Shoot in facing direction (hold to keep firing)
+        this.shootHeld = true;
+        this.shootPointerId = pointer.id;
+        this.shootIndicator.setPosition(pointer.x, pointer.y).setAlpha(0.3);
       }
     });
 
     this.input.on('pointermove', (pointer) => {
-      if (this.joystickActive && this.joystickOrigin) {
+      // Joystick movement
+      if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
         const dx = pointer.x - this.joystickOrigin.x;
         const dy = pointer.y - this.joystickOrigin.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -533,9 +547,10 @@ export class ArenaScene extends Phaser.Scene {
         const clampedDist = Math.min(dist, maxDist);
         const angle = Math.atan2(dy, dx);
 
-        const thumbX = this.joystickOrigin.x + Math.cos(angle) * clampedDist;
-        const thumbY = this.joystickOrigin.y + Math.sin(angle) * clampedDist;
-        this.joystickThumb.setPosition(thumbX, thumbY);
+        this.joystickThumb.setPosition(
+          this.joystickOrigin.x + Math.cos(angle) * clampedDist,
+          this.joystickOrigin.y + Math.sin(angle) * clampedDist,
+        );
 
         if (dist > 10) {
           this.joystickDir.x = Math.cos(angle);
@@ -545,14 +560,27 @@ export class ArenaScene extends Phaser.Scene {
           this.joystickDir.y = 0;
         }
       }
+
+      // Move shoot indicator with finger
+      if (this.shootHeld && pointer.id === this.shootPointerId) {
+        this.shootIndicator.setPosition(pointer.x, pointer.y);
+      }
     });
 
-    this.input.on('pointerup', () => {
-      this.joystickActive = false;
-      this.joystickDir.x = 0;
-      this.joystickDir.y = 0;
-      this.joystickBase.setAlpha(0);
-      this.joystickThumb.setAlpha(0);
+    this.input.on('pointerup', (pointer) => {
+      if (pointer.id === this.joystickPointerId) {
+        this.joystickActive = false;
+        this.joystickPointerId = null;
+        this.joystickDir.x = 0;
+        this.joystickDir.y = 0;
+        this.joystickBase.setAlpha(0);
+        this.joystickThumb.setAlpha(0);
+      }
+      if (pointer.id === this.shootPointerId) {
+        this.shootHeld = false;
+        this.shootPointerId = null;
+        this.shootIndicator.setAlpha(0);
+      }
     });
   }
 
@@ -932,21 +960,20 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  fireAt(targetX, targetY) {
+  fireInFacingDirection() {
     if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5) return;
     this.lastFireTime = this.time.now;
 
-    const bullet = this.bullets.get(this.player.x, this.player.y - 10, 'bullet');
+    const bullet = this.bullets.get(this.player.x, this.player.y, 'bullet');
     if (!bullet) return;
 
     bullet.setActive(true).setVisible(true);
     bullet.body.enable = true;
     bullet.setDepth(8);
-
-    // Track spawn time on the bullet itself for reliable lifetime
     bullet.setData('spawnTime', this.time.now);
 
-    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
+    // Shoot in the direction the player is facing
+    const angle = this.playerFacingAngle;
     const speed = 450;
     bullet.body.velocity.x = Math.cos(angle) * speed;
     bullet.body.velocity.y = Math.sin(angle) * speed;
@@ -1077,16 +1104,15 @@ export class ArenaScene extends Phaser.Scene {
     this.player.body.velocity.x = vx * this.mechStats.speed;
     this.player.body.velocity.y = vy * this.mechStats.speed;
 
-    // Rotate player toward movement
+    // Update facing angle based on movement direction
     if (len > 0.1) {
-      const targetAngle = Math.atan2(vy, vx) + Math.PI / 2;
-      this.player.rotation = Phaser.Math.Angle.RotateTo(this.player.rotation, targetAngle, 0.15);
+      this.playerFacingAngle = Math.atan2(vy, vx);
+      this.player.rotation = this.playerFacingAngle + Math.PI / 2;
     }
 
-    // Manual shoot only - tap to fire in that direction
-    if (this.manualShootTarget) {
-      this.fireAt(this.manualShootTarget.x, this.manualShootTarget.y);
-      this.manualShootTarget = null;
+    // Shoot: hold right side of screen OR press Space
+    if (this.shootHeld || this.spaceKey.isDown) {
+      this.fireInFacingDirection();
     }
 
     // Enemy AI
