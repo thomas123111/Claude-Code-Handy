@@ -5,6 +5,7 @@ import { HangarScene } from './scenes/HangarScene.js';
 import { ArenaScene } from './scenes/ArenaScene.js';
 import { ArenaCompleteScene } from './scenes/ArenaCompleteScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
+import { MazeArenaScene } from './scenes/MazeArenaScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -23,7 +24,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene],
+  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
 };
 
 const game = new Phaser.Game(config);

@@ -152,6 +152,56 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(25, 25, 25);
     pg.generateTexture('joystick_thumb', 50, 50);
 
+    // Ghost loot - ethereal glowing orb
+    pg.clear();
+    pg.fillStyle(0x44ddff, 0.6);
+    pg.fillCircle(8, 8, 8);
+    pg.fillStyle(0xaaeeff, 0.3);
+    pg.fillCircle(8, 8, 12);
+    pg.generateTexture('ghost_loot', 24, 24);
+
+    // Sequence switch - inactive (dark)
+    pg.clear();
+    pg.fillStyle(0x333344, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.lineStyle(2, 0x555566, 1);
+    pg.strokeCircle(14, 14, 14);
+    pg.generateTexture('switch_off', 28, 28);
+
+    // Sequence switch - showing (lit up)
+    pg.clear();
+    pg.fillStyle(0x33ff88, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.fillStyle(0xaaffcc, 0.6);
+    pg.fillCircle(14, 14, 8);
+    pg.lineStyle(2, 0x66ffaa, 1);
+    pg.strokeCircle(14, 14, 14);
+    pg.generateTexture('switch_on', 28, 28);
+
+    // Sequence switch - error (red)
+    pg.clear();
+    pg.fillStyle(0xff3333, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.lineStyle(2, 0xff6666, 1);
+    pg.strokeCircle(14, 14, 14);
+    pg.generateTexture('switch_error', 28, 28);
+
+    // Maze wall segment
+    pg.clear();
+    pg.fillStyle(0x4466aa, 0.7);
+    pg.fillRect(0, 0, 40, 40);
+    pg.lineStyle(1, 0x6688cc, 0.4);
+    pg.strokeRect(1, 1, 38, 38);
+    pg.generateTexture('maze_wall', 40, 40);
+
+    // Maze goal
+    pg.clear();
+    pg.fillStyle(0x44ffaa, 0.8);
+    pg.fillCircle(12, 12, 12);
+    pg.fillStyle(0xaaffdd, 0.5);
+    pg.fillCircle(12, 12, 6);
+    pg.generateTexture('maze_goal', 24, 24);
+
     pg.destroy();
   }
 }

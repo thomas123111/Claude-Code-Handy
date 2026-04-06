@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, getSelectedMech, addXpToMech } from '../systems/SaveSystem.js';
+import { getArenaSceneName, getArenaType } from '../systems/ArenaConfig.js';
 
 export class ArenaCompleteScene extends Phaser.Scene {
   constructor() {
@@ -46,9 +47,13 @@ export class ArenaCompleteScene extends Phaser.Scene {
       y += 30;
     });
 
-    // Next arena button
-    this.createButton(width / 2, 420, `NEXT ARENA →`, '#3399ff', () => {
-      this.scene.start('Arena', {
+    // Next arena button - route to maze or combat
+    const nextType = getArenaType(nextArena);
+    const nextLabel = nextType === 'maze' ? 'NEXT: MAZE ARENA →' : 'NEXT ARENA →';
+    const nextColor = nextType === 'maze' ? '#4466aa' : '#3399ff';
+
+    this.createButton(width / 2, 420, nextLabel, nextColor, () => {
+      this.scene.start(getArenaSceneName(nextArena), {
         arenaIndex: nextArena,
         runCredits: this.runCredits,
         runScrap: this.runScrap,

@@ -51,12 +51,24 @@ export class ArenaScene extends Phaser.Scene {
     this.portalTimerDone = false;
     this.clearMethod = null; // 'crates', 'kills', 'timer'
 
+    // Ghost loot state
+    this.ghostLoots = [];
+
+    // Sequence switch state
+    this.switches = [];
+    this.switchSequence = [];
+    this.switchPlayerInput = [];
+    this.switchShowingSequence = false;
+    this.switchPuzzleActive = false;
+    this.switchPuzzleSolved = false;
+
     // Groups
     this.bullets = this.physics.add.group({ maxSize: 50, classType: Phaser.Physics.Arcade.Image });
     this.enemyBullets = this.physics.add.group({ maxSize: 30, classType: Phaser.Physics.Arcade.Image });
     this.enemies = this.physics.add.group();
     this.lootItems = this.physics.add.group();
     this.crates = this.physics.add.group();
+    this.ghostLootGroup = this.physics.add.group();
 
     // Player
     this.player = this.physics.add.image(width / 2, height - 100, `mech_${this.mechId}`);
@@ -78,6 +90,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.enemies, this.onEnemyTouchPlayer, null, this);
     this.physics.add.overlap(this.player, this.portal, this.onEnterPortal, null, this);
     this.physics.add.overlap(this.player, this.crates, this.onCollectCrate, null, this);
+    this.physics.add.overlap(this.bullets, this.ghostLootGroup, this.onShootGhostLoot, null, this);
 
     // Input - keyboard
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -98,6 +111,14 @@ export class ArenaScene extends Phaser.Scene {
 
     // Spawn loot crates across the arena
     this.spawnCrates();
+
+    // Spawn ghost loot (visible briefly, then invisible, shoot to collect)
+    this.spawnGhostLoot();
+
+    // Spawn sequence switches (every 3rd arena starting from arena 2)
+    if (this.arenaIndex >= 2 && this.arenaIndex % 3 === 0) {
+      this.spawnSequenceSwitches();
+    }
 
     // Portal timer - opens portal after X seconds regardless
     this.portalTimerEvent = this.time.delayedCall(
@@ -188,6 +209,216 @@ export class ArenaScene extends Phaser.Scene {
       this.clearMethod = 'crates';
       this.clearArena();
     }
+  }
+
+  // === GHOST LOOT ===
+  spawnGhostLoot() {
+    const { width } = this.scale;
+    const count = 3 + Math.floor(this.arenaIndex * 0.3);
+
+    for (let i = 0; i < count; i++) {
+      const x = Phaser.Math.Between(40, width - 40);
+      const y = Phaser.Math.Between(120, 500);
+      const ghost = this.physics.add.image(x, y, 'ghost_loot');
+      ghost.setDepth(5);
+      ghost.setScale(1.2);
+      ghost.body.setImmovable(true);
+      ghost.setData('revealed', true);
+      ghost.setData('value', Phaser.Math.Between(8, 20 + this.arenaIndex * 3));
+      this.ghostLootGroup.add(ghost);
+      this.ghostLoots.push(ghost);
+
+      // Visible for 3 seconds with pulsing, then fade to invisible
+      this.tweens.add({
+        targets: ghost,
+        alpha: { from: 0.9, to: 0.5 },
+        scale: { from: 1.0, to: 1.3 },
+        duration: 500,
+        yoyo: true,
+        repeat: 2, // 3 cycles = ~3 seconds
+        onComplete: () => {
+          ghost.setData('revealed', false);
+          // Fade to nearly invisible
+          this.tweens.add({
+            targets: ghost,
+            alpha: 0.04,
+            duration: 400,
+          });
+        },
+      });
+    }
+  }
+
+  onShootGhostLoot(bullet, ghost) {
+    if (!ghost.active) return;
+
+    bullet.setActive(false).setVisible(false);
+    bullet.body.enable = false;
+
+    const value = ghost.getData('value');
+    const x = ghost.x;
+    const y = ghost.y;
+
+    // Reveal and collect effect
+    ghost.destroy();
+
+    // Sparkle burst
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI * 2 / 6) * i;
+      const spark = this.add.circle(
+        x + Math.cos(angle) * 5,
+        y + Math.sin(angle) * 5,
+        3, 0x44ddff, 1
+      ).setDepth(50);
+      this.tweens.add({
+        targets: spark,
+        x: x + Math.cos(angle) * 25,
+        y: y + Math.sin(angle) * 25,
+        alpha: 0,
+        duration: 400,
+        onComplete: () => spark.destroy(),
+      });
+    }
+
+    // Reward text
+    const { width } = this.scale;
+    const msg = this.add.text(x, y - 15, `GHOST +${value}cr`, {
+      fontSize: '12px', fontFamily: 'monospace', color: '#44ddff', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(200);
+    this.tweens.add({
+      targets: msg,
+      y: y - 40,
+      alpha: 0,
+      duration: 800,
+      onComplete: () => msg.destroy(),
+    });
+
+    this.runCredits += value;
+
+    // Small scrap bonus too
+    this.runScrap += Math.floor(value * 0.3);
+  }
+
+  // === SEQUENCE SWITCHES (Simon Says) ===
+  spawnSequenceSwitches() {
+    const { width } = this.scale;
+    const count = Math.min(3 + Math.floor((this.arenaIndex - 2) / 3), 6);
+
+    // Place switches in a pattern
+    for (let i = 0; i < count; i++) {
+      const x = 50 + ((width - 100) / (count - 1 || 1)) * i;
+      const y = Phaser.Math.Between(250, 450);
+
+      const sw = this.add.image(x, y, 'switch_off').setScale(1.3).setDepth(7);
+      sw.setInteractive({ useHandCursor: true });
+      sw.setData('index', i);
+      this.switches.push(sw);
+
+      // Click/tap handler
+      sw.on('pointerdown', () => this.onSwitchPressed(i));
+    }
+
+    // Generate random sequence
+    for (let i = 0; i < count; i++) {
+      this.switchSequence.push(Phaser.Math.Between(0, count - 1));
+    }
+
+    // Start showing the sequence after a delay
+    this.switchPuzzleActive = true;
+    this.time.delayedCall(2000, () => this.showSequence());
+  }
+
+  showSequence() {
+    if (!this.switchPuzzleActive || this.switchPuzzleSolved) return;
+    this.switchShowingSequence = true;
+    this.switchPlayerInput = [];
+
+    const { width } = this.scale;
+    const hint = this.add.text(width / 2, 230, 'WATCH THE SEQUENCE...', {
+      fontSize: '12px', fontFamily: 'monospace', color: '#33ff88', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(200);
+
+    // Flash each switch in sequence
+    this.switchSequence.forEach((switchIdx, seqPos) => {
+      this.time.delayedCall(600 * (seqPos + 1), () => {
+        const sw = this.switches[switchIdx];
+        if (!sw) return;
+        sw.setTexture('switch_on');
+        this.time.delayedCall(400, () => {
+          sw.setTexture('switch_off');
+        });
+      });
+    });
+
+    // After sequence shown, allow input
+    this.time.delayedCall(600 * (this.switchSequence.length + 1), () => {
+      this.switchShowingSequence = false;
+      hint.setText('YOUR TURN - Tap the switches!');
+      this.time.delayedCall(1500, () => hint.destroy());
+    });
+  }
+
+  onSwitchPressed(index) {
+    if (!this.switchPuzzleActive || this.switchShowingSequence || this.switchPuzzleSolved) return;
+
+    const sw = this.switches[index];
+    const expectedIdx = this.switchPlayerInput.length;
+    const expected = this.switchSequence[expectedIdx];
+
+    if (index === expected) {
+      // Correct
+      sw.setTexture('switch_on');
+      this.time.delayedCall(300, () => sw.setTexture('switch_off'));
+      this.switchPlayerInput.push(index);
+
+      // Check if complete
+      if (this.switchPlayerInput.length === this.switchSequence.length) {
+        this.onSequenceSolved();
+      }
+    } else {
+      // Wrong - flash all red, reset
+      this.switches.forEach((s) => s.setTexture('switch_error'));
+      this.time.delayedCall(600, () => {
+        this.switches.forEach((s) => s.setTexture('switch_off'));
+        this.switchPlayerInput = [];
+        // Replay sequence
+        this.time.delayedCall(500, () => this.showSequence());
+      });
+    }
+  }
+
+  onSequenceSolved() {
+    this.switchPuzzleSolved = true;
+    const { width } = this.scale;
+
+    // All switches glow green
+    this.switches.forEach((sw) => {
+      sw.setTexture('switch_on');
+      this.tweens.add({
+        targets: sw,
+        scale: { from: 1.3, to: 1.8 },
+        alpha: { from: 1, to: 0.3 },
+        duration: 600,
+        onComplete: () => sw.destroy(),
+      });
+    });
+
+    // Big reward
+    const reward = 25 + this.arenaIndex * 10;
+    const scrapReward = 10 + this.arenaIndex * 3;
+    this.runCredits += reward;
+    this.runScrap += scrapReward;
+
+    const msg = this.add.text(width / 2, 300, `PUZZLE SOLVED!\n+${reward}cr +${scrapReward}sc`, {
+      fontSize: '16px', fontFamily: 'monospace', color: '#33ff88', fontStyle: 'bold', align: 'center',
+    }).setOrigin(0.5).setDepth(200);
+    this.tweens.add({
+      targets: msg,
+      y: 270,
+      alpha: { from: 1, to: 0 },
+      duration: 2000,
+      onComplete: () => msg.destroy(),
+    });
   }
 
   setupTouchJoystick() {
