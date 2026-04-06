@@ -27,10 +27,10 @@ export function getArenaConfig(arenaIndex) {
     spawnInterval: Math.max(600, 1800 - arenaIndex * 100),
     // Wave config
     totalWaves: Math.min(2 + Math.floor(arenaIndex * 0.5), 8),
-    // Rewards
-    creditsReward: Math.floor(20 + arenaIndex * 15),
-    scrapReward: Math.floor(5 + arenaIndex * 5),
-    xpReward: Math.floor(30 + arenaIndex * 20),
+    // Rewards - credits are scarce, like XBlaster
+    creditsReward: Math.floor(3 + arenaIndex * 2),
+    scrapReward: Math.floor(1 + arenaIndex),
+    xpReward: Math.floor(15 + arenaIndex * 8),
     // Loot crates - collect all to open portal early
     crateCount: Math.min(3 + Math.floor(arenaIndex * 0.5), 8),
     // Timer portal - portal opens after this many seconds regardless
@@ -58,21 +58,21 @@ export function getArenaSceneName(arenaIndex) {
 }
 
 export const EQUIPMENT_SHOP = [
-  // Weapons
-  { id: 'wpn1', slot: 'weapon', name: 'Plasma Core', bonus: 5, cost: 50, costScrap: 10 },
-  { id: 'wpn2', slot: 'weapon', name: 'Rail Amplifier', bonus: 12, cost: 150, costScrap: 30 },
-  { id: 'wpn3', slot: 'weapon', name: 'Nova Cannon', bonus: 25, cost: 400, costScrap: 80 },
+  // Weapons - take several runs to afford
+  { id: 'wpn1', slot: 'weapon', name: 'Plasma Core', bonus: 5, cost: 25, costScrap: 8 },
+  { id: 'wpn2', slot: 'weapon', name: 'Rail Amplifier', bonus: 12, cost: 75, costScrap: 20 },
+  { id: 'wpn3', slot: 'weapon', name: 'Nova Cannon', bonus: 25, cost: 200, costScrap: 50 },
   // Armor
-  { id: 'arm1', slot: 'armor', name: 'Plating Mk1', bonus: 30, cost: 40, costScrap: 8 },
-  { id: 'arm2', slot: 'armor', name: 'Plating Mk2', bonus: 70, cost: 120, costScrap: 25 },
-  { id: 'arm3', slot: 'armor', name: 'Titan Shield', bonus: 150, cost: 350, costScrap: 70 },
+  { id: 'arm1', slot: 'armor', name: 'Plating Mk1', bonus: 30, cost: 20, costScrap: 6 },
+  { id: 'arm2', slot: 'armor', name: 'Plating Mk2', bonus: 70, cost: 60, costScrap: 18 },
+  { id: 'arm3', slot: 'armor', name: 'Titan Shield', bonus: 150, cost: 180, costScrap: 45 },
   // Engines
-  { id: 'eng1', slot: 'engine', name: 'Booster Mk1', bonus: 25, cost: 40, costScrap: 8 },
-  { id: 'eng2', slot: 'engine', name: 'Booster Mk2', bonus: 55, cost: 120, costScrap: 25 },
-  { id: 'eng3', slot: 'engine', name: 'Warp Drive', bonus: 100, cost: 350, costScrap: 70 },
+  { id: 'eng1', slot: 'engine', name: 'Booster Mk1', bonus: 25, cost: 20, costScrap: 6 },
+  { id: 'eng2', slot: 'engine', name: 'Booster Mk2', bonus: 55, cost: 60, costScrap: 18 },
+  { id: 'eng3', slot: 'engine', name: 'Warp Drive', bonus: 100, cost: 180, costScrap: 45 },
 ];
 
 export const MECH_UNLOCK_COSTS = {
-  tank: { credits: 200, scrap: 50 },
-  scout: { credits: 150, scrap: 40 },
+  tank: { credits: 100, scrap: 30 },
+  scout: { credits: 80, scrap: 25 },
 };

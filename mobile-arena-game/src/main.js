@@ -20,6 +20,9 @@ const config = {
       debug: false,
     },
   },
+  input: {
+    activePointers: 3, // enable multi-touch (2 fingers + 1 extra)
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

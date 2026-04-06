@@ -279,9 +279,9 @@ export class ArenaScene extends Phaser.Scene {
       const offY = Phaser.Math.Between(-25, 25);
       const pos = this.findOpenPosition(x + offX, y + offY);
       if (Math.random() < 0.6) {
-        this.spawnLoot(pos.x, pos.y, 'credit', Phaser.Math.Between(3, 8 + this.arenaIndex));
+        this.spawnLoot(pos.x, pos.y, 'credit', Phaser.Math.Between(1, 2));
       } else {
-        this.spawnLoot(pos.x, pos.y, 'scrap', Phaser.Math.Between(1, 4));
+        this.spawnLoot(pos.x, pos.y, 'scrap', 1);
       }
     }
 
@@ -317,7 +317,7 @@ export class ArenaScene extends Phaser.Scene {
       ghost.setScale(1.2);
       ghost.body.setImmovable(true);
       ghost.setData('revealed', true);
-      ghost.setData('value', Phaser.Math.Between(8, 20 + this.arenaIndex * 3));
+      ghost.setData('value', Phaser.Math.Between(2, 5));
       this.ghostLootGroup.add(ghost);
       this.ghostLoots.push(ghost);
 
@@ -384,7 +384,7 @@ export class ArenaScene extends Phaser.Scene {
     this.runCredits += value;
 
     // Small scrap bonus too
-    this.runScrap += Math.floor(value * 0.3);
+    this.runScrap += 1;
   }
 
   // === SEQUENCE SWITCHES (Simon Says) ===
@@ -491,8 +491,8 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     // Big reward
-    const reward = 25 + this.arenaIndex * 10;
-    const scrapReward = 10 + this.arenaIndex * 3;
+    const reward = 5 + this.arenaIndex * 2;
+    const scrapReward = 2 + this.arenaIndex;
     this.runCredits += reward;
     this.runScrap += scrapReward;
 
@@ -813,7 +813,7 @@ export class ArenaScene extends Phaser.Scene {
     const y = enemy.y;
 
     // Enemies give XP only, no loot drops
-    this.runXp += Phaser.Math.Between(5, 10 + this.arenaIndex * 2);
+    this.runXp += Phaser.Math.Between(2, 5);
 
     // XP popup
     const xpMsg = this.add.text(x, y - 10, `+XP`, {
@@ -840,11 +840,15 @@ export class ArenaScene extends Phaser.Scene {
     this.enemiesKilled++;
     this.waveEnemiesLeft--;
 
-    // Check wave complete - all enemies in this wave killed and all spawned
-    const allSpawned = !this.spawnTimer || this.spawnTimer.getRepeatCount() === 0;
+    // Check wave complete - all active enemies dead
     const allDead = this.enemies.getChildren().filter((e) => e.active).length === 0;
-    if (allDead && allSpawned) {
-      this.time.delayedCall(800, () => this.startWave());
+    if (allDead) {
+      // Cancel any remaining spawn timer
+      if (this.spawnTimer) {
+        this.spawnTimer.remove(false);
+        this.spawnTimer = null;
+      }
+      this.time.delayedCall(500, () => this.startWave());
     }
   }
 
