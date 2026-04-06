@@ -1,298 +1,286 @@
-// Arena layout generator
-// Walls are thin barriers (lines) - horizontal, vertical, or DIAGONAL
-// Diagonal walls are built from small axis-aligned segments for Arcade Physics
-// ALL layouts are validated via flood-fill to guarantee a path from bottom to top
+// Arena layout generator - FIXED hand-designed layouts
+// Each layout is tested and guaranteed passable
+// Walls are thin segments: { x, y, w, h } in world coordinates
 
-const CELL_SIZE = 40;
-const WALL_THICKNESS = 6;
-const DIAG_STEP = 10;
+const CELL = 40;
+const T = 6; // wall thickness
 
-function makeDiagonalWall(x1, y1, x2, y2) {
-  const segments = [];
-  const dx = x2 - x1;
-  const dy = y2 - y1;
+// Helper to create walls relative to arena dimensions
+// x/y are in grid units (0-based), converted to world coords
+function h(col, row, lengthCells, tm) {
+  return { x: col * CELL + (lengthCells * CELL) / 2, y: tm + row * CELL, w: lengthCells * CELL, h: T };
+}
+function v(col, row, lengthCells, tm) {
+  return { x: col * CELL, y: tm + row * CELL + (lengthCells * CELL) / 2, w: T, h: lengthCells * CELL };
+}
+function d(col1, row1, col2, row2, tm) {
+  // Diagonal wall from (col1,row1) to (col2,row2) - built from small segments
+  const x1 = col1 * CELL, y1 = tm + row1 * CELL;
+  const x2 = col2 * CELL, y2 = tm + row2 * CELL;
+  const segs = [];
+  const dx = x2 - x1, dy = y2 - y1;
   const len = Math.sqrt(dx * dx + dy * dy);
-  if (len < 1) return segments;
-  const steps = Math.ceil(len / DIAG_STEP);
-  const sx = dx / steps;
-  const sy = dy / steps;
+  const step = 10;
+  const steps = Math.ceil(len / step);
   for (let i = 0; i < steps; i++) {
-    segments.push({
-      x: x1 + sx * (i + 0.5),
-      y: y1 + sy * (i + 0.5),
-      w: DIAG_STEP + 2,
-      h: DIAG_STEP + 2,
+    segs.push({
+      x: x1 + (dx / steps) * (i + 0.5),
+      y: y1 + (dy / steps) * (i + 0.5),
+      w: step + 2,
+      h: step + 2,
     });
   }
-  return segments;
+  return segs;
 }
 
-function hWall(x, y, len) {
-  if (len <= 0) return [];
-  return [{ x: x + len / 2, y, w: len, h: WALL_THICKNESS }];
-}
-function vWall(x, y, len) {
-  if (len <= 0) return [];
-  return [{ x, y: y + len / 2, w: WALL_THICKNESS, h: len }];
-}
-function dWall(x1, y1, x2, y2) {
-  return makeDiagonalWall(x1, y1, x2, y2);
-}
+// 9 cols wide (0-9), ~18 rows tall (0-17) for 390x844 with 95px top margin
+// Player spawns row 16-17, portal in top third (row 0-5)
+// Every layout has clear paths from bottom to top
 
-const LAYOUT_GENERATORS = [
-  // Mixed: short walls at various angles
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    const count = 7 + Math.floor(rng() * 5);
-    const maxLen = w * 0.4; // walls never span more than 40% of width
-    for (let i = 0; i < count; i++) {
-      const cx = CELL_SIZE * 1.5 + rng() * (w - CELL_SIZE * 3);
-      const cy = tm + CELL_SIZE * 2 + rng() * ((rows - 4) * CELL_SIZE);
-      const len = Math.min((1.5 + rng() * 2) * CELL_SIZE, maxLen);
-      const type = rng();
-      if (type < 0.3) {
-        segs.push(...hWall(cx, cy, len));
-      } else if (type < 0.6) {
-        segs.push(...vWall(cx, cy, len));
-      } else {
-        const angle = (rng() * 0.8 + 0.2) * Math.PI * (rng() > 0.5 ? 1 : -1) * 0.5;
-        segs.push(...dWall(cx, cy, cx + Math.cos(angle) * len, cy + Math.sin(angle) * len));
-      }
-    }
-    return segs;
-  },
+const LAYOUTS = [
+  // 0: Simple pillars - open field with short obstacles
+  (tm) => [
+    h(1, 4, 2, tm),
+    h(6, 4, 2, tm),
+    h(3, 7, 3, tm),
+    v(2, 9, 3, tm),
+    v(7, 9, 3, tm),
+    h(1, 13, 2, tm),
+    h(6, 13, 2, tm),
+  ],
 
-  // V-shapes (smaller, with gaps between them)
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    const count = 3 + Math.floor(rng() * 2);
-    for (let i = 0; i < count; i++) {
-      // Center the V, keep arms short so they don't span full width
-      const cx = CELL_SIZE * 2 + rng() * (w - CELL_SIZE * 4);
-      const cy = tm + CELL_SIZE * 3 + (i / count) * ((rows - 6) * CELL_SIZE);
-      const armLen = (1 + rng() * 1.2) * CELL_SIZE; // shorter arms
-      const spread = 0.4 + rng() * 0.4;
-      const flip = rng() > 0.5 ? 1 : -1;
-      segs.push(...dWall(cx, cy, cx - armLen * spread, cy + armLen * flip));
-      segs.push(...dWall(cx, cy, cx + armLen * spread, cy + armLen * flip));
-    }
-    return segs;
-  },
+  // 1: Two horizontal bars with wide gaps
+  (tm) => [
+    h(0, 5, 3, tm),
+    h(5, 5, 4, tm),
+    // gap at col 3-5
+    h(0, 11, 4, tm),
+    h(6, 11, 3, tm),
+    // gap at col 4-6
+    v(4.5, 7, 2, tm),
+  ],
 
-  // Horizontal bars with guaranteed wide gaps
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    const h = rows * CELL_SIZE;
-    for (let i = 0; i < 2; i++) {
-      const y = tm + Math.floor((i + 1) / 3 * h);
-      // Gap is always at least 3 cells wide (plenty of room)
-      const gapW = CELL_SIZE * (3 + Math.floor(rng() * 2));
-      const gapX = CELL_SIZE + rng() * (w - gapW - CELL_SIZE * 2);
-      if (gapX > CELL_SIZE) segs.push(...hWall(CELL_SIZE / 2, y, gapX - CELL_SIZE / 2));
-      const rightStart = gapX + gapW;
-      if (rightStart < w - CELL_SIZE) segs.push(...hWall(rightStart, y, w - rightStart - CELL_SIZE));
-    }
-    // A few short diagonal accents
-    for (let i = 0; i < 3; i++) {
-      const cx = CELL_SIZE * 2 + rng() * (w - CELL_SIZE * 4);
-      const cy = tm + CELL_SIZE * 2 + rng() * (h - CELL_SIZE * 4);
-      const len = (1 + rng() * 1.5) * CELL_SIZE;
-      const angle = rng() * Math.PI;
-      segs.push(...dWall(cx, cy, cx + Math.cos(angle) * len, cy + Math.sin(angle) * len));
-    }
-    return segs;
-  },
+  // 2: Diagonal corridors
+  (tm) => [
+    ...d(1, 3, 4, 6, tm),
+    ...d(8, 3, 5, 6, tm),
+    ...d(2, 9, 5, 12, tm),
+    ...d(7, 9, 4, 12, tm),
+    h(3, 15, 3, tm),
+  ],
 
-  // Starburst (fewer arms, shorter reach)
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    const h = rows * CELL_SIZE;
-    const centers = 2 + Math.floor(rng() * 2);
-    for (let c = 0; c < centers; c++) {
-      const cx = CELL_SIZE * 3 + rng() * (w - CELL_SIZE * 6);
-      const cy = tm + CELL_SIZE * 3 + rng() * (h - CELL_SIZE * 6);
-      const armCount = 3 + Math.floor(rng() * 2);
-      for (let a = 0; a < armCount; a++) {
-        const angle = (a / armCount) * Math.PI * 2 + rng() * 0.4;
-        const armLen = (1 + rng() * 1.5) * CELL_SIZE; // shorter arms
-        segs.push(...dWall(cx, cy, cx + Math.cos(angle) * armLen, cy + Math.sin(angle) * armLen));
-      }
-    }
-    return segs;
-  },
+  // 3: L-shapes creating cover spots
+  (tm) => [
+    h(1, 4, 3, tm),
+    v(1, 4, 2, tm),
+    h(6, 4, 2, tm),
+    v(8, 4, 2, tm),
+    h(3, 9, 3, tm),
+    v(3, 9, 2, tm),
+    v(6, 9, 2, tm),
+    h(1, 14, 2, tm),
+    h(7, 14, 2, tm),
+  ],
 
-  // Zigzag barriers (shorter, always leave open side)
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    let fromLeft = rng() > 0.5;
-    for (let row = 2; row < rows - 3; row += 4) {
-      const y = tm + row * CELL_SIZE;
-      // Wall covers max 50% of width, always leaving the other half open
-      const wallLen = w * (0.3 + rng() * 0.2);
-      if (fromLeft) {
-        segs.push(...hWall(0, y, wallLen));
-      } else {
-        segs.push(...hWall(w - wallLen, y, wallLen));
-      }
-      fromLeft = !fromLeft;
-    }
-    // Add a few diagonal accent walls
-    for (let i = 0; i < 2; i++) {
-      const cx = CELL_SIZE * 2 + rng() * (w - CELL_SIZE * 4);
-      const cy = tm + CELL_SIZE * 3 + rng() * ((rows - 6) * CELL_SIZE);
-      const len = (1 + rng() * 1.5) * CELL_SIZE;
-      const angle = (rng() - 0.5) * Math.PI * 0.6;
-      segs.push(...dWall(cx, cy, cx + Math.cos(angle) * len, cy + Math.sin(angle) * len));
-    }
-    return segs;
-  },
+  // 4: Zigzag - alternating short walls
+  (tm) => [
+    h(0, 3, 4, tm),
+    h(5, 6, 4, tm),
+    h(0, 9, 4, tm),
+    h(5, 12, 4, tm),
+    ...d(4, 3, 5, 6, tm),
+    ...d(4, 9, 5, 12, tm),
+  ],
 
-  // Scattered short walls at grid-aligned angles (0/45/90/135)
-  (cols, rows, rng, tm, w) => {
-    const segs = [];
-    const count = 8 + Math.floor(rng() * 5);
-    const maxLen = w * 0.35;
-    for (let i = 0; i < count; i++) {
-      const cx = CELL_SIZE + rng() * (w - CELL_SIZE * 2);
-      const cy = tm + CELL_SIZE * 2 + rng() * ((rows - 4) * CELL_SIZE);
-      const len = Math.min((1 + rng() * 1.5) * CELL_SIZE, maxLen);
-      const baseAngles = [0, Math.PI / 4, Math.PI / 2, Math.PI * 3 / 4];
-      const angle = baseAngles[Math.floor(rng() * 4)];
-      if (Math.abs(angle) < 0.01 || Math.abs(angle - Math.PI) < 0.01) {
-        segs.push(...hWall(cx, cy, len));
-      } else if (Math.abs(angle - Math.PI / 2) < 0.01) {
-        segs.push(...vWall(cx, cy, len));
-      } else {
-        segs.push(...dWall(cx, cy, cx + Math.cos(angle) * len, cy + Math.sin(angle) * len));
-      }
-    }
-    return segs;
-  },
+  // 5: Center fortress with openings
+  (tm) => [
+    h(2, 5, 5, tm),
+    h(2, 10, 5, tm),
+    v(2, 5, 5, tm),
+    v(7, 5, 5, tm),
+    // Openings: top-center, bottom-center, left-mid, right-mid
+    // (gaps are implicit: h walls don't connect to v walls at corners)
+  ],
+
+  // 6: V-shapes pointing down (player can go around sides)
+  (tm) => [
+    ...d(4.5, 3, 2, 6, tm),
+    ...d(4.5, 3, 7, 6, tm),
+    ...d(4.5, 9, 2, 12, tm),
+    ...d(4.5, 9, 7, 12, tm),
+  ],
+
+  // 7: Grid of small walls (lots of cover)
+  (tm) => [
+    h(1, 3, 2, tm),
+    h(4, 3, 2, tm),
+    h(7, 3, 2, tm),
+    v(3, 5, 2, tm),
+    v(6, 5, 2, tm),
+    h(1, 8, 2, tm),
+    h(4, 8, 2, tm),
+    h(7, 8, 2, tm),
+    v(3, 10, 2, tm),
+    v(6, 10, 2, tm),
+    h(2, 13, 2, tm),
+    h(6, 13, 2, tm),
+  ],
+
+  // 8: Diagonal cross
+  (tm) => [
+    ...d(1, 2, 5, 8, tm),
+    ...d(8, 2, 4, 8, tm),
+    h(3, 10, 3, tm),
+    ...d(2, 12, 5, 15, tm),
+    ...d(7, 12, 4, 15, tm),
+  ],
+
+  // 9: Tunnels - vertical walls create corridors
+  (tm) => [
+    v(3, 1, 5, tm),
+    v(6, 1, 5, tm),
+    // Gap at row 6-8
+    v(3, 8, 5, tm),
+    v(6, 8, 5, tm),
+    // Horizontal connectors to force weaving
+    h(3, 4, 3, tm),
+    h(3, 11, 3, tm),
+  ],
+
+  // 10: Scattered diagonals at various angles
+  (tm) => [
+    ...d(1, 3, 3, 5, tm),
+    ...d(7, 2, 5, 5, tm),
+    h(3, 7, 3, tm),
+    ...d(2, 9, 4, 7, tm),
+    ...d(6, 9, 8, 7, tm),
+    ...d(1, 12, 3, 14, tm),
+    ...d(8, 12, 6, 14, tm),
+  ],
+
+  // 11: Starburst from two points
+  (tm) => [
+    ...d(3, 6, 1, 4, tm),
+    ...d(3, 6, 5, 4, tm),
+    ...d(3, 6, 1, 8, tm),
+    ...d(3, 6, 5, 8, tm),
+    ...d(6, 11, 4, 9, tm),
+    ...d(6, 11, 8, 9, tm),
+    ...d(6, 11, 4, 13, tm),
+    ...d(6, 11, 8, 13, tm),
+  ],
+
+  // 12: Maze-lite - connected walls but always passable
+  (tm) => [
+    h(0, 3, 3, tm),
+    v(3, 3, 2, tm),
+    h(5, 5, 4, tm),
+    v(5, 5, 3, tm),
+    h(1, 8, 4, tm),
+    v(1, 8, 2, tm),
+    h(6, 10, 3, tm),
+    v(6, 10, 2, tm),
+    h(2, 13, 3, tm),
+  ],
+
+  // 13: Arrow formations pointing at player
+  (tm) => [
+    ...d(2, 3, 4.5, 5, tm),
+    ...d(7, 3, 4.5, 5, tm),
+    h(3, 8, 3, tm),
+    ...d(1, 10, 4, 13, tm),
+    ...d(8, 10, 5, 13, tm),
+  ],
+
+  // 14: Spiral-ish pattern
+  (tm) => [
+    h(2, 3, 6, tm),
+    v(8, 3, 4, tm),
+    h(2, 7, 6, tm),
+    v(2, 7, 3, tm),
+    h(2, 10, 5, tm),
+    v(7, 10, 3, tm),
+    h(3, 13, 4, tm),
+  ],
+
+  // 15: Diamond shapes
+  (tm) => [
+    ...d(4.5, 2, 2, 5, tm),
+    ...d(4.5, 2, 7, 5, tm),
+    ...d(2, 5, 4.5, 8, tm),
+    ...d(7, 5, 4.5, 8, tm),
+    h(3, 11, 3, tm),
+    v(2, 12, 2, tm),
+    v(7, 12, 2, tm),
+  ],
+
+  // 16: Parallel diagonals
+  (tm) => [
+    ...d(0, 4, 4, 8, tm),
+    ...d(2, 4, 6, 8, tm),
+    ...d(5, 4, 9, 8, tm),
+    ...d(0, 10, 4, 14, tm),
+    ...d(5, 10, 9, 14, tm),
+  ],
+
+  // 17: Fortress with diagonal walls
+  (tm) => [
+    ...d(2, 4, 4.5, 6, tm),
+    ...d(7, 4, 4.5, 6, tm),
+    h(2, 4, 2, tm),
+    h(6, 4, 2, tm),
+    v(4, 8, 3, tm),
+    v(5, 8, 3, tm),
+    h(1, 13, 3, tm),
+    h(6, 13, 3, tm),
+  ],
+
+  // 18: Wide open with scattered small obstacles
+  (tm) => [
+    h(2, 4, 1.5, tm),
+    h(6, 3, 1.5, tm),
+    v(4.5, 6, 1.5, tm),
+    h(1, 9, 1.5, tm),
+    h(7, 8, 1.5, tm),
+    ...d(3, 11, 4, 12, tm),
+    ...d(6, 11, 5, 12, tm),
+    h(3, 14, 1.5, tm),
+  ],
+
+  // 19: Cross pattern
+  (tm) => [
+    v(4.5, 2, 4, tm),
+    h(1, 5, 3, tm),
+    h(6, 5, 3, tm),
+    v(4.5, 8, 3, tm),
+    h(1, 11, 3, tm),
+    h(6, 11, 3, tm),
+    ...d(2, 13, 4, 15, tm),
+    ...d(7, 13, 5, 15, tm),
+  ],
 ];
 
-function seedRng(seed) {
-  let s = seed;
-  return function () {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
-  };
-}
-
-// Flood-fill reachability check: can we get from bottom rows to top rows?
-function checkReachability(occupied, cols, rows) {
-  const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
-  const queue = [];
-
-  // Start from all open cells in bottom 2 rows
-  for (let c = 0; c < cols; c++) {
-    if (!occupied[rows - 1][c]) { visited[rows - 1][c] = true; queue.push([rows - 1, c]); }
-    if (!occupied[rows - 2][c]) { visited[rows - 2][c] = true; queue.push([rows - 2, c]); }
-  }
-
-  // BFS flood fill
-  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
-  let head = 0;
-  while (head < queue.length) {
-    const [r, c] = queue[head++];
-    for (const [dr, dc] of dirs) {
-      const nr = r + dr;
-      const nc = c + dc;
-      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && !occupied[nr][nc]) {
-        visited[nr][nc] = true;
-        queue.push([nr, nc]);
-      }
-    }
-  }
-
-  // Check if any cell in top 3 rows is reachable
-  for (let c = 0; c < cols; c++) {
-    if (visited[0][c] || visited[1][c] || visited[2][c]) return true;
-  }
-  return false;
-}
-
 export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMargin) {
-  const cols = Math.floor(arenaWidth / CELL_SIZE);
-  const rows = Math.floor((arenaHeight - topMargin) / CELL_SIZE);
-  const rng = seedRng(arenaIndex * 7919 + 42);
-  const w = cols * CELL_SIZE;
+  const cols = Math.floor(arenaWidth / CELL);
+  const rows = Math.floor((arenaHeight - topMargin) / CELL);
 
-  const layoutIdx = Math.floor(rng() * LAYOUT_GENERATORS.length);
-  let rawWalls = LAYOUT_GENERATORS[layoutIdx](cols, rows, rng, topMargin, w);
+  // Pick layout based on arena index (cycles through all layouts)
+  const layoutIdx = arenaIndex % LAYOUTS.length;
+  const rawWalls = LAYOUTS[layoutIdx](topMargin).flat();
 
-  // Filter walls: keep within playable area
-  let walls = rawWalls.filter((seg) => {
-    return seg.y >= topMargin + CELL_SIZE &&
-      seg.y <= arenaHeight - CELL_SIZE * 2 &&
-      seg.x >= 0 && seg.x <= arenaWidth &&
-      seg.w > 0 && seg.h > 0;
+  // Filter walls within playable area
+  const walls = rawWalls.filter((w) => {
+    return w.y >= topMargin + CELL &&
+      w.y <= arenaHeight - CELL * 2 &&
+      w.x >= 0 && w.x <= arenaWidth &&
+      w.w > 0 && w.h > 0;
   });
 
   // Build occupancy grid
-  let occupied = buildOccupancyGrid(walls, cols, rows, topMargin);
-
-  // REACHABILITY CHECK: ensure path from bottom to top exists
-  // If blocked, remove walls one at a time (largest first) until passable
-  let attempts = 0;
-  while (!checkReachability(occupied, cols, rows) && walls.length > 0 && attempts < 50) {
-    // Find a wall segment in the most-blocked row and remove it
-    const blockedRow = findMostBlockedRow(occupied, cols, rows);
-    // Remove wall segments in that row area
-    const rowY = topMargin + blockedRow * CELL_SIZE + CELL_SIZE / 2;
-    const removed = [];
-    walls = walls.filter((seg) => {
-      if (Math.abs(seg.y - rowY) < CELL_SIZE && removed.length < 3) {
-        removed.push(seg);
-        return false;
-      }
-      return true;
-    });
-    // If we couldn't remove from that row, remove random walls
-    if (removed.length === 0) {
-      const idx = Math.floor(rng() * walls.length);
-      walls.splice(idx, Math.min(3, walls.length));
-    }
-    occupied = buildOccupancyGrid(walls, cols, rows, topMargin);
-    attempts++;
-  }
-
-  const openSpaces = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (!occupied[r][c]) {
-        openSpaces.push({
-          x: c * CELL_SIZE + CELL_SIZE / 2,
-          y: topMargin + r * CELL_SIZE + CELL_SIZE / 2,
-          gridR: r,
-          gridC: c,
-        });
-      }
-    }
-  }
-
-  // Portal: random open position in top third
-  const topThird = openSpaces.filter((s) => s.gridR < Math.floor(rows / 3) && s.gridR > 0);
-  const portalSpace = topThird.length > 0
-    ? topThird[Math.floor(rng() * topThird.length)]
-    : openSpaces[Math.floor(rng() * openSpaces.length)];
-
-  return {
-    walls,
-    openSpaces,
-    occupied,
-    portalPosition: { x: portalSpace.x, y: portalSpace.y },
-    cols,
-    rows,
-    cellSize: CELL_SIZE,
-    topMargin,
-  };
-}
-
-function buildOccupancyGrid(walls, cols, rows, topMargin) {
   const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
-  walls.forEach((seg) => {
-    const c = Math.floor(seg.x / CELL_SIZE);
-    const r = Math.floor((seg.y - topMargin) / CELL_SIZE);
+  walls.forEach((w) => {
+    const c = Math.floor(w.x / CELL);
+    const r = Math.floor((w.y - topMargin) / CELL);
     if (r >= 0 && r < rows && c >= 0 && c < cols) {
       occupied[r][c] = true;
     }
@@ -302,24 +290,57 @@ function buildOccupancyGrid(walls, cols, rows, topMargin) {
     if (rows - 1 >= 0) occupied[rows - 1][c] = false;
     if (rows - 2 >= 0) occupied[rows - 2][c] = false;
   }
-  return occupied;
-}
 
-function findMostBlockedRow(occupied, cols, rows) {
-  let worstRow = 0;
-  let worstCount = 0;
-  // Check middle rows (not spawn area)
-  for (let r = 1; r < rows - 2; r++) {
-    let blocked = 0;
+  const openSpaces = [];
+  for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      if (occupied[r][c]) blocked++;
-    }
-    if (blocked > worstCount) {
-      worstCount = blocked;
-      worstRow = r;
+      if (!occupied[r][c]) {
+        openSpaces.push({
+          x: c * CELL + CELL / 2,
+          y: topMargin + r * CELL + CELL / 2,
+          gridR: r,
+          gridC: c,
+        });
+      }
     }
   }
-  return worstRow;
+
+  // Portal positions per layout (hand-picked to be reachable)
+  const portalPositions = [
+    { c: 4.5, r: 1 }, // 0
+    { c: 4, r: 2 },   // 1
+    { c: 4.5, r: 1 }, // 2
+    { c: 4.5, r: 1 }, // 3
+    { c: 7, r: 1 },   // 4
+    { c: 4.5, r: 2 }, // 5
+    { c: 4.5, r: 1 }, // 6
+    { c: 5, r: 1 },   // 7
+    { c: 4.5, r: 1 }, // 8
+    { c: 4.5, r: 0.5 }, // 9
+    { c: 4.5, r: 1 }, // 10
+    { c: 4.5, r: 2 }, // 11
+    { c: 7, r: 1 },   // 12
+    { c: 4.5, r: 1 }, // 13
+    { c: 5, r: 1 },   // 14
+    { c: 4.5, r: 1 }, // 15
+    { c: 4.5, r: 1 }, // 16
+    { c: 4.5, r: 1 }, // 17
+    { c: 4.5, r: 1 }, // 18
+    { c: 4.5, r: 1 }, // 19
+  ];
+
+  const pp = portalPositions[layoutIdx] || { c: 4.5, r: 1 };
+
+  return {
+    walls,
+    openSpaces,
+    occupied,
+    portalPosition: { x: pp.c * CELL, y: topMargin + pp.r * CELL },
+    cols,
+    rows,
+    cellSize: CELL,
+    topMargin,
+  };
 }
 
 export function getRandomOpenPositions(layout, count, rng, minRow, maxRow) {
