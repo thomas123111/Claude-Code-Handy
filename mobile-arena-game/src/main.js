@@ -9,8 +9,8 @@ import { MazeArenaScene } from './scenes/MazeArenaScene.js';
 
 const config = {
   type: Phaser.AUTO,
-  width: 390,
-  height: 844,
+  width: 844,
+  height: 390,
   parent: document.body,
   backgroundColor: '#0a0a1a',
   physics: {

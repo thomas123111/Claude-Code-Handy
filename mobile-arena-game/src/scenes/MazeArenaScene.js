@@ -48,6 +48,7 @@ export class MazeArenaScene extends Phaser.Scene {
     this.arenaIndex = data.arenaIndex || 0;
     this.runCredits = data.runCredits || 0;
     this.runScrap = data.runScrap || 0;
+    this.runSeed = data.runSeed || 1;
     this.runXp = data.runXp || 0;
   }
 
@@ -234,6 +235,7 @@ export class MazeArenaScene extends Phaser.Scene {
         runXp: this.runXp + Math.floor(mazeBonus * 0.8),
         timeBonus,
         playerHpPercent: 1,
+        runSeed: this.runSeed,
       });
     });
   }
