@@ -116,6 +116,18 @@ export class BootScene extends Phaser.Scene {
     pg.fillRect(0, 3, 12, 6);
     pg.generateTexture('loot_health', 12, 12);
 
+    // Loot crate
+    pg.clear();
+    pg.fillStyle(0xcc8833, 1);
+    pg.fillRect(2, 4, 20, 16);
+    pg.fillStyle(0xffaa44, 1);
+    pg.fillRect(4, 6, 16, 12);
+    pg.lineStyle(2, 0x885522, 1);
+    pg.strokeRect(2, 4, 20, 16);
+    pg.fillStyle(0xffdd00, 1);
+    pg.fillRect(9, 9, 6, 6);
+    pg.generateTexture('loot_crate', 24, 24);
+
     // Portal
     pg.clear();
     pg.lineStyle(3, 0x9944ff, 1);
