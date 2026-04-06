@@ -43,6 +43,18 @@ export function getArenaConfig(arenaIndex) {
   };
 }
 
+// Determine arena type: every 5th arena (index 4, 9, 14...) is a maze
+export function getArenaType(arenaIndex) {
+  if (arenaIndex >= 4 && (arenaIndex + 1) % 5 === 0) {
+    return 'maze';
+  }
+  return 'combat';
+}
+
+export function getArenaSceneName(arenaIndex) {
+  return getArenaType(arenaIndex) === 'maze' ? 'MazeArena' : 'Arena';
+}
+
 export const EQUIPMENT_SHOP = [
   // Weapons
   { id: 'wpn1', slot: 'weapon', name: 'Plasma Core', bonus: 5, cost: 50, costScrap: 10 },
