@@ -19,12 +19,12 @@ export function getArenaConfig(arenaIndex) {
     index: arenaIndex,
     name: `${theme.name} ${cycle > 0 ? `(Tier ${cycle + 1})` : ''}`.trim(),
     theme,
-    // Enemy config
-    enemyCount: Math.min(6 + Math.floor(arenaIndex * 1.5), 30),
-    enemyHp: Math.floor(20 * difficulty),
-    enemyDamage: Math.floor(5 * difficulty),
-    enemySpeed: Math.floor(60 + arenaIndex * 5),
-    spawnInterval: Math.max(800, 2000 - arenaIndex * 80),
+    // Enemy config - significantly tougher
+    enemyCount: Math.min(8 + Math.floor(arenaIndex * 2), 35),
+    enemyHp: Math.floor(50 * difficulty),
+    enemyDamage: Math.floor(12 * difficulty),
+    enemySpeed: Math.floor(80 + arenaIndex * 8),
+    spawnInterval: Math.max(600, 1800 - arenaIndex * 100),
     // Wave config
     totalWaves: Math.min(2 + Math.floor(arenaIndex * 0.5), 8),
     // Rewards
