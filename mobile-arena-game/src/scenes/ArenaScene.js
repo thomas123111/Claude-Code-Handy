@@ -76,7 +76,7 @@ export class ArenaScene extends Phaser.Scene {
     this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin);
     this.arenaRng = this.seedRng(this.arenaIndex * 3571 + 13);
 
-    // Build wall physics
+    // Build wall physics - each segment is a small block
     this.walls = this.physics.add.staticGroup();
     this.arenaLayout.walls.forEach((w) => {
       const wall = this.walls.create(w.x, w.y, 'arena_wall');
@@ -85,6 +85,7 @@ export class ArenaScene extends Phaser.Scene {
       wall.body.setSize(w.w, w.h);
       wall.refreshBody();
       wall.setDepth(3);
+      wall.setAlpha(0.85);
     });
 
     // Player - starts at very bottom
@@ -140,11 +141,11 @@ export class ArenaScene extends Phaser.Scene {
     this.joystickDir = { x: 0, y: 0 };
     this.setupTouchJoystick();
 
-    // Manual shoot - tap top half of screen to shoot in that direction
+    // Manual shoot - tap anywhere that's not the joystick area to shoot
     this.manualShootTarget = null;
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.y < this.scale.height * 0.4) {
-        // Top half tap = manual shoot toward that position
+      // Bottom 40% is joystick zone, rest is shoot zone
+      if (pointer.y < this.scale.height * 0.6) {
         this.manualShootTarget = { x: pointer.x, y: pointer.y };
       }
     });
@@ -204,6 +205,31 @@ export class ArenaScene extends Phaser.Scene {
     };
   }
 
+  // Check if a world position is inside an occupied cell
+  isInWall(wx, wy) {
+    const layout = this.arenaLayout;
+    const c = Math.floor(wx / layout.cellSize);
+    const r = Math.floor((wy - layout.topMargin) / layout.cellSize);
+    if (r < 0 || r >= layout.rows || c < 0 || c >= layout.cols) return true;
+    return layout.occupied[r][c];
+  }
+
+  // Find nearest open position to given world coordinates
+  findOpenPosition(wx, wy) {
+    if (!this.isInWall(wx, wy)) return { x: wx, y: wy };
+    // Search nearby open spaces
+    let best = null;
+    let bestDist = Infinity;
+    this.arenaLayout.openSpaces.forEach((s) => {
+      const d = Math.abs(s.x - wx) + Math.abs(s.y - wy);
+      if (d < bestDist) {
+        bestDist = d;
+        best = s;
+      }
+    });
+    return best || { x: wx, y: wy };
+  }
+
   spawnCrates() {
     const positions = getRandomOpenPositions(this.arenaLayout, this.cratesTotal, this.arenaRng, 1, this.arenaLayout.rows - 3);
     for (let i = 0; i < positions.length; i++) {
@@ -246,15 +272,16 @@ export class ArenaScene extends Phaser.Scene {
       onComplete: () => flash.destroy(),
     });
 
-    // Drop loot from crate
+    // Drop loot from crate - ensure it lands in open space
     const lootCount = Phaser.Math.Between(2, 4);
     for (let i = 0; i < lootCount; i++) {
       const offX = Phaser.Math.Between(-25, 25);
       const offY = Phaser.Math.Between(-25, 25);
+      const pos = this.findOpenPosition(x + offX, y + offY);
       if (Math.random() < 0.6) {
-        this.spawnLoot(x + offX, y + offY, 'credit', Phaser.Math.Between(3, 8 + this.arenaIndex));
+        this.spawnLoot(pos.x, pos.y, 'credit', Phaser.Math.Between(3, 8 + this.arenaIndex));
       } else {
-        this.spawnLoot(x + offX, y + offY, 'scrap', Phaser.Math.Between(1, 4));
+        this.spawnLoot(pos.x, pos.y, 'scrap', Phaser.Math.Between(1, 4));
       }
     }
 
@@ -905,47 +932,8 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  autoFire() {
-    if (this.time.now - this.lastFireTime < this.mechStats.fireRate) return;
-
-    // Find nearest enemy
-    let nearest = null;
-    let nearestDist = Infinity;
-    this.enemies.getChildren().forEach((enemy) => {
-      if (!enemy.active) return;
-      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
-      if (d < nearestDist) {
-        nearestDist = d;
-        nearest = enemy;
-      }
-    });
-
-    if (!nearest || nearestDist > 400) return;
-
-    this.lastFireTime = this.time.now;
-    const bullet = this.bullets.get(this.player.x, this.player.y - 10, 'bullet');
-    if (!bullet) return;
-
-    bullet.setActive(true).setVisible(true);
-    bullet.body.enable = true;
-    bullet.setDepth(8);
-
-    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, nearest.x, nearest.y);
-    const speed = 450;
-    bullet.body.velocity.x = Math.cos(angle) * speed;
-    bullet.body.velocity.y = Math.sin(angle) * speed;
-
-    // Destroy bullet after 2 seconds
-    this.time.delayedCall(2000, () => {
-      if (bullet.active) {
-        bullet.setActive(false).setVisible(false);
-        bullet.body.enable = false;
-      }
-    });
-  }
-
   fireAt(targetX, targetY) {
-    if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.7) return;
+    if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5) return;
     this.lastFireTime = this.time.now;
 
     const bullet = this.bullets.get(this.player.x, this.player.y - 10, 'bullet');
@@ -954,29 +942,81 @@ export class ArenaScene extends Phaser.Scene {
     bullet.setActive(true).setVisible(true);
     bullet.body.enable = true;
     bullet.setDepth(8);
+
+    // Track spawn time on the bullet itself for reliable lifetime
+    bullet.setData('spawnTime', this.time.now);
 
     const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, targetX, targetY);
     const speed = 450;
     bullet.body.velocity.x = Math.cos(angle) * speed;
     bullet.body.velocity.y = Math.sin(angle) * speed;
-
-    this.time.delayedCall(2000, () => {
-      if (bullet.active) {
-        bullet.setActive(false).setVisible(false);
-        bullet.body.enable = false;
-      }
-    });
   }
 
   enemyAI(enemy, delta) {
     if (!enemy.active || !this.player.active) return;
 
     const speed = enemy.getData('speed');
-    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+    const directAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+    let moveX = Math.cos(directAngle);
+    let moveY = Math.sin(directAngle);
 
-    // Move toward player
-    enemy.body.velocity.x = Math.cos(angle) * speed;
-    enemy.body.velocity.y = Math.sin(angle) * speed;
+    // Wall avoidance: probe ahead and to the sides
+    const probeLen = 40;
+    const ex = enemy.x;
+    const ey = enemy.y;
+
+    const aheadX = ex + moveX * probeLen;
+    const aheadY = ey + moveY * probeLen;
+
+    if (this.isInWall(aheadX, aheadY)) {
+      // Try perpendicular directions to find a way around
+      const leftAngle = directAngle - Math.PI / 2;
+      const rightAngle = directAngle + Math.PI / 2;
+
+      const leftX = ex + Math.cos(leftAngle) * probeLen;
+      const leftY = ey + Math.sin(leftAngle) * probeLen;
+      const rightX = ex + Math.cos(rightAngle) * probeLen;
+      const rightY = ey + Math.sin(rightAngle) * probeLen;
+
+      const leftBlocked = this.isInWall(leftX, leftY);
+      const rightBlocked = this.isInWall(rightX, rightY);
+
+      if (!leftBlocked && !rightBlocked) {
+        // Both open - pick whichever is closer to player
+        const leftDist = Phaser.Math.Distance.Between(leftX, leftY, this.player.x, this.player.y);
+        const rightDist = Phaser.Math.Distance.Between(rightX, rightY, this.player.x, this.player.y);
+        const chosen = leftDist < rightDist ? leftAngle : rightAngle;
+        moveX = Math.cos(chosen);
+        moveY = Math.sin(chosen);
+      } else if (!leftBlocked) {
+        moveX = Math.cos(leftAngle);
+        moveY = Math.sin(leftAngle);
+      } else if (!rightBlocked) {
+        moveX = Math.cos(rightAngle);
+        moveY = Math.sin(rightAngle);
+      } else {
+        // All blocked - try diagonal escapes
+        const diagAngle = directAngle + Math.PI * 0.75;
+        moveX = Math.cos(diagAngle);
+        moveY = Math.sin(diagAngle);
+      }
+
+      // Store wall-avoidance direction briefly so enemy doesn't jitter
+      enemy.setData('avoidTimer', 300);
+      enemy.setData('avoidX', moveX);
+      enemy.setData('avoidY', moveY);
+    } else {
+      // Check if we're still in avoidance mode
+      const avoidTimer = enemy.getData('avoidTimer') || 0;
+      if (avoidTimer > 0) {
+        enemy.setData('avoidTimer', avoidTimer - delta);
+        moveX = enemy.getData('avoidX') || moveX;
+        moveY = enemy.getData('avoidY') || moveY;
+      }
+    }
+
+    enemy.body.velocity.x = moveX * speed;
+    enemy.body.velocity.y = moveY * speed;
 
     // Enemy shooting - starts from arena 1
     if (this.arenaIndex >= 1) {
@@ -984,7 +1024,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.setData('shootTimer', timer);
       if (timer >= enemy.getData('shootInterval')) {
         enemy.setData('shootTimer', 0);
-        this.enemyShoot(enemy, angle);
+        this.enemyShoot(enemy, directAngle);
       }
     }
   }
@@ -1043,21 +1083,21 @@ export class ArenaScene extends Phaser.Scene {
       this.player.rotation = Phaser.Math.Angle.RotateTo(this.player.rotation, targetAngle, 0.15);
     }
 
-    // Manual shoot (tap top half of screen)
+    // Manual shoot only - tap to fire in that direction
     if (this.manualShootTarget) {
       this.fireAt(this.manualShootTarget.x, this.manualShootTarget.y);
       this.manualShootTarget = null;
     }
 
-    // Auto fire at enemies
-    this.autoFire();
-
     // Enemy AI
     this.enemies.getChildren().forEach((enemy) => this.enemyAI(enemy, delta));
 
-    // Clean up off-screen bullets
+    // Clean up bullets: off-screen or expired (3 second lifetime)
+    const now = this.time.now;
     this.bullets.getChildren().forEach((b) => {
-      if (b.active && (b.y < -20 || b.y > 900 || b.x < -20 || b.x > 420)) {
+      if (!b.active) return;
+      const age = now - (b.getData('spawnTime') || 0);
+      if (age > 3000 || b.y < -20 || b.y > 900 || b.x < -20 || b.x > 420) {
         b.setActive(false).setVisible(false);
         b.body.enable = false;
       }
