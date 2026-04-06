@@ -260,13 +260,12 @@ const LAYOUTS = [
   ],
 ];
 
-export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMargin) {
+export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMargin, runSeed) {
   const cols = Math.floor(arenaWidth / CELL);
   const rows = Math.floor((arenaHeight - topMargin) / CELL);
 
-  // Shuffled layout order - deterministic but not sequential
-  // Uses a seeded shuffle so arena 0 doesn't always get layout 0
-  const layoutIdx = getShuffledLayoutIndex(arenaIndex, LAYOUTS.length);
+  // Shuffled layout order - uses runSeed so each run has different order
+  const layoutIdx = getShuffledLayoutIndex(arenaIndex, LAYOUTS.length, runSeed || 1);
   const rawWalls = LAYOUTS[layoutIdx](topMargin).flat();
 
   // Filter walls within playable area
@@ -346,13 +345,13 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
 
 // Deterministic shuffle: maps arenaIndex to a layout index
 // Each "cycle" of 20 arenas uses a different permutation
-function getShuffledLayoutIndex(arenaIndex, layoutCount) {
+function getShuffledLayoutIndex(arenaIndex, layoutCount, runSeed) {
   const cycle = Math.floor(arenaIndex / layoutCount);
   const posInCycle = arenaIndex % layoutCount;
 
-  // Build a shuffled order for this cycle using a simple seed
+  // Build a shuffled order using runSeed + cycle so each run is different
   const order = Array.from({ length: layoutCount }, (_, i) => i);
-  let seed = (cycle + 1) * 2654435761; // different shuffle per cycle
+  let seed = ((runSeed || 1) * 2654435761 + (cycle + 1) * 7919) >>> 0;
   for (let i = layoutCount - 1; i > 0; i--) {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff;
     const j = (seed >>> 0) % (i + 1);

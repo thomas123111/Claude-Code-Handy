@@ -13,6 +13,7 @@ export class ArenaScene extends Phaser.Scene {
     this.runCredits = data.runCredits || 0;
     this.runScrap = data.runScrap || 0;
     this.runXp = data.runXp || 0;
+    this.runSeed = data.runSeed || 1;
   }
 
   create() {
@@ -72,8 +73,8 @@ export class ArenaScene extends Phaser.Scene {
     this.ghostLootGroup = this.physics.add.group();
 
     // Generate arena layout with walls
-    const topMargin = 95; // space for HUD
-    this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin);
+    const topMargin = 50; // compact HUD for landscape
+    this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin, this.runSeed);
     this.arenaRng = this.seedRng(this.arenaIndex * 3571 + 13);
 
     // Build wall physics - each segment is a small block
@@ -587,41 +588,44 @@ export class ArenaScene extends Phaser.Scene {
   createHUD() {
     const { width } = this.scale;
 
-    // Arena name
-    this.arenaLabel = this.add.text(width / 2, 12, `Arena ${this.arenaIndex + 1}: ${this.arenaConfig.name}`, {
-      fontSize: '13px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(100);
+    // Compact single-line HUD for landscape
+    // Top bar: Arena name | HP bar | Wave | Timer
+    this.arenaLabel = this.add.text(5, 4, `A${this.arenaIndex + 1}`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    }).setDepth(100);
 
-    // HP bar background
-    this.add.rectangle(width / 2, 35, width - 40, 14, 0x333333, 0.8).setDepth(100);
-    this.hpBar = this.add.rectangle(20, 35, width - 40, 14, 0x44ff44, 0.9)
+    // HP bar
+    const hpBarX = 40;
+    const hpBarW = 180;
+    this.add.rectangle(hpBarX + hpBarW / 2, 10, hpBarW, 10, 0x333333, 0.8).setDepth(100);
+    this.hpBar = this.add.rectangle(hpBarX, 10, hpBarW, 10, 0x44ff44, 0.9)
       .setOrigin(0, 0.5).setDepth(101);
-
-    this.hpText = this.add.text(width / 2, 35, `${this.playerHp}/${this.maxHp}`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(0.5).setDepth(102);
-
-    // Wave info
-    this.waveText = this.add.text(width / 2, 55, '', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#aaaaaa',
-    }).setOrigin(0.5).setDepth(100);
-
-    // Crate progress bar background
-    this.add.rectangle(width / 2, 72, width - 40, 10, 0x333333, 0.6).setDepth(100);
-    this.crateBar = this.add.rectangle(20, 72, 0, 10, 0xffaa00, 0.8)
-      .setOrigin(0, 0.5).setDepth(101);
-    this.crateText = this.add.text(width / 2, 72, '', {
+    this.hpText = this.add.text(hpBarX + hpBarW / 2, 10, `${this.playerHp}/${this.maxHp}`, {
       fontSize: '8px', fontFamily: 'monospace', color: '#ffffff',
     }).setOrigin(0.5).setDepth(102);
 
-    // Timer display
-    this.timerText = this.add.text(width - 10, 55, '', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#888888',
+    // Crate bar (second line)
+    const crateBarW = 120;
+    this.add.rectangle(5 + crateBarW / 2, 26, crateBarW, 8, 0x333333, 0.5).setDepth(100);
+    this.crateBar = this.add.rectangle(5, 26, 0, 8, 0xffaa00, 0.8)
+      .setOrigin(0, 0.5).setDepth(101);
+    this.crateText = this.add.text(5 + crateBarW / 2, 26, '', {
+      fontSize: '7px', fontFamily: 'monospace', color: '#ffffff',
+    }).setOrigin(0.5).setDepth(102);
+
+    // Wave info (right of HP bar)
+    this.waveText = this.add.text(240, 4, '', {
+      fontSize: '10px', fontFamily: 'monospace', color: '#aaaaaa',
+    }).setDepth(100);
+
+    // Timer (top right)
+    this.timerText = this.add.text(width - 5, 4, '', {
+      fontSize: '10px', fontFamily: 'monospace', color: '#888888',
     }).setOrigin(1, 0).setDepth(100);
 
-    // Run loot display
-    this.lootText = this.add.text(10, 85, '', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#ffdd00',
+    // Loot display (right of crate bar)
+    this.lootText = this.add.text(140, 22, '', {
+      fontSize: '9px', fontFamily: 'monospace', color: '#ffdd00',
     }).setDepth(100);
   }
 
@@ -946,6 +950,7 @@ export class ArenaScene extends Phaser.Scene {
         runXp: this.runXp + this.arenaConfig.xpReward,
         timeBonus: this.timeBonus || 0,
         playerHpPercent: this.playerHp / this.maxHp,
+        runSeed: this.runSeed,
       });
     });
   }
@@ -1123,7 +1128,8 @@ export class ArenaScene extends Phaser.Scene {
     this.bullets.getChildren().forEach((b) => {
       if (!b.active) return;
       const age = now - (b.getData('spawnTime') || 0);
-      if (age > 3000 || b.y < -20 || b.y > 900 || b.x < -20 || b.x > 420) {
+      const { width: sw, height: sh } = this.scale;
+      if (age > 3000 || b.y < -20 || b.y > sh + 20 || b.x < -20 || b.x > sw + 20) {
         b.setActive(false).setVisible(false);
         b.body.enable = false;
       }
@@ -1136,7 +1142,7 @@ export class ArenaScene extends Phaser.Scene {
   updateHUD() {
     const { width } = this.scale;
     const hpPercent = Math.max(0, this.playerHp / this.maxHp);
-    this.hpBar.width = (width - 40) * hpPercent;
+    this.hpBar.width = 180 * hpPercent;
     this.hpBar.fillColor = hpPercent > 0.5 ? 0x44ff44 : hpPercent > 0.25 ? 0xffaa00 : 0xff4444;
     this.hpText.setText(`${Math.ceil(this.playerHp)}/${this.maxHp}`);
 
@@ -1149,7 +1155,7 @@ export class ArenaScene extends Phaser.Scene {
 
     // Crate progress
     const cratePercent = this.cratesTotal > 0 ? this.cratesCollected / this.cratesTotal : 0;
-    this.crateBar.width = (width - 40) * cratePercent;
+    this.crateBar.width = 120 * cratePercent;
     this.crateText.setText(`Crates: ${this.cratesCollected}/${this.cratesTotal}`);
 
     // Timer countdown

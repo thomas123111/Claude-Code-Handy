@@ -14,6 +14,7 @@ export class ArenaCompleteScene extends Phaser.Scene {
     this.runXp = data.runXp;
     this.timeBonus = data.timeBonus || 0;
     this.playerHpPercent = data.playerHpPercent || 1;
+    this.runSeed = data.runSeed || 1;
   }
 
   create() {
@@ -58,6 +59,7 @@ export class ArenaCompleteScene extends Phaser.Scene {
         runCredits: this.runCredits,
         runScrap: this.runScrap,
         runXp: this.runXp,
+        runSeed: this.runSeed,
       });
     });
 
