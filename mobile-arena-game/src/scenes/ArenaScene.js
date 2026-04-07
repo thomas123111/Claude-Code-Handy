@@ -49,7 +49,8 @@ export class ArenaScene extends Phaser.Scene {
     this.specialActive = false;
     this.specialTimer = 0;
 
-    const { width: viewW, height: viewH } = this.scale;
+    const width = this.scale.width;
+    const height = this.scale.height;
 
     // World is larger than the viewport - camera scrolls
     const worldW = 1600;
