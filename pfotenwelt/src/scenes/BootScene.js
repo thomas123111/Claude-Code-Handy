@@ -27,9 +27,21 @@ export class BootScene extends Phaser.Scene {
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
     bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
 
-    // Town building sprites (AI-generated, freigestellt)
-    const blds = ['shelter', 'workshop', 'vet', 'salon', 'school', 'hotel', 'cafe', 'guild'];
-    blds.forEach((b) => this.load.image(`bld_${b}`, `assets/bld_${b}.png`));
+    // Town environment tiles (LimeZu Modern Exteriors, curated)
+    this.load.image('lz_lamp', 'assets/tiles/lamp_1.png');
+    this.load.image('lz_bench', 'assets/tiles/bench_1.png');
+    this.load.image('lz_fountain', 'assets/tiles/fountain_lz.png');
+    this.load.image('lz_hydrant', 'assets/tiles/hydrant.png');
+    this.load.image('lz_trash', 'assets/tiles/trash.png');
+    this.load.image('lz_car', 'assets/tiles/car.png');
+
+    // Animated character spritesheets (LimeZu Modern Interiors Free)
+    // Each sheet: 384x224, frames 16x16, 24 cols × 14 rows
+    // Row 0-3: idle, Row 4-7: walk down/left/right/up (6 frames each)
+    this.load.spritesheet('char_adam', 'assets/chars/char_adam.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('char_amelia', 'assets/chars/char_amelia.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('char_alex', 'assets/chars/char_alex.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('char_bob', 'assets/chars/char_bob.png', { frameWidth: 16, frameHeight: 16 });
 
     // Town environment sprites
     this.load.image('env_fountain', 'assets/env_fountain.png');
@@ -61,6 +73,45 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Create walk animations for characters
+    // LimeZu 16x16 sheets: 24 columns, 14 rows
+    // Walk animations are in specific rows. Standard RPG layout:
+    // The walk cycle uses 6 frames per direction
+    const chars = ['char_adam', 'char_amelia', 'char_alex', 'char_bob'];
+    chars.forEach((key) => {
+      if (!this.textures.exists(key)) return;
+      // Walk down: row 4 (frames 96-101 in a 24-col grid)
+      this.anims.create({
+        key: `${key}_walk_down`,
+        frames: this.anims.generateFrameNumbers(key, { start: 96, end: 101 }),
+        frameRate: 8, repeat: -1,
+      });
+      // Walk left: row 5
+      this.anims.create({
+        key: `${key}_walk_left`,
+        frames: this.anims.generateFrameNumbers(key, { start: 120, end: 125 }),
+        frameRate: 8, repeat: -1,
+      });
+      // Walk right: row 6
+      this.anims.create({
+        key: `${key}_walk_right`,
+        frames: this.anims.generateFrameNumbers(key, { start: 144, end: 149 }),
+        frameRate: 8, repeat: -1,
+      });
+      // Walk up: row 7
+      this.anims.create({
+        key: `${key}_walk_up`,
+        frames: this.anims.generateFrameNumbers(key, { start: 168, end: 173 }),
+        frameRate: 8, repeat: -1,
+      });
+      // Idle: frame 0
+      this.anims.create({
+        key: `${key}_idle`,
+        frames: [{ key, frame: 0 }],
+        frameRate: 1,
+      });
+    });
+
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
 

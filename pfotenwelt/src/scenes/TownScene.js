@@ -64,7 +64,6 @@ const DECOR = [
   { x: 880, y: 280, tex: 'env_flowerbed', scale: 0.5 },
   { x: 600, y: 1000, tex: 'env_flowerbed', scale: 0.5 },
 ];
-];
 
 export class TownScene extends Phaser.Scene {
   constructor() { super('Town'); }
@@ -199,8 +198,48 @@ export class TownScene extends Phaser.Scene {
       });
     });
 
-    // Stadt-Leben: nur subtile Effekte die zum Stil passen
-    // (Figuren brauchen echte Sprite-Packs, kommen später)
+    // === LIVING CITY - animated LimeZu character sprites ===
+    this.walkers = [];
+    const charKeys = ['char_adam', 'char_amelia', 'char_alex', 'char_bob'];
+    const walkerPaths = [
+      [[200, 350], [600, 350], [600, 600], [200, 600], [200, 350]],
+      [[1000, 350], [600, 350], [600, 750], [1000, 750], [1000, 350]],
+      [[200, 750], [600, 750], [600, 1100], [200, 1100], [200, 750]],
+      [[1000, 750], [600, 1100], [600, 1250], [1000, 1100], [1000, 750]],
+    ];
+
+    charKeys.forEach((key, i) => {
+      if (!this.textures.exists(key)) return;
+      const path = walkerPaths[i % walkerPaths.length];
+      const start = path[0];
+      const sprite = this.add.sprite(start[0], start[1], key)
+        .setScale(2.5).setDepth(4);
+      sprite.play(`${key}_walk_right`);
+
+      this.walkers.push({
+        sprite, key, path,
+        targetIdx: 1,
+        speed: Phaser.Math.Between(25, 40),
+      });
+    });
+
+    // LimeZu environment props on paths
+    const lzProps = [
+      { x: 350, y: 200, tex: 'lz_lamp', scale: 2 },
+      { x: 850, y: 200, tex: 'lz_lamp', scale: 2 },
+      { x: 350, y: 1100, tex: 'lz_lamp', scale: 2 },
+      { x: 850, y: 1100, tex: 'lz_lamp', scale: 2 },
+      { x: 480, y: 600, tex: 'lz_bench', scale: 2 },
+      { x: 720, y: 600, tex: 'lz_bench', scale: 2 },
+      { x: 600, y: 600, tex: 'lz_fountain', scale: 2.5 },
+      { x: 400, y: 450, tex: 'lz_hydrant', scale: 2 },
+      { x: 800, y: 850, tex: 'lz_trash', scale: 2 },
+    ];
+    lzProps.forEach((p) => {
+      if (this.textures.exists(p.tex)) {
+        this.add.image(p.x, p.y, p.tex).setScale(p.scale).setDepth(2);
+      }
+    });
 
     // === HUD (fixed to camera) ===
     this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
@@ -351,5 +390,32 @@ export class TownScene extends Phaser.Scene {
       });
     }
     this.time.delayedCall(800, () => this.scene.restart());
+  }
+
+  update(time, delta) {
+    if (!this.walkers) return;
+    this.walkers.forEach((w) => {
+      const target = w.path[w.targetIdx];
+      const dx = target[0] - w.sprite.x;
+      const dy = target[1] - w.sprite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 5) {
+        w.targetIdx = (w.targetIdx + 1) % w.path.length;
+        // Set animation based on direction to next target
+        const next = w.path[w.targetIdx];
+        const ndx = next[0] - w.sprite.x;
+        const ndy = next[1] - w.sprite.y;
+        if (Math.abs(ndx) > Math.abs(ndy)) {
+          w.sprite.play(ndx > 0 ? `${w.key}_walk_right` : `${w.key}_walk_left`, true);
+        } else {
+          w.sprite.play(ndy > 0 ? `${w.key}_walk_down` : `${w.key}_walk_up`, true);
+        }
+      } else {
+        const spd = w.speed * (delta / 1000);
+        w.sprite.x += (dx / dist) * spd;
+        w.sprite.y += (dy / dist) * spd;
+      }
+    });
   }
 }
