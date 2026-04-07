@@ -33,10 +33,18 @@ export class MergeBoardScene extends Phaser.Scene {
       fontSize: '13px', fontFamily: 'monospace', color: '#88ccff',
     }).setOrigin(1, 0);
 
-    // Info text
-    this.infoText = this.add.text(width / 2, 75, 'Ziehe gleiche Items zusammen!', {
+    // Info text + active tasks from pets
+    this.infoText = this.add.text(width / 2, 75, '', {
       fontSize: '11px', fontFamily: 'monospace', color: '#887799',
     }).setOrigin(0.5);
+    this.updateTasksInfo();
+
+    // Combo counter
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.comboText = this.add.text(width - 15, 75, '', {
+      fontSize: '13px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold',
+    }).setOrigin(1, 0.5);
 
     // Initialize board
     if (!this.save.mergeBoard) {
@@ -183,27 +191,73 @@ export class MergeBoardScene extends Phaser.Scene {
     }
   }
 
+  updateTasksInfo() {
+    // Show what pets need
+    const pets = this.save.pets || [];
+    if (pets.length === 0) {
+      this.infoText.setText('Merge max-level Items um Tiere zu bekommen!');
+      return;
+    }
+    const needs = [];
+    pets.forEach((p) => {
+      if (p.needs.hunger < 40) needs.push('🍖');
+      if (p.needs.hygiene < 40) needs.push('🧼');
+      if (p.needs.play < 40) needs.push('🧸');
+      if (p.needs.health < 40) needs.push('💊');
+    });
+    if (needs.length > 0) {
+      this.infoText.setText(`Tiere brauchen: ${[...new Set(needs)].join(' ')}`);
+    } else {
+      this.infoText.setText(`${pets.length} glückliche Tiere im Heim! 🐾`);
+    }
+  }
+
   onMerge(result, r, c) {
     const { x, y } = this.cellToScreen(r, c);
 
-    // Sparkle effect
-    const sparkle = this.add.text(x, y, '✨', { fontSize: '32px' }).setOrigin(0.5).setDepth(20);
+    // Combo system
+    this.comboCount++;
+    this.comboTimer = 3; // seconds
+    if (this.comboCount > 1) {
+      this.comboText.setText(`${this.comboCount}x COMBO!`);
+      this.tweens.add({
+        targets: this.comboText,
+        scale: { from: 1.3, to: 1 },
+        duration: 200,
+      });
+    }
+
+    // Sparkle + merge animation
+    const sparkle = this.add.text(x, y, '✨', { fontSize: '36px' }).setOrigin(0.5).setDepth(20);
     this.tweens.add({
       targets: sparkle,
-      scale: { from: 0.5, to: 1.5 },
+      scale: { from: 0.3, to: 2 },
       alpha: { from: 1, to: 0 },
+      rotation: Math.PI,
       y: y - 30,
-      duration: 500,
+      duration: 600,
       onComplete: () => sparkle.destroy(),
     });
 
-    // XP + hearts
-    const hearts = result.value;
-    this.save.hearts += hearts;
-    addXp(this.save, result.value * 2);
+    // Ring burst effect
+    const ring = this.add.circle(x, y, 5, 0xffcc00, 0.6).setDepth(19);
+    this.tweens.add({
+      targets: ring,
+      scale: { from: 1, to: 4 },
+      alpha: { from: 0.6, to: 0 },
+      duration: 400,
+      onComplete: () => ring.destroy(),
+    });
 
-    // Show reward
-    const reward = this.add.text(x, y - 20, `+${hearts}❤️`, {
+    // XP + hearts (combo multiplier!)
+    const comboMult = Math.min(this.comboCount, 5); // max 5x
+    const hearts = result.value * comboMult;
+    this.save.hearts += hearts;
+    addXp(this.save, result.value * 2 * comboMult);
+
+    // Show reward with combo info
+    const comboLabel = comboMult > 1 ? ` (${comboMult}x!)` : '';
+    const reward = this.add.text(x, y - 20, `+${hearts}❤️${comboLabel}`, {
       fontSize: '14px', fontFamily: 'monospace', color: '#ff88aa', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(20);
     this.tweens.add({
@@ -287,5 +341,16 @@ export class MergeBoardScene extends Phaser.Scene {
   saveAndExit() {
     this.autosave();
     this.scene.start('Menu');
+  }
+
+  update(time, delta) {
+    // Combo timer decay
+    if (this.comboTimer > 0) {
+      this.comboTimer -= delta / 1000;
+      if (this.comboTimer <= 0) {
+        this.comboCount = 0;
+        this.comboText.setText('');
+      }
+    }
   }
 }
