@@ -1,17 +1,16 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy } from '../data/SaveManager.js';
 
-// Buildings mapped to approximate positions on town_map_clean.jpg
-// The AI image has buildings at these rough locations (1024x1024 map)
+// Buildings mapped to ACTUAL positions in town_map_clean.jpg (1024x1024)
 const BUILDINGS = [
-  { id: 'shelter', key: 'Shelter', name: 'Tierheim', x: 180, y: 190, r: 55, unlockCost: 0, unlocked: true },
-  { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', x: 510, y: 130, r: 50, unlockCost: 0, unlocked: true },
-  { id: 'vet', key: 'Vet', name: 'Tierarzt', x: 820, y: 180, r: 50, unlockCost: 200 },
-  { id: 'salon', key: 'Salon', name: 'Salon', x: 160, y: 520, r: 50, unlockCost: 350 },
-  { id: 'school', key: 'School', name: 'Schule', x: 510, y: 560, r: 50, unlockCost: 500 },
-  { id: 'hotel', key: 'Hotel', name: 'Pension', x: 840, y: 520, r: 50, unlockCost: 800 },
-  { id: 'cafe', key: 'Cafe', name: 'Café', x: 350, y: 360, r: 45, unlockCost: 1200 },
-  { id: 'guild', key: 'Guild', name: 'Gilde', x: 700, y: 370, r: 45, unlockCost: 300 },
+  { id: 'shelter', key: 'Shelter', name: 'Tierheim', x: 200, y: 280, r: 65, unlockCost: 0, unlocked: true },
+  { id: 'vet', key: 'Vet', name: 'Tierarzt', x: 540, y: 200, r: 60, unlockCost: 200 },
+  { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', x: 780, y: 280, r: 60, unlockCost: 0, unlocked: true },
+  { id: 'salon', key: 'Salon', name: 'Salon', x: 200, y: 680, r: 60, unlockCost: 350 },
+  { id: 'school', key: 'School', name: 'Schule', x: 790, y: 480, r: 60, unlockCost: 500 },
+  { id: 'cafe', key: 'Cafe', name: 'Café', x: 370, y: 780, r: 55, unlockCost: 1200 },
+  { id: 'guild', key: 'Guild', name: 'Gilde', x: 650, y: 680, r: 55, unlockCost: 300 },
+  { id: 'hotel', key: 'Hotel', name: 'Pension', x: 650, y: 850, r: 55, unlockCost: 800 },
 ];
 
 export class TownScene extends Phaser.Scene {
@@ -91,9 +90,10 @@ export class TownScene extends Phaser.Scene {
       fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
 
-    // === DRAG TO SCROLL ===
+    // === DRAG TO SCROLL + PINCH TO ZOOM ===
     this.isDragging = false;
     this.dragMoved = false;
+    this.lastPinchDist = 0;
 
     this.input.on('pointerdown', (pointer) => {
       this.isDragging = true;
@@ -105,6 +105,22 @@ export class TownScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
+      // Pinch zoom with 2 fingers
+      if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
+        const p1 = this.input.pointer1;
+        const p2 = this.input.pointer2;
+        const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
+        if (this.lastPinchDist > 0) {
+          const delta = dist - this.lastPinchDist;
+          const newZoom = Phaser.Math.Clamp(this.cameras.main.zoom + delta * 0.005, 0.6, 3.0);
+          this.cameras.main.setZoom(newZoom);
+        }
+        this.lastPinchDist = dist;
+        this.dragMoved = true;
+        return;
+      }
+      this.lastPinchDist = 0;
+
       if (!this.isDragging) return;
       const dx = pointer.x - this.dragStartX;
       const dy = pointer.y - this.dragStartY;
@@ -118,7 +134,8 @@ export class TownScene extends Phaser.Scene {
 
     this.input.on('pointerup', (pointer) => {
       this.isDragging = false;
-      if (this.dragMoved) return; // was scroll, not tap
+      this.lastPinchDist = 0;
+      if (this.dragMoved) return;
 
       // Tap: check buildings in world coords
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
@@ -134,6 +151,24 @@ export class TownScene extends Phaser.Scene {
           }
           return;
         }
+      }
+
+      // Double-tap to zoom in/out
+      const now = Date.now();
+      if (this.lastTapTime && now - this.lastTapTime < 300) {
+        // Double tap: toggle zoom
+        const targetZoom = this.cameras.main.zoom < 1.5 ? 2.2 : 1.0;
+        this.tweens.add({
+          targets: this.cameras.main,
+          zoom: targetZoom,
+          scrollX: wp.x - width / (2 * targetZoom),
+          scrollY: wp.y - height / (2 * targetZoom),
+          duration: 300,
+          ease: 'Cubic.Out',
+        });
+        this.lastTapTime = 0;
+      } else {
+        this.lastTapTime = now;
       }
     });
   }
