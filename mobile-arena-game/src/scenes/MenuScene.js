@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, resetSave, getSelectedMech } from '../systems/SaveSystem.js';
 
-export const GAME_VERSION = 'v0.4.6';
+export const GAME_VERSION = 'v0.4.7';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {

@@ -583,9 +583,10 @@ export class ArenaScene extends Phaser.Scene {
     this.aimOrigin = null;
 
     this.input.on('pointerdown', (pointer) => {
-      // Use downX/downY which are the initial touch position in game coords
-      const sx = pointer.downX;
-      const sy = pointer.downY;
+      // Convert world coords to screen coords (camera-relative)
+      const cam = this.cameras.main;
+      const sx = pointer.x - cam.worldView.x;
+      const sy = pointer.y - cam.worldView.y;
 
       if (sx < halfW) {
         // LEFT: Movement joystick
@@ -607,8 +608,9 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
-      const sx = pointer.x;
-      const sy = pointer.y;
+      const cam = this.cameras.main;
+      const sx = pointer.x - cam.worldView.x;
+      const sy = pointer.y - cam.worldView.y;
 
       // Movement joystick
       if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
