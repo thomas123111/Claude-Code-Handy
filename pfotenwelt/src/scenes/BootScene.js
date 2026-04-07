@@ -27,6 +27,10 @@ export class BootScene extends Phaser.Scene {
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
     bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
 
+    // Town map (clean, no characters - we animate those with Canvas)
+    this.load.image('town_map_clean', 'assets/town_map_clean.jpg');
+    this.load.image('town_map_main', 'assets/town_map_main.jpg');
+
     // AI-generated item icons (Gemini)
     const items = ['kibble', 'treat', 'bowl', 'premium_food', 'feast',
       'yarn', 'ball', 'plush', 'cattree', 'playground',
