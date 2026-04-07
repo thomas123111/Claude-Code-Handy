@@ -3,6 +3,8 @@ import { loadSave, getSelectedMech, getMechStats } from '../systems/SaveSystem.j
 import { getArenaConfig, AMMO_TYPES } from '../systems/ArenaConfig.js';
 import { generateArenaLayout, getRandomOpenPositions } from '../systems/ArenaLayoutGenerator.js';
 import { getLoadoutEffects } from '../systems/SkillSystem.js';
+import { getEnemyType, getBossConfig, isBossArena, BEHAVIOR, fanPattern } from '../systems/EnemyPatterns.js';
+import { deathExplosion, hitSpark, lootPickupEffect, damageNumber, criticalHitEffect, healEffect, shieldActivateEffect } from '../systems/ParticleEffects.js';
 
 export class ArenaScene extends Phaser.Scene {
   constructor() {
@@ -67,10 +69,23 @@ export class ArenaScene extends Phaser.Scene {
     // Background
     this.cameras.main.setBackgroundColor(this.arenaConfig.theme.bgColor);
 
+    // Floor tiles - checkerboard dungeon pattern
+    const tileSize = 32;
+    for (let tx = 0; tx < width; tx += tileSize) {
+      for (let ty = 70; ty < height; ty += tileSize) {
+        const isLight = ((tx / tileSize) + (ty / tileSize)) % 2 === 0;
+        const floorTex = isLight ? 'floor_light' : 'floor_dark';
+        if (this.textures.exists(floorTex)) {
+          this.add.image(tx + tileSize / 2, ty + tileSize / 2, floorTex)
+            .setDisplaySize(tileSize, tileSize).setDepth(0).setAlpha(0.3);
+        }
+      }
+    }
+
     // Arena boundary
     this.add.rectangle(width / 2, height / 2, width - 4, height - 4)
-      .setStrokeStyle(2, this.arenaConfig.theme.color, 0.5)
-      .setFillStyle(0x000000, 0);
+      .setStrokeStyle(2, this.arenaConfig.theme.color, 0.3)
+      .setFillStyle(0x000000, 0).setDepth(1);
 
     // State
     this.playerHp = this.mechStats.hp;
@@ -161,9 +176,24 @@ export class ArenaScene extends Phaser.Scene {
     // Wall collisions - block player, enemies, and destroy bullets
     this.physics.add.collider(this.player, this.walls);
     this.physics.add.collider(this.enemies, this.walls);
-    this.physics.add.collider(this.bullets, this.walls, (bullet) => {
-      bullet.setActive(false).setVisible(false);
-      bullet.body.enable = false;
+    this.physics.add.collider(this.bullets, this.walls, (bullet, wall) => {
+      // Ricochet skill: bounce off walls
+      const bounces = bullet.getData('bouncesLeft') || 0;
+      if (bounces > 0) {
+        bullet.setData('bouncesLeft', bounces - 1);
+        // Reflect velocity based on which side was hit
+        const bx = bullet.body.velocity.x;
+        const by = bullet.body.velocity.y;
+        if (Math.abs(bullet.x - wall.x) > Math.abs(bullet.y - wall.y)) {
+          bullet.body.velocity.x = -bx;
+        } else {
+          bullet.body.velocity.y = -by;
+        }
+        bullet.setData('spawnTime', this.time.now); // reset lifetime on bounce
+      } else {
+        bullet.setActive(false).setVisible(false);
+        bullet.body.enable = false;
+      }
     });
     this.physics.add.collider(this.enemyBullets, this.walls, (bullet) => {
       bullet.setActive(false).setVisible(false);
@@ -712,46 +742,15 @@ export class ArenaScene extends Phaser.Scene {
     const { width } = this.scale;
     const config = this.arenaConfig;
 
-    // Random enemy type
+    // Use EnemyPatterns system for varied enemy types
     const roll = Math.random();
-    let texture, hp, speed, damage, size;
+    const enemyType = getEnemyType(this.arenaIndex, roll);
 
-    if (roll < 0.1 && this.arenaIndex > 2) {
-      // Demon (boss-like)
-      texture = 'enemy_demon';
-      hp = config.enemyHp * 3;
-      speed = config.enemySpeed * 0.5;
-      damage = config.enemyDamage * 2;
-      size = 14;
-    } else if (roll < 0.25 && this.arenaIndex > 1) {
-      // Orc (tanky)
-      texture = 'enemy_orc';
-      hp = config.enemyHp * 2;
-      speed = config.enemySpeed * 0.7;
-      damage = config.enemyDamage * 1.5;
-      size = 14;
-    } else if (roll < 0.45) {
-      // Ghost (fast, phasing)
-      texture = 'enemy_ghost';
-      hp = config.enemyHp * 0.5;
-      speed = config.enemySpeed * 1.8;
-      damage = config.enemyDamage * 0.8;
-      size = 14;
-    } else if (roll < 0.7) {
-      // Skeleton (balanced)
-      texture = 'enemy_skeleton';
-      hp = config.enemyHp;
-      speed = config.enemySpeed;
-      damage = config.enemyDamage;
-      size = 14;
-    } else {
-      // Slime (basic)
-      texture = 'enemy_slime';
-      hp = config.enemyHp * 0.8;
-      speed = config.enemySpeed * 0.9;
-      damage = config.enemyDamage * 0.7;
-      size = 14;
-    }
+    const texture = enemyType.textureKey;
+    const hp = config.enemyHp * enemyType.hpMult;
+    const speed = config.enemySpeed * enemyType.speedMult;
+    const damage = config.enemyDamage * enemyType.damageMult;
+    const size = 14;
 
     // Spawn in open space, preferring spots far from player
     const spawnPositions = getRandomOpenPositions(this.arenaLayout, 5, () => Math.random(), 0, Math.floor(this.arenaLayout.rows * 0.7));
@@ -775,7 +774,15 @@ export class ArenaScene extends Phaser.Scene {
     enemy.setData('speed', speed);
     enemy.setData('damage', damage);
     enemy.setData('shootTimer', 0);
-    enemy.setData('shootInterval', Phaser.Math.Between(1500, 3000));
+    enemy.setData('shootInterval', enemyType.shootInterval || Phaser.Math.Between(1500, 3000));
+    enemy.setData('behavior', enemyType.behaviorType);
+    enemy.setData('bulletSpeed', enemyType.bulletSpeed || 200);
+    enemy.setData('dashTimer', 0);
+    enemy.setData('dashCooldown', enemyType.dashCooldown || 2000);
+    enemy.setData('dashSpeed', enemyType.dashSpeed || 400);
+    enemy.setData('orbitAngle', Math.random() * Math.PI * 2);
+    enemy.setData('teleportTimer', 0);
+    enemy.setData('teleportInterval', enemyType.teleportInterval || 3000);
     this.enemies.add(enemy);
     this.enemiesSpawned++;
   }
@@ -905,11 +912,13 @@ export class ArenaScene extends Phaser.Scene {
     const hp = enemy.getData('hp') - damage;
     enemy.setData('hp', hp);
 
-    // Flash white
+    // Hit effects
     enemy.setTint(0xffffff);
-    this.time.delayedCall(60, () => {
-      if (enemy.active) enemy.clearTint();
-    });
+    this.time.delayedCall(60, () => { if (enemy.active) enemy.clearTint(); });
+    hitSpark(this, enemy.x, enemy.y);
+    const isCrit = bullet.getData('isCrit');
+    damageNumber(this, enemy.x, enemy.y - 15, damage, isCrit);
+    if (isCrit) criticalHitEffect(this, enemy.x, enemy.y);
 
     // Splash damage: hurt nearby enemies
     if (isSplash) {
@@ -941,26 +950,19 @@ export class ArenaScene extends Phaser.Scene {
     // Enemies give XP only, no loot drops
     this.runXp += Phaser.Math.Between(2, 5);
 
-    // XP popup
-    const xpMsg = this.add.text(x, y - 10, `+XP`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#aaffaa', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(50);
-    this.tweens.add({
-      targets: xpMsg,
-      y: y - 30, alpha: 0,
-      duration: 600,
-      onComplete: () => xpMsg.destroy(),
-    });
+    // Death explosion particles
+    deathExplosion(this, x, y);
+    damageNumber(this, x, y - 10, 'XP', false);
 
-    // Death particles (simple flash)
-    const flash = this.add.circle(x, y, 15, 0xffffff, 0.8).setDepth(50);
-    this.tweens.add({
-      targets: flash,
-      scale: { from: 1, to: 3 },
-      alpha: { from: 0.8, to: 0 },
-      duration: 200,
-      onComplete: () => flash.destroy(),
-    });
+    // Bomber: explode on death dealing area damage
+    if (enemy.getData('behavior') === BEHAVIOR.BOMBER) {
+      const splashR = 60;
+      this.cameras.main.shake(150, 0.01);
+      deathExplosion(this, x, y, 0xff6600);
+      // Damage player if close
+      const pDist = Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y);
+      if (pDist < splashR) this.takeDamage(enemy.getData('damage'));
+    }
 
     enemy.destroy();
     this.enemiesKilled++;
@@ -971,6 +973,7 @@ export class ArenaScene extends Phaser.Scene {
     const healOnKill = this.skillEffects ? this.skillEffects.healOnKill : 0;
     if (healOnKill > 0) {
       this.playerHp = Math.min(this.maxHp, this.playerHp + healOnKill);
+      healEffect(this, this.player.x, this.player.y);
     }
 
     // Check wave complete - all active enemies dead
@@ -1033,6 +1036,7 @@ export class ArenaScene extends Phaser.Scene {
       }
     }
 
+    lootPickupEffect(this, loot.x, loot.y, type);
     loot.destroy();
   }
 
@@ -1195,6 +1199,7 @@ export class ArenaScene extends Phaser.Scene {
       // Shotgun pellets: shorter lifetime (1.5s vs 3s for others)
       const lifetime = mech.weaponType === 'shotgun' ? 1500 : 3000;
       bullet.setData('lifetime', lifetime);
+      bullet.setData('bouncesLeft', this.skillEffects ? this.skillEffects.bounces : 0);
     }
   }
 
@@ -1264,98 +1269,130 @@ export class ArenaScene extends Phaser.Scene {
   enemyAI(enemy, delta) {
     if (!enemy.active || !this.player.active) return;
 
-    // Cloaked: enemies wander randomly instead of chasing
     if (this.playerCloaked) {
-      const wanderAngle = enemy.getData('wanderAngle') || Math.random() * Math.PI * 2;
+      const wa = enemy.getData('wanderAngle') || Math.random() * Math.PI * 2;
       if (Math.random() < 0.02) enemy.setData('wanderAngle', Math.random() * Math.PI * 2);
-      const ws = enemy.getData('speed') * 0.4;
-      enemy.body.velocity.x = Math.cos(wanderAngle) * ws;
-      enemy.body.velocity.y = Math.sin(wanderAngle) * ws;
+      enemy.body.velocity.x = Math.cos(wa) * enemy.getData('speed') * 0.3;
+      enemy.body.velocity.y = Math.sin(wa) * enemy.getData('speed') * 0.3;
       return;
     }
 
     const speed = enemy.getData('speed');
-    const directAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
-    let moveX = Math.cos(directAngle);
-    let moveY = Math.sin(directAngle);
+    const behavior = enemy.getData('behavior') || BEHAVIOR.CHASE;
+    const dist = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+    const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
 
-    // Wall avoidance: probe ahead and to the sides
-    const probeLen = 40;
-    const ex = enemy.x;
-    const ey = enemy.y;
+    // Movement based on behavior type
+    switch (behavior) {
+      case BEHAVIOR.CHASE:
+      default:
+        enemy.body.velocity.x = Math.cos(angle) * speed;
+        enemy.body.velocity.y = Math.sin(angle) * speed;
+        break;
 
-    const aheadX = ex + moveX * probeLen;
-    const aheadY = ey + moveY * probeLen;
-
-    if (this.isInWall(aheadX, aheadY)) {
-      // Try perpendicular directions to find a way around
-      const leftAngle = directAngle - Math.PI / 2;
-      const rightAngle = directAngle + Math.PI / 2;
-
-      const leftX = ex + Math.cos(leftAngle) * probeLen;
-      const leftY = ey + Math.sin(leftAngle) * probeLen;
-      const rightX = ex + Math.cos(rightAngle) * probeLen;
-      const rightY = ey + Math.sin(rightAngle) * probeLen;
-
-      const leftBlocked = this.isInWall(leftX, leftY);
-      const rightBlocked = this.isInWall(rightX, rightY);
-
-      if (!leftBlocked && !rightBlocked) {
-        // Both open - pick whichever is closer to player
-        const leftDist = Phaser.Math.Distance.Between(leftX, leftY, this.player.x, this.player.y);
-        const rightDist = Phaser.Math.Distance.Between(rightX, rightY, this.player.x, this.player.y);
-        const chosen = leftDist < rightDist ? leftAngle : rightAngle;
-        moveX = Math.cos(chosen);
-        moveY = Math.sin(chosen);
-      } else if (!leftBlocked) {
-        moveX = Math.cos(leftAngle);
-        moveY = Math.sin(leftAngle);
-      } else if (!rightBlocked) {
-        moveX = Math.cos(rightAngle);
-        moveY = Math.sin(rightAngle);
-      } else {
-        // All blocked - try diagonal escapes
-        const diagAngle = directAngle + Math.PI * 0.75;
-        moveX = Math.cos(diagAngle);
-        moveY = Math.sin(diagAngle);
+      case BEHAVIOR.CIRCLE: {
+        const orbit = enemy.getData('orbitAngle') + delta * 0.002;
+        enemy.setData('orbitAngle', orbit);
+        const orbitR = 120;
+        if (dist > orbitR + 30) {
+          enemy.body.velocity.x = Math.cos(angle) * speed;
+          enemy.body.velocity.y = Math.sin(angle) * speed;
+        } else {
+          enemy.body.velocity.x = Math.cos(orbit) * speed * 0.7;
+          enemy.body.velocity.y = Math.sin(orbit) * speed * 0.7;
+        }
+        break;
       }
 
-      // Store wall-avoidance direction briefly so enemy doesn't jitter
-      enemy.setData('avoidTimer', 300);
-      enemy.setData('avoidX', moveX);
-      enemy.setData('avoidY', moveY);
-    } else {
-      // Check if we're still in avoidance mode
-      const avoidTimer = enemy.getData('avoidTimer') || 0;
-      if (avoidTimer > 0) {
-        enemy.setData('avoidTimer', avoidTimer - delta);
-        moveX = enemy.getData('avoidX') || moveX;
-        moveY = enemy.getData('avoidY') || moveY;
+      case BEHAVIOR.DASH: {
+        const dt = (enemy.getData('dashTimer') || 0) + delta;
+        enemy.setData('dashTimer', dt);
+        const cd = enemy.getData('dashCooldown');
+        if (dt < cd * 0.7) {
+          // Pause phase - slow approach
+          enemy.body.velocity.x = Math.cos(angle) * speed * 0.2;
+          enemy.body.velocity.y = Math.sin(angle) * speed * 0.2;
+        } else if (dt < cd) {
+          // Dash phase
+          const ds = enemy.getData('dashSpeed');
+          enemy.body.velocity.x = Math.cos(angle) * ds;
+          enemy.body.velocity.y = Math.sin(angle) * ds;
+        } else {
+          enemy.setData('dashTimer', 0);
+        }
+        break;
+      }
+
+      case BEHAVIOR.SNIPER:
+        if (dist < 180) {
+          // Back away
+          enemy.body.velocity.x = -Math.cos(angle) * speed * 0.6;
+          enemy.body.velocity.y = -Math.sin(angle) * speed * 0.6;
+        } else if (dist > 250) {
+          enemy.body.velocity.x = Math.cos(angle) * speed * 0.4;
+          enemy.body.velocity.y = Math.sin(angle) * speed * 0.4;
+        } else {
+          enemy.body.velocity.x = 0;
+          enemy.body.velocity.y = 0;
+        }
+        break;
+
+      case BEHAVIOR.BOMBER:
+        // Rush at player, faster as closer
+        const rushMult = dist < 80 ? 2 : 1;
+        enemy.body.velocity.x = Math.cos(angle) * speed * rushMult;
+        enemy.body.velocity.y = Math.sin(angle) * speed * rushMult;
+        break;
+
+      case BEHAVIOR.SWARM:
+        // Slight zigzag toward player
+        const zig = Math.sin(this.time.now * 0.01 + enemy.x) * 0.5;
+        enemy.body.velocity.x = Math.cos(angle + zig) * speed;
+        enemy.body.velocity.y = Math.sin(angle + zig) * speed;
+        break;
+
+      case BEHAVIOR.TELEPORT: {
+        const tt = (enemy.getData('teleportTimer') || 0) + delta;
+        enemy.setData('teleportTimer', tt);
+        if (tt >= enemy.getData('teleportInterval')) {
+          enemy.setData('teleportTimer', 0);
+          const { width, height } = this.scale;
+          enemy.setPosition(Phaser.Math.Between(40, width - 40), Phaser.Math.Between(100, height - 100));
+          enemy.setAlpha(0);
+          this.tweens.add({ targets: enemy, alpha: 1, duration: 300 });
+        }
+        enemy.body.velocity.x = Math.cos(angle) * speed * 0.3;
+        enemy.body.velocity.y = Math.sin(angle) * speed * 0.3;
+        break;
       }
     }
 
-    enemy.body.velocity.x = moveX * speed;
-    enemy.body.velocity.y = moveY * speed;
-
-    // Enemy shooting - starts from arena 1
-    if (this.arenaIndex >= 1) {
-      const timer = enemy.getData('shootTimer') + delta;
-      enemy.setData('shootTimer', timer);
-      if (timer >= enemy.getData('shootInterval')) {
-        enemy.setData('shootTimer', 0);
-        this.enemyShoot(enemy, directAngle);
+    // Shooting
+    const shootTimer = (enemy.getData('shootTimer') || 0) + delta;
+    enemy.setData('shootTimer', shootTimer);
+    if (shootTimer >= enemy.getData('shootInterval')) {
+      enemy.setData('shootTimer', 0);
+      if (behavior === BEHAVIOR.SNIPER) {
+        // Accurate fast shot
+        this.enemyShoot(enemy, angle, enemy.getData('bulletSpeed') || 350);
+      } else if (behavior === BEHAVIOR.CIRCLE) {
+        // Fan pattern
+        const angles = fanPattern(3, 0.4);
+        angles.forEach((a) => this.enemyShoot(enemy, angle + a));
+      } else if (behavior !== BEHAVIOR.SWARM && behavior !== BEHAVIOR.BOMBER) {
+        this.enemyShoot(enemy, angle);
       }
     }
   }
 
-  enemyShoot(enemy, angle) {
+  enemyShoot(enemy, angle, bulletSpeed) {
     const bullet = this.enemyBullets.get(enemy.x, enemy.y, 'enemy_bullet');
     if (!bullet) return;
     bullet.setActive(true).setVisible(true);
     bullet.body.enable = true;
     bullet.setDepth(8);
 
-    const speed = 200;
+    const speed = bulletSpeed || 200;
     bullet.body.velocity.x = Math.cos(angle) * speed;
     bullet.body.velocity.y = Math.sin(angle) * speed;
 
@@ -1411,6 +1448,35 @@ export class ArenaScene extends Phaser.Scene {
     // AUTO-SHOOT: fire at nearest enemy when NOT moving
     if (!this.playerMoving) {
       this.autoShootAtNearest();
+    }
+
+    // Loot magnet skill - attract nearby loot toward player
+    if (this.skillEffects && this.skillEffects.magnetRange > 40) {
+      const mr = this.skillEffects.magnetRange;
+      this.lootItems.getChildren().forEach((l) => {
+        if (!l.active) return;
+        const d = Phaser.Math.Distance.Between(l.x, l.y, this.player.x, this.player.y);
+        if (d < mr && d > 5) {
+          const a = Phaser.Math.Angle.Between(l.x, l.y, this.player.x, this.player.y);
+          l.x += Math.cos(a) * 3;
+          l.y += Math.sin(a) * 3;
+        }
+      });
+    }
+
+    // Shield skill - periodic auto-activation
+    if (this.skillEffects && this.skillEffects.shieldInterval > 0) {
+      this.shieldSkillTimer = (this.shieldSkillTimer || 0) + delta;
+      if (this.shieldSkillTimer >= this.skillEffects.shieldInterval && !this.playerInvuln) {
+        this.shieldSkillTimer = 0;
+        this.playerInvuln = true;
+        shieldActivateEffect(this, this.player.x, this.player.y);
+        this.player.setTint(0x4488ff);
+        this.time.delayedCall(2000, () => {
+          this.playerInvuln = false;
+          this.player.clearTint();
+        });
+      }
     }
 
     // Enemy AI
