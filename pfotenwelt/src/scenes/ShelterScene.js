@@ -90,7 +90,7 @@ export class ShelterScene extends Phaser.Scene {
         this.selectedPet = null;
         this.drawUI();
       } else {
-        this.scene.start('Menu');
+        this.scene.start('Town');
       }
     });
 

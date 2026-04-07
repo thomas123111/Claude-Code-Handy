@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.6.1';
+export const GAME_VERSION = 'v0.7.0';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -115,18 +115,12 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'monospace', color: '#aa9977',
     }).setOrigin(0.5);
 
-    // Buttons
+    // Main button - enter town
     this.buttons = [];
-    this.drawButton(cx, 420, '🧩  MERGE BOARD', '#8855cc', () => {
-      this.scene.start('MergeBoard');
+    this.drawButton(cx, 430, '🏘️  STADT BETRETEN', '#8855cc', () => {
+      this.scene.start('Town');
     });
-    this.drawButton(cx, 490, '🏠  TIERHEIM', '#cc7744', () => {
-      this.scene.start('Shelter');
-    });
-    this.drawButton(cx, 560, '🏥  STATIONEN', '#4488aa', () => {
-      this.scene.start('Stations');
-    });
-    this.drawButton(cx, 630, '📖  SAMMELBUCH', '#886644', () => {
+    this.drawButton(cx, 500, '📖  SAMMELBUCH', '#886644', () => {
       this.scene.start('Collection');
     });
 

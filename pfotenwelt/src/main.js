@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
+import { TownScene } from './scenes/TownScene.js';
 import { MergeBoardScene } from './scenes/MergeBoardScene.js';
 import { ShelterScene } from './scenes/ShelterScene.js';
 import { DailyRewardScene } from './scenes/DailyRewardScene.js';
@@ -33,7 +34,7 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: [
-    BootScene, MenuScene, MergeBoardScene, ShelterScene, DailyRewardScene,
+    BootScene, MenuScene, TownScene, MergeBoardScene, ShelterScene, DailyRewardScene,
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
     StoryScene, CollectionScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle,

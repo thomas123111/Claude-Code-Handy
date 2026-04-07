@@ -150,7 +150,7 @@ export class SchoolScene extends Phaser.Scene {
     this.add.text(cx, height - 40, '← Zurück', {
       fontSize: '14px', fontFamily: 'monospace', color: '#888888',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Menu'));
+    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {
