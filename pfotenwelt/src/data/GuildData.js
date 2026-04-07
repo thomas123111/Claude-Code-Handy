@@ -54,10 +54,10 @@ export function processNPCHelp(save) {
   if (pets.length === 0) return save;
 
   guild.members.forEach((member) => {
-    if (!member.isNPC) return; // future: real players have different logic
-    // NPCs help every 10 minutes
+    if (!member.isNPC) return;
+    // NPCs help once per day
     const timeSince = now - (member.lastActive || 0);
-    if (timeSince < 10 * 60 * 1000) return;
+    if (timeSince < 24 * 60 * 60 * 1000) return; // 24 hours
 
     member.lastActive = now;
     member.helpCount++;
