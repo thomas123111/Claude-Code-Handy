@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, resetSave, getSelectedMech } from '../systems/SaveSystem.js';
 
-export const GAME_VERSION = 'v0.5.0';
+export const GAME_VERSION = 'v0.5.1';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -23,9 +23,10 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'monospace', color: '#6688aa',
     }).setOrigin(0.5);
 
-    // Mech display
-    const texKey = this.textures.exists(`mech_${mech.id}`) ? `mech_${mech.id}` : 'mech_striker';
-    this.add.image(cx, 140, texKey).setScale(4);
+    // Hero display - map mech ID to dungeon sprite
+    const heroSprites = { striker: 'hero_knight', titan: 'hero_knight', phantom: 'hero_mage' };
+    const heroTex = heroSprites[mech.id] || 'hero_knight';
+    this.add.image(cx, 140, heroTex).setScale(6);
 
     this.add.text(cx, 190, `${mech.name} - Lv.${mech.level}`, {
       fontSize: '16px', fontFamily: 'monospace', color: '#ffffff',
@@ -78,10 +79,12 @@ export class MenuScene extends Phaser.Scene {
   }
 
   drawButton(x, y, text, color) {
-    const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
-    this.add.rectangle(x, y, 300, 48, colorVal, 0.2).setStrokeStyle(2, colorVal);
-    this.add.text(x, y, text, {
-      fontSize: '18px', fontFamily: 'monospace', color, fontStyle: 'bold',
+    // Use RPG UI button images
+    const btnMap = { '#3399ff': 'btn_blue', '#44aa44': 'btn_brown', '#cc8800': 'btn_beige', '#884444': 'btn_grey' };
+    const btnTex = btnMap[color] || 'btn_blue';
+    const btn = this.add.image(x, y, btnTex).setDisplaySize(280, 45);
+    this.add.text(x, y - 2, text, {
+      fontSize: '16px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     let action;

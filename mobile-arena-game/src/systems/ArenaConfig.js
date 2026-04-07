@@ -2,12 +2,12 @@
 // Difficulty scales with arena index
 
 export const ARENA_THEMES = [
-  { name: 'Scrapyard', color: 0x4a6741, enemyTint: 0xff6644, bgColor: '#1a2a1a' },
-  { name: 'Foundry', color: 0x8b4513, enemyTint: 0xff4444, bgColor: '#2a1a0a' },
-  { name: 'Ice Cavern', color: 0x4488aa, enemyTint: 0x88ccff, bgColor: '#0a1a2a' },
-  { name: 'Volcano', color: 0xaa3300, enemyTint: 0xffaa00, bgColor: '#2a0a0a' },
-  { name: 'Neon City', color: 0x8833aa, enemyTint: 0xff33ff, bgColor: '#1a0a2a' },
-  { name: 'Void Station', color: 0x222244, enemyTint: 0x6666ff, bgColor: '#0a0a1a' },
+  { name: 'Stone Dungeon', color: 0x6b6b6b, bgColor: '#1a1a22' },
+  { name: 'Crypt', color: 0x5a4a3a, bgColor: '#1a1510' },
+  { name: 'Ice Cave', color: 0x4488aa, bgColor: '#0a1520' },
+  { name: 'Lava Pit', color: 0x8b3300, bgColor: '#1a0a05' },
+  { name: 'Shadow Keep', color: 0x6633aa, bgColor: '#120a1a' },
+  { name: 'Ancient Tomb', color: 0x8b7b5b, bgColor: '#151210' },
 ];
 
 export function getArenaConfig(arenaIndex) {
