@@ -45,26 +45,15 @@ export class MenuScene extends Phaser.Scene {
     this.drawButton(bx, 170, 'HANGAR', '#44aa44');
     this.drawButton(bx, 240, 'RESET SAVE', '#884444');
 
-    // Debug: show where touches land (red dot + coordinates)
-    this.debugText = this.add.text(10, 10, 'Tap anywhere...', {
-      fontSize: '12px', fontFamily: 'monospace', color: '#ff0000',
-    });
-
-    // Single global pointer handler - check which button was hit
+    // Global pointer handler - check which button was hit
     this.input.on('pointerdown', (pointer) => {
       const px = pointer.x;
       const py = pointer.y;
 
-      // Show touch position as debug
-      this.debugText.setText(`Touch: ${Math.round(px)}, ${Math.round(py)}`);
-      const dot = this.add.circle(px, py, 5, 0xff0000).setDepth(999);
-      this.time.delayedCall(1000, () => dot.destroy());
-
       for (const btn of this.buttons) {
         if (px >= btn.x - btn.w / 2 && px <= btn.x + btn.w / 2 &&
             py >= btn.y - btn.h / 2 && py <= btn.y + btn.h / 2) {
-          btn.bg.setFillStyle(btn.colorVal, 0.5);
-          this.time.delayedCall(100, () => btn.action());
+          btn.action();
           return;
         }
       }
