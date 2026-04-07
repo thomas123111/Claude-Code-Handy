@@ -22,6 +22,7 @@ export class SchoolScene extends Phaser.Scene {
   create() {
     this.save = loadSave();
     this.message = null;
+    this.checkPuzzleResult();
     this.drawUI();
   }
 
@@ -169,12 +170,33 @@ export class SchoolScene extends Phaser.Scene {
     if (!pet.tricks) pet.tricks = [];
     if (pet.tricks.includes(trick.name)) return;
 
-    this.save.hearts -= trick.cost;
-    pet.tricks.push(trick.name);
-    addXp(this.save, 10);
-    this.message = `${pet.name} hat "${trick.name}" gelernt!`;
-    writeSave(this.save);
-    this.drawUI();
+    // Launch timing puzzle
+    this.registry.set('pendingTrick', { petIdx, trickName: trick.name, cost: trick.cost });
+    this.scene.start('TimingPuzzle', {
+      petName: pet.name,
+      trickName: trick.name,
+      onComplete: 'School',
+    });
+  }
+
+  checkPuzzleResult() {
+    const result = this.registry.get('puzzleResult');
+    const pending = this.registry.get('pendingTrick');
+    if (!result || !pending) return;
+    this.registry.remove('puzzleResult');
+    this.registry.remove('pendingTrick');
+
+    const pet = this.save.pets[pending.petIdx];
+    if (pet && result.success) {
+      if (!pet.tricks) pet.tricks = [];
+      this.save.hearts -= pending.cost;
+      pet.tricks.push(pending.trickName);
+      addXp(this.save, 15);
+      this.message = `${pet.name} hat "${pending.trickName}" gelernt! 🎉`;
+      writeSave(this.save);
+    } else if (!result.success) {
+      this.message = 'Training nicht bestanden - versuch es nochmal!';
+    }
   }
 
   enterCompetition(petIdx) {

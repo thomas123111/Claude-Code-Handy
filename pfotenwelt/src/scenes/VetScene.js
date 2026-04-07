@@ -16,7 +16,7 @@ export class VetScene extends Phaser.Scene {
 
   create() {
     this.save = loadSave();
-    // Assign diagnoses to sick pets that don't have one yet
+    this.checkPuzzleResult();
     this.assignDiagnoses();
     this.drawUI();
   }
@@ -176,13 +176,36 @@ export class VetScene extends Phaser.Scene {
     const pet = this.save.pets[petIdx];
     if (!pet || this.save.hearts < cost) return;
 
-    this.save.hearts -= cost;
-    pet.needs.health = 100;
-    delete pet.diagnosis;
-    pet.happiness = calculateHappiness(pet);
-    addXp(this.save, 15);
-    writeSave(this.save);
-    this.drawUI();
+    // Store pending treatment data
+    this.registry.set('pendingTreatment', { petIdx, cost });
+
+    // Launch Match-3 puzzle
+    this.scene.start('Match3Puzzle', {
+      petName: pet.name,
+      onComplete: 'Vet',
+    });
+  }
+
+  // Called when returning from puzzle
+  checkPuzzleResult() {
+    const result = this.registry.get('puzzleResult');
+    const pending = this.registry.get('pendingTreatment');
+    if (!result || !pending) return;
+
+    this.registry.remove('puzzleResult');
+    this.registry.remove('pendingTreatment');
+
+    if (result.success) {
+      const pet = this.save.pets[pending.petIdx];
+      if (pet) {
+        this.save.hearts -= pending.cost;
+        pet.needs.health = 100;
+        delete pet.diagnosis;
+        pet.happiness = calculateHappiness(pet);
+        addXp(this.save, 15 + (result.score || 0));
+        writeSave(this.save);
+      }
+    }
   }
 
   insurePet(petIdx) {

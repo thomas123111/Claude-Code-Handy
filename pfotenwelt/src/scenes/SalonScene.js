@@ -7,6 +7,7 @@ export class SalonScene extends Phaser.Scene {
 
   create() {
     this.save = loadSave();
+    this.checkPuzzleResult();
     this.drawUI();
   }
 
@@ -107,11 +108,30 @@ export class SalonScene extends Phaser.Scene {
     const pet = this.save.pets[petIdx];
     if (!pet || this.save.hearts < 15 || pet.groomed) return;
 
-    this.save.hearts -= 15;
-    pet.groomed = true;
-    addXp(this.save, 10);
-    writeSave(this.save);
-    this.drawUI();
+    this.registry.set('pendingGroom', { petIdx });
+    this.scene.start('SwipePuzzle', {
+      petName: pet.name,
+      petEmoji: pet.emoji,
+      onComplete: 'Salon',
+    });
+  }
+
+  checkPuzzleResult() {
+    const result = this.registry.get('puzzleResult');
+    const pending = this.registry.get('pendingGroom');
+    if (!result || !pending) return;
+    this.registry.remove('puzzleResult');
+    this.registry.remove('pendingGroom');
+
+    if (result.success) {
+      const pet = this.save.pets[pending.petIdx];
+      if (pet) {
+        this.save.hearts -= 15;
+        pet.groomed = true;
+        addXp(this.save, 15);
+        writeSave(this.save);
+      }
+    }
   }
 
   addHitArea(x, y, w, h, cb) {

@@ -12,6 +12,12 @@ import { HotelScene } from './scenes/HotelScene.js';
 import { CafeScene } from './scenes/CafeScene.js';
 import { StoryScene } from './scenes/StoryScene.js';
 import { CollectionScene } from './scenes/CollectionScene.js';
+// Mini-puzzles
+import { Match3Puzzle } from './scenes/puzzles/Match3Puzzle.js';
+import { MemoryPuzzle } from './scenes/puzzles/MemoryPuzzle.js';
+import { SortPuzzle } from './scenes/puzzles/SortPuzzle.js';
+import { SwipePuzzle } from './scenes/puzzles/SwipePuzzle.js';
+import { TimingPuzzle } from './scenes/puzzles/TimingPuzzle.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -26,9 +32,12 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, MergeBoardScene, ShelterScene, DailyRewardScene,
-          StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
-          StoryScene, CollectionScene],
+  scene: [
+    BootScene, MenuScene, MergeBoardScene, ShelterScene, DailyRewardScene,
+    StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
+    StoryScene, CollectionScene,
+    Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle,
+  ],
 };
 
 new Phaser.Game(config);
