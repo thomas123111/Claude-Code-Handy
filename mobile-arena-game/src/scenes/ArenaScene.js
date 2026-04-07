@@ -811,7 +811,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.clearMethod === 'timer') {
       this.timeBonus = 0;
     } else {
-      this.timeBonus = elapsed < parTime ? Math.floor((parTime - elapsed) * 5) : 0;
+      this.timeBonus = elapsed < parTime ? Math.floor((parTime - elapsed) * 0.5) : 0;
     }
 
     const { width } = this.scale;
@@ -1036,20 +1036,19 @@ export class ArenaScene extends Phaser.Scene {
     if (!this.arenaCleared || this.transitioning) return;
     this.transitioning = true;
 
-    // Transition effect
-    this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.cameras.main.once('camerafadeoutcomplete', () => {
-      this.scene.start('ArenaComplete', {
-        arenaIndex: this.arenaIndex,
-        runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
-        runScrap: this.runScrap + this.arenaConfig.scrapReward,
-        runXp: this.runXp + this.arenaConfig.xpReward,
-        timeBonus: this.timeBonus || 0,
-        playerHpPercent: this.playerHp / this.maxHp,
-        runSeed: this.runSeed,
-        ammoStock: this.ammoStock,
-      });
-    });
+    const nextData = {
+      arenaIndex: this.arenaIndex,
+      runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
+      runScrap: this.runScrap + this.arenaConfig.scrapReward,
+      runXp: this.runXp + this.arenaConfig.xpReward,
+      timeBonus: this.timeBonus || 0,
+      playerHpPercent: this.playerHp / this.maxHp,
+      runSeed: this.runSeed,
+      ammoStock: this.ammoStock,
+    };
+
+    // Go directly to next scene (skip fade which can hang)
+    this.scene.start('ArenaComplete', nextData);
   }
 
   gameOver() {

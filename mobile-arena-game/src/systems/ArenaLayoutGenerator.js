@@ -265,9 +265,9 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
   const cols = Math.floor(arenaWidth / CELL);
   const rows = Math.floor((arenaHeight - topMargin) / CELL);
 
-  // Scale layouts from design grid (9x17) to actual world size
-  SX = cols / 9;
-  SY = rows / 17;
+  // Don't scale layouts - use 1:1 grid, center horizontally
+  SX = 1;
+  SY = 1;
 
   // Shuffled layout order - uses runSeed so each run has different order
   const layoutIdx = getShuffledLayoutIndex(arenaIndex, LAYOUTS.length, runSeed || 1);
@@ -390,7 +390,7 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
     walls,
     openSpaces,
     occupied,
-    portalPosition: { x: pp.c * (cols / 9) * CELL, y: topMargin + pp.r * (rows / 17) * CELL },
+    portalPosition: { x: pp.c * CELL, y: topMargin + pp.r * CELL },
     cols,
     rows,
     cellSize: CELL,
