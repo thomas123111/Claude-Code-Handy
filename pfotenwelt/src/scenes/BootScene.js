@@ -13,7 +13,19 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.load.on('progress', (p) => { fill.width = 196 * p; });
 
-    // Pet sprites (Kenney Tiny Dungeon CC0 - used as pet avatars)
+    // Animal face sprites (Kenney Animal Pack CC0 - cute round style)
+    this.load.image('animal_rabbit', 'assets/animal_rabbit.png');
+    this.load.image('animal_panda', 'assets/animal_panda.png');
+    this.load.image('animal_monkey', 'assets/animal_monkey.png');
+    this.load.image('animal_pig', 'assets/animal_pig.png');
+    this.load.image('animal_penguin', 'assets/animal_penguin.png');
+    this.load.image('animal_parrot', 'assets/animal_parrot.png');
+    this.load.image('animal_elephant', 'assets/animal_elephant.png');
+    this.load.image('animal_giraffe', 'assets/animal_giraffe.png');
+    this.load.image('animal_hippo', 'assets/animal_hippo.png');
+    this.load.image('animal_snake', 'assets/animal_snake.png');
+
+    // Pet sprites (Kenney Tiny Dungeon CC0 - pixel style fallback)
     this.load.image('pet_cat', 'assets/pet_mage.png');
     this.load.image('pet_dog', 'assets/pet_warrior.png');
     this.load.image('pet_small', 'assets/pet_monk.png');
