@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy } from '../data/SaveManager.js';
+import { shouldTriggerEvent, getRandomEvent } from '../data/EventData.js';
+import { processNPCHelp } from '../data/GuildData.js';
 
 // Town map positions for each building
 const BUILDINGS = [
@@ -45,6 +47,12 @@ const BUILDINGS = [
     desc: 'Besucher & Herzen',
     unlockCost: 1200, bgAsset: 'bg_cafe',
   },
+  {
+    id: 'guild', key: 'Guild', name: 'Gilde', emoji: '🤝',
+    x: 270, y: 660, w: 100, h: 90,
+    desc: 'Helfer & Gemeinschaft',
+    unlockCost: 300, bgAsset: null,
+  },
 ];
 
 export class TownScene extends Phaser.Scene {
@@ -53,6 +61,23 @@ export class TownScene extends Phaser.Scene {
   create() {
     this.save = loadSave();
     regenerateEnergy(this.save);
+
+    // Process guild NPC help
+    if (this.save.guild) {
+      processNPCHelp(this.save);
+      writeSave(this.save);
+    }
+
+    // Check for random event
+    if (shouldTriggerEvent(this.save)) {
+      const evt = getRandomEvent(this.save);
+      if (evt) {
+        this.save.lastEventTime = Date.now();
+        writeSave(this.save);
+        this.scene.start('Event', { event: evt });
+        return;
+      }
+    }
     const { width, height } = this.scale;
     const cx = width / 2;
 
