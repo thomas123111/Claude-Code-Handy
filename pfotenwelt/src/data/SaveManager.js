@@ -29,6 +29,13 @@ const DEFAULT_SAVE = {
     cafe: { level: 0, unlocked: false },
   },
 
+  // Story tracking
+  seenStories: [],
+  lastEventTime: 0,
+
+  // Guild
+  guild: null,
+
   // Insurance
   insuredPets: [], // pet IDs that have insurance
 
