@@ -23,37 +23,27 @@ export class BootScene extends Phaser.Scene {
     ];
     breeds.forEach((b) => this.load.image(`breed_${b}`, `assets/breed_${b}.png`));
 
-    // Pet sprites (Kenney Tiny Dungeon CC0 - pixel style fallback)
-    this.load.image('pet_cat', 'assets/pet_mage.png');
-    this.load.image('pet_dog', 'assets/pet_warrior.png');
-    this.load.image('pet_small', 'assets/pet_monk.png');
-    this.load.image('pet_big_dog', 'assets/pet_bear.png');
-    this.load.image('pet_cute', 'assets/pet_slime.png');
-    this.load.image('pet_guard', 'assets/pet_knight.png');
+    // AI-generated backgrounds (Gemini)
+    const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
+    bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.png`));
 
-    // Item sprites
-    this.load.image('potion_red', 'assets/potion_red.png');
-    this.load.image('potion_blue', 'assets/potion_blue.png');
-    this.load.image('chest', 'assets/chest.png');
-    this.load.image('door', 'assets/door.png');
+    // AI-generated item icons (Gemini)
+    const items = ['kibble', 'treat', 'bowl', 'premium_food', 'feast',
+      'yarn', 'ball', 'plush', 'cattree', 'playground',
+      'bandage', 'medicine', 'medkit', 'soap', 'brush', 'shampoo',
+      'blanket', 'cushion', 'bed'];
+    items.forEach((i) => this.load.image(`item_${i}`, `assets/item_${i}.png`));
 
-    // UI sprites (Kenney RPG UI CC0)
-    this.load.image('panel_brown', 'assets/panel_brown.png');
-    this.load.image('panel_beige', 'assets/panel_beige.png');
-    this.load.image('btn_brown', 'assets/btn_brown.png');
-    this.load.image('btn_blue', 'assets/btn_blue.png');
+    // AI-generated UI icons (Gemini)
+    this.load.image('ui_heart', 'assets/ui_heart.png');
+    this.load.image('ui_energy', 'assets/ui_energy.png');
+    this.load.image('ui_star', 'assets/ui_star.png');
+    this.load.image('ui_coin', 'assets/ui_coin.png');
+    this.load.image('ui_paw', 'assets/ui_paw.png');
 
-    // Town tiles (Kenney Tiny Town CC0)
-    this.load.image('coin', 'assets/town_104.png');
-    this.load.image('key', 'assets/town_105.png');
-    this.load.image('cup', 'assets/town_107.png');
-    this.load.image('house_1', 'assets/town_72.png');
-    this.load.image('house_2', 'assets/town_73.png');
-    this.load.image('house_3', 'assets/town_76.png');
-    this.load.image('shop', 'assets/town_80.png');
-    this.load.image('tree_1', 'assets/town_86.png');
-    this.load.image('tree_2', 'assets/town_87.png');
-    this.load.image('flower', 'assets/town_92.png');
+    // App icon + splash
+    this.load.image('icon_app', 'assets/icon_app.png');
+    this.load.image('splash_screen', 'assets/splash_screen.png');
   }
 
   create() {

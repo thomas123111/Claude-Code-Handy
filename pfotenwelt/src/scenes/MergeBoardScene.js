@@ -220,11 +220,16 @@ export class MergeBoardScene extends Phaser.Scene {
 
         const { x, y } = this.cellToScreen(r, c);
 
-        // Item emoji
-        const emoji = this.add.text(x, y - 5, item.emoji, {
-          fontSize: '30px',
-        }).setOrigin(0.5).setDepth(5);
-        this.itemSprites.push(emoji);
+        // Item sprite (AI-generated) or emoji fallback
+        if (item.sprite && this.textures.exists(item.sprite)) {
+          const img = this.add.image(x, y - 3, item.sprite)
+            .setDisplaySize(CELL_SIZE - 14, CELL_SIZE - 14).setDepth(5);
+          this.itemSprites.push(img);
+        } else {
+          const em = this.add.text(x, y - 5, item.emoji, { fontSize: '30px' })
+            .setOrigin(0.5).setDepth(5);
+          this.itemSprites.push(em);
+        }
 
         // Level badge
         const lvlColors = ['#888888', '#88ccff', '#88ff88', '#ffcc44', '#ff88cc'];
@@ -412,7 +417,7 @@ export class MergeBoardScene extends Phaser.Scene {
 
   saveAndExit() {
     this.autosave();
-    this.scene.start('Menu');
+    this.scene.start('Town');
   }
 
   update(time, delta) {

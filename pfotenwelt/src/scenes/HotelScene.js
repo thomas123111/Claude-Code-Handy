@@ -179,7 +179,7 @@ export class HotelScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.addHitArea(cx, height - 40, 120, 30, () => {
       if (this.refreshTimer) this.refreshTimer.remove();
-      this.scene.start('Menu');
+      this.scene.start('Town');
     });
 
     // Touch handler
