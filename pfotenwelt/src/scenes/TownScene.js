@@ -60,17 +60,14 @@ export class TownScene extends Phaser.Scene {
     this.cameras.main.centerOn(MAP_W / 2, 400);
     this.cameras.main.setZoom(Math.min(width / MAP_W * 1.8, 1.2));
 
-    // === GREEN GRASS BACKGROUND ===
-    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x4a8a3a).setDepth(0);
-
-    // Tile grass texture across background
-    if (this.textures.exists('tile_grass')) {
-      for (let gx = 0; gx < MAP_W; gx += 120) {
-        for (let gy = 0; gy < MAP_H; gy += 120) {
-          this.add.image(gx + 60, gy + 60, 'tile_grass')
-            .setDisplaySize(125, 125).setDepth(0).setAlpha(0.4);
-        }
-      }
+    // === GREEN GRASS BACKGROUND (solid + subtle noise) ===
+    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x5a9a42).setDepth(0);
+    // Add subtle variation patches (no tiling artifacts)
+    for (let i = 0; i < 30; i++) {
+      const gx = Phaser.Math.Between(0, MAP_W);
+      const gy = Phaser.Math.Between(0, MAP_H);
+      const shade = Phaser.Math.Between(0x4a8a3a, 0x6aaa52);
+      this.add.circle(gx, gy, Phaser.Math.Between(40, 100), shade, 0.15).setDepth(0);
     }
 
     // === PATHS (connecting buildings) ===
@@ -278,13 +275,19 @@ export class TownScene extends Phaser.Scene {
 
   drawPath(x1, y1, x2, y2, color) {
     const isHorizontal = Math.abs(y2 - y1) < Math.abs(x2 - x1);
-    const w = isHorizontal ? Math.abs(x2 - x1) : 40;
-    const h = isHorizontal ? 40 : Math.abs(y2 - y1);
+    const pathW = 50;
+    const w = isHorizontal ? Math.abs(x2 - x1) : pathW;
+    const h = isHorizontal ? pathW : Math.abs(y2 - y1);
     const cx = (x1 + x2) / 2;
     const cy = (y1 + y2) / 2;
-    this.add.rectangle(cx, cy, w, h, color, 0.4).setDepth(0);
-    // Path border
-    this.add.rectangle(cx, cy, w + 4, h + 4, 0x8a7a5a, 0.15).setDepth(0);
+    // Path edge (darker)
+    this.add.rectangle(cx, cy, w + 6, h + 6, 0x7a6a4a, 0.5).setDepth(0);
+    // Path fill
+    this.add.rectangle(cx, cy, w, h, color, 0.6).setDepth(0);
+    // Center line (subtle lighter)
+    const cw = isHorizontal ? w - 20 : 4;
+    const ch = isHorizontal ? 4 : h - 20;
+    this.add.rectangle(cx, cy, cw, ch, 0xddccaa, 0.15).setDepth(0);
   }
 
   unlockBuilding(b) {
