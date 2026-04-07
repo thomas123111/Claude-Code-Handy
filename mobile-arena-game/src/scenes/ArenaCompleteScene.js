@@ -52,25 +52,37 @@ export class ArenaCompleteScene extends Phaser.Scene {
       fontSize: '9px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Right side: Buttons
+    // Right side: Buttons (manual hit detection)
     const bx = width * 0.72;
     const nextType = getArenaType(nextArena);
-    const nextLabel = nextType === 'maze' ? 'MAZE ARENA →' : 'NEXT ARENA →';
+    const nextLabel = nextType === 'maze' ? 'MAZE ARENA' : 'NEXT ARENA';
     const nextColor = nextType === 'maze' ? '#4466aa' : '#3399ff';
+    const nextColorVal = Phaser.Display.Color.HexStringToColor(nextColor).color;
+    const cashColorVal = Phaser.Display.Color.HexStringToColor('#ffaa00').color;
 
-    this.createButton(bx, height * 0.3, nextLabel, nextColor, () => {
-      this.scene.start(getArenaSceneName(nextArena), {
-        arenaIndex: nextArena,
-        runCredits: this.runCredits,
-        runScrap: this.runScrap,
-        runXp: this.runXp,
-        runSeed: this.runSeed,
-        ammoStock: this.ammoStock,
-      });
-    });
+    this.add.rectangle(bx, height * 0.35, 220, 50, nextColorVal, 0.2).setStrokeStyle(2, nextColorVal);
+    this.add.text(bx, height * 0.35, nextLabel, {
+      fontSize: '16px', fontFamily: 'monospace', color: nextColor, fontStyle: 'bold',
+    }).setOrigin(0.5);
 
-    this.createButton(bx, height * 0.6, 'CASH OUT & SAVE', '#ffaa00', () => {
-      this.cashOut();
+    this.add.rectangle(bx, height * 0.6, 220, 50, cashColorVal, 0.2).setStrokeStyle(2, cashColorVal);
+    this.add.text(bx, height * 0.6, 'CASH OUT', {
+      fontSize: '16px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    this.input.on('pointerdown', (pointer) => {
+      const px = pointer.x, py = pointer.y;
+      if (px >= bx - 110 && px <= bx + 110) {
+        if (py >= height * 0.35 - 25 && py <= height * 0.35 + 25) {
+          this.scene.start(getArenaSceneName(nextArena), {
+            arenaIndex: nextArena, runCredits: this.runCredits,
+            runScrap: this.runScrap, runXp: this.runXp,
+            runSeed: this.runSeed, ammoStock: this.ammoStock,
+          });
+        } else if (py >= height * 0.6 - 25 && py <= height * 0.6 + 25) {
+          this.cashOut();
+        }
+      }
     });
   }
 
@@ -94,13 +106,4 @@ export class ArenaCompleteScene extends Phaser.Scene {
     this.scene.start('Menu');
   }
 
-  createButton(x, y, text, color, callback) {
-    const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
-    const zone = this.add.zone(x, y, 220, 50).setInteractive();
-    this.add.rectangle(x, y, 220, 50, colorVal, 0.2).setStrokeStyle(2, colorVal);
-    this.add.text(x, y, text, {
-      fontSize: '16px', fontFamily: 'monospace', color, fontStyle: 'bold',
-    }).setOrigin(0.5);
-    zone.on('pointerdown', callback);
-  }
 }

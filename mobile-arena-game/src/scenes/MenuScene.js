@@ -16,61 +16,71 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '32px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(width * 0.3, 58, 'Top-Down Arena Shooter', {
+    this.add.text(width * 0.3, 60, mech.title || 'Top-Down Arena Shooter', {
       fontSize: '12px', fontFamily: 'monospace', color: '#6688aa',
     }).setOrigin(0.5);
 
-    this.add.image(width * 0.3, 120, `mech_${mech.id}`).setScale(3);
+    this.add.image(width * 0.3, 130, `mech_${mech.id}`).setScale(3);
 
-    this.add.text(width * 0.3, 160, `${mech.name} - Lv.${mech.level}`, {
+    this.add.text(width * 0.3, 175, `${mech.name} - Lv.${mech.level}`, {
       fontSize: '16px', fontFamily: 'monospace', color: '#ffffff',
     }).setOrigin(0.5);
 
-    this.add.text(width * 0.3, 185, `Credits: ${save.credits}  |  Scrap: ${save.scrap}`, {
+    this.add.text(width * 0.3, 200, `Credits: ${save.credits}  |  Scrap: ${save.scrap}`, {
       fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa',
     }).setOrigin(0.5);
 
-    this.add.text(width * 0.3, 205, `Highest Arena: ${save.highestArena}  |  Runs: ${save.totalRuns}`, {
+    this.add.text(width * 0.3, 220, `Highest Arena: ${save.highestArena}  |  Runs: ${save.totalRuns}`, {
       fontSize: '11px', fontFamily: 'monospace', color: '#888888',
     }).setOrigin(0.5);
 
-    // Controls hint
-    this.add.text(width * 0.3, height - 30, 'Left: Shoot | Right: Move | WASD on desktop', {
+    this.add.text(width * 0.3, height - 30, 'Left stick: Aim+Shoot | Right stick: Move', {
       fontSize: '10px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Right side: Buttons
+    // Right side: Buttons (using manual hit detection)
     const bx = width * 0.72;
-    this.createButton(bx, 80, 'START RUN', '#3399ff', () => {
-      const runSeed = Date.now();
-      this.scene.start('Arena', { arenaIndex: 0, runCredits: 0, runScrap: 0, runXp: 0, runSeed });
-    });
+    this.buttons = [];
+    this.drawButton(bx, 100, 'START RUN', '#3399ff');
+    this.drawButton(bx, 170, 'HANGAR', '#44aa44');
+    this.drawButton(bx, 240, 'RESET SAVE', '#884444');
 
-    this.createButton(bx, 150, 'HANGAR', '#44aa44', () => {
-      this.scene.start('Hangar');
-    });
+    // Single global pointer handler - check which button was hit
+    this.input.on('pointerdown', (pointer) => {
+      const px = pointer.x;
+      const py = pointer.y;
 
-    this.createButton(bx, 220, 'RESET SAVE', '#884444', () => {
-      resetSave();
-      this.scene.restart();
+      for (const btn of this.buttons) {
+        if (px >= btn.x - btn.w / 2 && px <= btn.x + btn.w / 2 &&
+            py >= btn.y - btn.h / 2 && py <= btn.y + btn.h / 2) {
+          btn.bg.setFillStyle(btn.colorVal, 0.5);
+          this.time.delayedCall(100, () => btn.action());
+          return;
+        }
+      }
     });
   }
 
-  createButton(x, y, text, color, callback) {
+  drawButton(x, y, text, color) {
     const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
-
-    // Zone for touch - invisible but covers the button area
-    const zone = this.add.zone(x, y, 220, 50).setInteractive();
-    // Visual background
     const bg = this.add.rectangle(x, y, 220, 50, colorVal, 0.2)
       .setStrokeStyle(2, colorVal);
-    // Label
     this.add.text(x, y, text, {
       fontSize: '16px', fontFamily: 'monospace', color, fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    zone.on('pointerdown', callback);
-    zone.on('pointerover', () => bg.setFillStyle(colorVal, 0.4));
-    zone.on('pointerout', () => bg.setFillStyle(colorVal, 0.2));
+    let action;
+    if (text === 'START RUN') {
+      action = () => {
+        const runSeed = Date.now();
+        this.scene.start('Arena', { arenaIndex: 0, runCredits: 0, runScrap: 0, runXp: 0, runSeed });
+      };
+    } else if (text === 'HANGAR') {
+      action = () => this.scene.start('Hangar');
+    } else if (text === 'RESET SAVE') {
+      action = () => { resetSave(); this.scene.restart(); };
+    }
+
+    this.buttons.push({ x, y, w: 220, h: 50, bg, colorVal, action });
   }
 }

@@ -72,14 +72,19 @@ export class GameOverScene extends Phaser.Scene {
       fontSize: '9px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Right: Button
+    // Right: Button (manual hit detection)
     const bx = width * 0.72;
-    const bg = this.add.rectangle(bx, height * 0.45, 200, 44, 0x3399ff, 0.2)
-      .setStrokeStyle(2, 0x3399ff)
-      .setInteractive({ useHandCursor: true });
-    this.add.text(bx, height * 0.45, 'BACK TO MENU', {
+    const by = height * 0.45;
+    this.add.rectangle(bx, by, 220, 50, 0x3399ff, 0.2).setStrokeStyle(2, 0x3399ff);
+    this.add.text(bx, by, 'BACK TO MENU', {
       fontSize: '16px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
     }).setOrigin(0.5);
-    bg.on('pointerdown', () => this.scene.start('Menu'));
+
+    this.input.on('pointerdown', (pointer) => {
+      if (pointer.x >= bx - 110 && pointer.x <= bx + 110 &&
+          pointer.y >= by - 25 && pointer.y <= by + 25) {
+        this.scene.start('Menu');
+      }
+    });
   }
 }

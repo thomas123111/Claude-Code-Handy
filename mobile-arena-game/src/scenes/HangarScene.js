@@ -15,6 +15,8 @@ export class HangarScene extends Phaser.Scene {
 
   drawUI() {
     this.children.removeAll();
+    this.input.removeAllListeners();
+    this.hitAreas = [];
     const { width, height } = this.scale;
     const save = this.save;
 
@@ -57,9 +59,25 @@ export class HangarScene extends Phaser.Scene {
     }
 
     // Back button
-    this.createSmallButton(width / 2, height - 50, '← BACK', '#888888', () => {
-      this.scene.start('Menu');
+    this.addHitArea(width / 2, height - 50, 100, 30, () => this.scene.start('Menu'));
+    this.add.text(width / 2, height - 50, '← BACK', {
+      fontSize: '13px', fontFamily: 'monospace', color: '#888888', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    // Global pointer handler for all hit areas
+    this.input.on('pointerdown', (pointer) => {
+      for (const h of this.hitAreas) {
+        if (pointer.x >= h.x - h.w / 2 && pointer.x <= h.x + h.w / 2 &&
+            pointer.y >= h.y - h.h / 2 && pointer.y <= h.y + h.h / 2) {
+          h.cb();
+          return;
+        }
+      }
     });
+  }
+
+  addHitArea(x, y, w, h, cb) {
+    this.hitAreas.push({ x, y, w, h, cb });
   }
 
   drawMechsTab(save) {
@@ -182,8 +200,7 @@ export class HangarScene extends Phaser.Scene {
           }).setOrigin(1, 0);
 
           if (canAfford) {
-            btn.setInteractive({ useHandCursor: true });
-            btn.on('pointerdown', () => {
+            this.addHitArea(width - 50, y + 12, 80, 24, () => {
               this.save.credits -= item.cost;
               this.save.scrap -= item.costScrap;
               this.save.inventory.push(item.id);
@@ -225,8 +242,7 @@ export class HangarScene extends Phaser.Scene {
       }).setOrigin(1, 0);
 
       if (canAfford) {
-        btn.setInteractive({ useHandCursor: true });
-        btn.on('pointerdown', () => {
+        this.addHitArea(width - 50, y + 10, 80, 24, () => {
           this.save.credits -= item.cost;
           this.save.scrap -= item.costScrap;
           if (!this.save.ammo) this.save.ammo = { plasma: 0, explosive: 0, piercing: 0 };
@@ -249,20 +265,18 @@ export class HangarScene extends Phaser.Scene {
 
   createTab(x, y, text, active, callback) {
     const color = active ? '#ffffff' : '#666666';
-    const bg = this.add.rectangle(x, y, 120, 30, active ? 0x334466 : 0x1a1a2a, 0.8)
-      .setStrokeStyle(1, active ? 0x3399ff : 0x333344)
-      .setInteractive({ useHandCursor: true });
+    this.add.rectangle(x, y, 120, 30, active ? 0x334466 : 0x1a1a2a, 0.8)
+      .setStrokeStyle(1, active ? 0x3399ff : 0x333344);
     this.add.text(x, y, text, {
       fontSize: '14px', fontFamily: 'monospace', color, fontStyle: 'bold',
     }).setOrigin(0.5);
-    bg.on('pointerdown', callback);
+    this.addHitArea(x, y, 120, 30, callback);
   }
 
   createSmallButton(x, y, text, color, callback) {
-    const t = this.add.text(x, y, text, {
+    this.add.text(x, y, text, {
       fontSize: '13px', fontFamily: 'monospace', color, fontStyle: 'bold',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    t.on('pointerdown', callback);
-    return t;
+    }).setOrigin(0.5);
+    this.addHitArea(x, y, 80, 25, callback);
   }
 }
