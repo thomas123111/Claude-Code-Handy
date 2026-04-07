@@ -58,20 +58,19 @@ export class MenuScene extends Phaser.Scene {
 
   createButton(x, y, text, color, callback) {
     const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
+
+    // Zone for touch - invisible but covers the button area
+    const zone = this.add.zone(x, y, 220, 50).setInteractive();
+    // Visual background
     const bg = this.add.rectangle(x, y, 220, 50, colorVal, 0.2)
       .setStrokeStyle(2, colorVal);
-
-    const label = this.add.text(x, y, text, {
+    // Label
+    this.add.text(x, y, text, {
       fontSize: '16px', fontFamily: 'monospace', color, fontStyle: 'bold',
-      padding: { x: 20, y: 12 },
-      backgroundColor: 'transparent',
-    }).setOrigin(0.5).setInteractive(
-      new Phaser.Geom.Rectangle(-110, -25, 220, 50),
-      Phaser.Geom.Rectangle.Contains
-    );
+    }).setOrigin(0.5);
 
-    label.on('pointerover', () => bg.setFillStyle(colorVal, 0.4));
-    label.on('pointerout', () => bg.setFillStyle(colorVal, 0.2));
-    label.on('pointerdown', callback);
+    zone.on('pointerdown', callback);
+    zone.on('pointerover', () => bg.setFillStyle(colorVal, 0.4));
+    zone.on('pointerout', () => bg.setFillStyle(colorVal, 0.2));
   }
 }

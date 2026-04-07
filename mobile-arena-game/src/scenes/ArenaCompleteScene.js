@@ -95,16 +95,12 @@ export class ArenaCompleteScene extends Phaser.Scene {
   }
 
   createButton(x, y, text, color, callback) {
-    const bg = this.add.rectangle(x, y, 260, 50, Phaser.Display.Color.HexStringToColor(color).color, 0.2)
-      .setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(color).color)
-      .setInteractive({ useHandCursor: true });
-
+    const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
+    const zone = this.add.zone(x, y, 220, 50).setInteractive();
+    this.add.rectangle(x, y, 220, 50, colorVal, 0.2).setStrokeStyle(2, colorVal);
     this.add.text(x, y, text, {
       fontSize: '16px', fontFamily: 'monospace', color, fontStyle: 'bold',
     }).setOrigin(0.5);
-
-    bg.on('pointerover', () => bg.setFillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.4));
-    bg.on('pointerout', () => bg.setFillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.2));
-    bg.on('pointerdown', callback);
+    zone.on('pointerdown', callback);
   }
 }

@@ -11,7 +11,6 @@ const config = {
   type: Phaser.AUTO,
   width: 960,
   height: 540,
-  parent: 'game-container',
   backgroundColor: '#0a0a1a',
   physics: {
     default: 'arcade',
@@ -22,15 +21,13 @@ const config = {
   },
   input: {
     activePointers: 3,
+    touch: { capture: true },
   },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    expandParent: true,
-    parent: 'game-container',
   },
   scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
 };
 
-const game = new Phaser.Game(config);
-window.game = game; // expose for orientation change handler
+new Phaser.Game(config);
