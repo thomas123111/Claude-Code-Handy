@@ -843,34 +843,23 @@ export class ArenaScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(200);
     }
 
-    // Auto-transition after 2 seconds (no tap needed)
+    // Auto-transition: go to next arena after 2 seconds
     const { height } = this.scale;
-    const countdownText = this.add.text(width / 2, height / 2 + 30, 'NEXT ARENA IN 3...', {
-      fontSize: '16px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
+    this.add.text(width / 2, height / 2 + 30, 'ARENA CLEAR!', {
+      fontSize: '18px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(201);
 
-    let countdown = 3;
-    this.autoTransitionTimer = this.time.addEvent({
-      delay: 1000,
-      repeat: 2,
-      callback: () => {
-        countdown--;
-        if (countdown > 0) {
-          countdownText.setText(`NEXT ARENA IN ${countdown}...`);
-        } else {
-          this.goToArenaComplete();
-        }
-      },
-    });
+    // Simply transition after 2 seconds
+    this.time.delayedCall(2000, () => this.goToArenaComplete());
 
-    // Also allow tapping to skip countdown
+    // Also allow tapping to skip
     this.clearTapHandler = true;
   }
 
   goToArenaComplete() {
     if (this.transitioning) return;
     this.transitioning = true;
-    if (this.autoTransitionTimer) this.autoTransitionTimer.remove();
+    // Remove any pending timers
 
     // Auto-collect all remaining loot
     this.lootItems.getChildren().forEach((loot) => {
