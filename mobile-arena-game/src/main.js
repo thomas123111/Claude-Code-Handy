@@ -24,10 +24,8 @@ const config = {
     activePointers: 3,
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: '100%',
-    height: '100%',
   },
   scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
 };
