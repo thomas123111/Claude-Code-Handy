@@ -836,31 +836,57 @@ export class ArenaScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(200);
     }
 
-    // Tappable NEXT button (no need to walk to portal)
+    // Auto-transition after 2 seconds (no tap needed)
     const { height } = this.scale;
-    const nextBtn = this.add.rectangle(width / 2, height / 2 + 30, 200, 50, 0x9944ff, 0.4)
-      .setStrokeStyle(3, 0xcc88ff).setDepth(200);
-    this.add.text(width / 2, height / 2 + 30, 'TAP TO CONTINUE', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    const countdownText = this.add.text(width / 2, height / 2 + 30, 'NEXT ARENA IN 3...', {
+      fontSize: '16px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(201);
 
-    // Tap anywhere after 1 second to proceed
-    this.time.delayedCall(500, () => {
-      this.input.once('pointerdown', () => {
-        if (this.arenaCleared && !this.transitioning) {
-          this.transitioning = true;
-          this.scene.start('ArenaComplete', {
-            arenaIndex: this.arenaIndex,
-            runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
-            runScrap: this.runScrap + this.arenaConfig.scrapReward,
-            runXp: this.runXp + this.arenaConfig.xpReward,
-            timeBonus: this.timeBonus || 0,
-            playerHpPercent: this.playerHp / this.maxHp,
-            runSeed: this.runSeed,
-            ammoStock: this.ammoStock,
-          });
+    let countdown = 3;
+    this.autoTransitionTimer = this.time.addEvent({
+      delay: 1000,
+      repeat: 2,
+      callback: () => {
+        countdown--;
+        if (countdown > 0) {
+          countdownText.setText(`NEXT ARENA IN ${countdown}...`);
+        } else {
+          this.goToArenaComplete();
         }
-      });
+      },
+    });
+
+    // Also allow tapping to skip countdown
+    this.clearTapHandler = true;
+  }
+
+  goToArenaComplete() {
+    if (this.transitioning) return;
+    this.transitioning = true;
+    if (this.autoTransitionTimer) this.autoTransitionTimer.remove();
+
+    // Auto-collect all remaining loot
+    this.lootItems.getChildren().forEach((loot) => {
+      if (!loot.active) return;
+      const type = loot.getData('type');
+      const value = loot.getData('value');
+      if (type === 'credit') this.runCredits += value;
+      else if (type === 'scrap') this.runScrap += value;
+      else if (type === 'health') this.playerHp = Math.min(this.maxHp, this.playerHp + value);
+      else if (type === 'ammo') {
+        const at = loot.getData('ammoType');
+        if (at && this.ammoStock[at] !== undefined) this.ammoStock[at] += value;
+      }
+    });
+    this.scene.start('ArenaComplete', {
+      arenaIndex: this.arenaIndex,
+      runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
+      runScrap: this.runScrap + this.arenaConfig.scrapReward,
+      runXp: this.runXp + this.arenaConfig.xpReward,
+      timeBonus: this.timeBonus || 0,
+      playerHpPercent: this.playerHp / this.maxHp,
+      runSeed: this.runSeed,
+      ammoStock: this.ammoStock,
     });
   }
 
@@ -1344,6 +1370,13 @@ export class ArenaScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.player || !this.player.active) return;
     if (this.startFrozen) return;
+
+    // If arena cleared and player taps, skip countdown
+    if (this.clearTapHandler && this.arenaCleared && this.input.activePointer.isDown) {
+      this.clearTapHandler = false;
+      this.goToArenaComplete();
+      return;
+    }
 
     // Player movement
     let vx = 0;
