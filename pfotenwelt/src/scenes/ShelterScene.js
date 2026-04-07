@@ -8,7 +8,24 @@ export class ShelterScene extends Phaser.Scene {
   create() {
     this.save = loadSave();
     this.checkPuzzleResult();
+    this.selectedPet = null;
     this.drawUI();
+  }
+
+  checkPuzzleResult() {
+    const result = this.registry.get('puzzleResult');
+    const pending = this.registry.get('pendingFeed');
+    if (!result || !pending) return;
+    this.registry.remove('puzzleResult');
+    this.registry.remove('pendingFeed');
+    const pet = this.save.pets[pending.petIdx];
+    if (pet && result.success) {
+      this.save.hearts -= pending.cost;
+      pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 40);
+      pet.happiness = calculateHappiness(pet);
+      addXp(this.save, 10);
+      writeSave(this.save);
+    }
   }
 
   drawUI() {
@@ -20,124 +37,64 @@ export class ShelterScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#221a2e');
+    this.cameras.main.setBackgroundColor('#1e1628');
 
-    // Header
-    this.add.text(cx, 25, '🏠 Dein Tierheim', {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ddaa77', fontStyle: 'bold',
+    // === HEADER ===
+    this.add.rectangle(cx, 0, width, 50, 0x2a1f35, 0.95).setOrigin(0.5, 0);
+    this.add.rectangle(cx, 50, width, 2, 0x443355).setOrigin(0.5, 0);
+    this.add.text(cx, 25, '🏠 Mein Tierheim', {
+      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
+    this.add.text(15, 15, `❤️ ${save.hearts}`, {
+      fontSize: '12px', fontFamily: 'monospace', color: '#ff6688',
+    });
+    this.add.text(width - 15, 15, `${save.pets.length} Tiere`, {
+      fontSize: '12px', fontFamily: 'monospace', color: '#aa88cc',
+    }).setOrigin(1, 0);
+    this.add.text(width - 15, 32, `${save.adopted} vermittelt`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#776688',
+    }).setOrigin(1, 0);
 
-    this.add.text(cx, 52, `${save.pets.length} Tiere | ❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#998877',
-    }).setOrigin(0.5);
-
+    // === EMPTY STATE ===
     if (save.pets.length === 0) {
-      this.add.text(cx, height / 2, 'Noch keine Tiere!\n\nMerge Items im Merge Board\num Tiere freizuschalten.', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#776688', align: 'center',
+      this.add.text(cx, 200, '🐾', { fontSize: '60px' }).setOrigin(0.5);
+      this.add.text(cx, 270, 'Noch keine Tiere!', {
+        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#aa88cc', fontStyle: 'bold',
       }).setOrigin(0.5);
+      this.add.text(cx, 300, 'Merge max-level Items im Merge Board\num dein erstes Tier zu bekommen!', {
+        fontSize: '12px', fontFamily: 'monospace', color: '#776688', align: 'center',
+      }).setOrigin(0.5);
+
+      // Quick link to merge
+      this.add.rectangle(cx, 370, 220, 44, 0x553388, 0.4).setStrokeStyle(2, 0x7744aa);
+      this.add.text(cx, 370, '🧩 Zum Merge Board', {
+        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ccaaff', fontStyle: 'bold',
+      }).setOrigin(0.5);
+      this.addHitArea(cx, 370, 220, 44, () => this.scene.start('MergeBoard'));
+
+    } else if (this.selectedPet !== null) {
+      // === PET DETAIL VIEW ===
+      this.drawPetDetail(save.pets[this.selectedPet], this.selectedPet);
     } else {
-      // Pet cards
-      let y = 80;
-      save.pets.forEach((pet, idx) => {
-        // Decay needs based on time
-        const elapsed = (Date.now() - pet.arrivedAt) / 60000;
-        decayNeeds(pet, Math.min(elapsed, 60)); // max 1h decay
-        pet.happiness = calculateHappiness(pet);
-
-        const cardH = 110;
-        const rarityColor = RARITY_COLORS[pet.rarity];
-
-        // Card background
-        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x2d2240, 0.8)
-          .setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(rarityColor).color);
-
-        // Pet emoji + name
-        this.add.text(25, y + 10, pet.emoji, { fontSize: '36px' });
-        this.add.text(70, y + 8, pet.name, {
-          fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-        });
-        this.add.text(70, y + 28, `${pet.breed} · ${RARITY_LABELS[pet.rarity]}`, {
-          fontSize: '10px', fontFamily: 'monospace', color: rarityColor,
-        });
-
-        // Insurance badge
-        if (pet.insured) {
-          this.add.text(width - 25, y + 10, '🛡️', { fontSize: '16px' }).setOrigin(1, 0);
-        }
-
-        // Needs bars
-        const barY = y + 50;
-        const needs = [
-          { key: 'hunger', label: '🍖', color: 0xff8844 },
-          { key: 'hygiene', label: '🧼', color: 0x44aaff },
-          { key: 'play', label: '🎾', color: 0x44dd44 },
-          { key: 'health', label: '💊', color: 0xff4466 },
-        ];
-
-        needs.forEach((need, ni) => {
-          const bx = 25 + ni * 125;
-          const val = pet.needs[need.key];
-          this.add.text(bx, barY, need.label, { fontSize: '12px' });
-          this.add.rectangle(bx + 20 + 40, barY + 7, 80, 8, 0x333333)
-            .setStrokeStyle(1, 0x444444);
-          this.add.rectangle(bx + 20, barY + 7, 80 * (val / 100), 8, need.color)
-            .setOrigin(0, 0.5);
-        });
-
-        // Action buttons
-        const btnY = y + 78;
-        // Feed button
-        this.add.text(25, btnY, '🍖 Füttern (5❤️)', {
-          fontSize: '10px', fontFamily: 'monospace', color: save.hearts >= 5 ? '#ffaa44' : '#555555',
-        });
-        if (save.hearts >= 5) {
-          this.addHitArea(80, btnY + 6, 130, 18, () => this.feedPet(idx, 'hunger', 5));
-        }
-
-        // Clean
-        this.add.text(170, btnY, '🧼 Pflegen (3❤️)', {
-          fontSize: '10px', fontFamily: 'monospace', color: save.hearts >= 3 ? '#44aaff' : '#555555',
-        });
-        if (save.hearts >= 3) {
-          this.addHitArea(230, btnY + 6, 120, 18, () => this.feedPet(idx, 'hygiene', 3));
-        }
-
-        // Play
-        this.add.text(315, btnY, '🎾 Spielen (3❤️)', {
-          fontSize: '10px', fontFamily: 'monospace', color: save.hearts >= 3 ? '#44dd44' : '#555555',
-        });
-        if (save.hearts >= 3) {
-          this.addHitArea(375, btnY + 6, 120, 18, () => this.feedPet(idx, 'play', 3));
-        }
-
-        // Adoption progress
-        pet.adoptionProgress = Math.min(100, pet.happiness * 1.2);
-        if (pet.adoptionProgress >= 95) {
-          this.add.text(cx, y + cardH - 8, '🎉 Bereit zur Vermittlung!', {
-            fontSize: '10px', fontFamily: 'monospace', color: '#44ff88',
-          }).setOrigin(0.5);
-          this.addHitArea(cx, y + cardH - 8, 200, 18, () => this.adoptPet(idx));
-        }
-
-        y += cardH + 8;
-      });
+      // === PET GRID VIEW ===
+      this.drawPetGrid();
     }
 
-    // Insurance section
-    this.add.text(cx, height - 100, '🛡️ Tierversicherung', {
-      fontSize: '13px', fontFamily: 'monospace', color: '#88aacc',
+    // === BACK BUTTON ===
+    const backLabel = this.selectedPet !== null ? '← Zurück zur Übersicht' : '← Hauptmenü';
+    this.add.text(cx, height - 30, backLabel, {
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#887799',
     }).setOrigin(0.5);
-    this.add.text(cx, height - 80, 'Schützt vor hohen Tierarztkosten!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#667788',
-    }).setOrigin(0.5);
+    this.addHitArea(cx, height - 30, 250, 35, () => {
+      if (this.selectedPet !== null) {
+        this.selectedPet = null;
+        this.drawUI();
+      } else {
+        this.scene.start('Menu');
+      }
+    });
 
-    // Back button
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Menu'));
-
-    // Touch handler
+    // Global touch
     this.input.on('pointerdown', (pointer) => {
       for (const h of this.hitAreas) {
         if (pointer.x >= h.x - h.w / 2 && pointer.x <= h.x + h.w / 2 &&
@@ -149,11 +106,261 @@ export class ShelterScene extends Phaser.Scene {
     });
   }
 
+  // === PET GRID (overview) ===
+  drawPetGrid() {
+    const { width } = this.scale;
+    const save = this.save;
+    const cols = 3;
+    const cardW = 160;
+    const cardH = 175;
+    const startY = 65;
+    const gapX = 12;
+    const gapY = 10;
+
+    this.add.text(width / 2, startY + 5, 'Tippe auf ein Tier für Details', {
+      fontSize: '10px', fontFamily: 'monospace', color: '#665577',
+    }).setOrigin(0.5);
+
+    save.pets.forEach((pet, idx) => {
+      // Decay needs
+      const elapsed = (Date.now() - (pet.arrivedAt || Date.now())) / 60000;
+      decayNeeds(pet, Math.min(elapsed * 0.1, 10));
+      pet.happiness = calculateHappiness(pet);
+
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const cx = 30 + col * (cardW + gapX) + cardW / 2;
+      const cy = startY + 25 + row * (cardH + gapY) + cardH / 2;
+
+      // Card
+      const rarityCol = Phaser.Display.Color.HexStringToColor(RARITY_COLORS[pet.rarity] || '#555555').color;
+      this.add.rectangle(cx, cy, cardW, cardH, 0x2a2040, 0.85)
+        .setStrokeStyle(2, rarityCol);
+
+      // Breed portrait
+      const breedTex = `breed_${pet.breedId}`;
+      if (this.textures.exists(breedTex)) {
+        this.add.image(cx, cy - 35, breedTex).setScale(0.13);
+      } else {
+        this.add.text(cx, cy - 40, pet.emoji, { fontSize: '40px' }).setOrigin(0.5);
+      }
+
+      // Name
+      this.add.text(cx, cy + 25, pet.name, {
+        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+      }).setOrigin(0.5);
+
+      // Breed + rarity
+      this.add.text(cx, cy + 42, pet.breed, {
+        fontSize: '9px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
+      }).setOrigin(0.5);
+
+      // Happiness indicator
+      const happyEmoji = pet.happiness >= 75 ? '😊' : pet.happiness >= 50 ? '😐' : '😢';
+      this.add.text(cx, cy + 60, `${happyEmoji} ${Math.round(pet.happiness)}%`, {
+        fontSize: '11px', fontFamily: 'monospace', color: pet.happiness >= 75 ? '#44ff88' : pet.happiness >= 50 ? '#ffcc44' : '#ff6644',
+      }).setOrigin(0.5);
+
+      // Badges
+      let badgeX = cx - 50;
+      if (pet.insured) {
+        this.add.text(badgeX, cy + 75, '🛡️', { fontSize: '12px' });
+        badgeX += 20;
+      }
+      if (pet.groomed) {
+        this.add.text(badgeX, cy + 75, '✨', { fontSize: '12px' });
+        badgeX += 20;
+      }
+      if (pet.tricks && pet.tricks.length > 0) {
+        this.add.text(badgeX, cy + 75, '🎓', { fontSize: '12px' });
+      }
+
+      // Tap to select
+      this.addHitArea(cx, cy, cardW, cardH, () => {
+        this.selectedPet = idx;
+        this.drawUI();
+      });
+    });
+  }
+
+  // === PET DETAIL VIEW ===
+  drawPetDetail(pet, petIdx) {
+    const { width, height } = this.scale;
+    const cx = width / 2;
+    const save = this.save;
+
+    // Decay needs
+    const elapsed = (Date.now() - (pet.arrivedAt || Date.now())) / 60000;
+    decayNeeds(pet, Math.min(elapsed * 0.1, 10));
+    pet.happiness = calculateHappiness(pet);
+
+    // Large portrait
+    const breedTex = `breed_${pet.breedId}`;
+    if (this.textures.exists(breedTex)) {
+      this.add.image(cx, 140, breedTex).setScale(0.28);
+    } else {
+      this.add.text(cx, 120, pet.emoji, { fontSize: '64px' }).setOrigin(0.5);
+    }
+
+    // Name + breed
+    this.add.text(cx, 225, pet.name, {
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.add.text(cx, 250, `${pet.breed} · ${RARITY_LABELS[pet.rarity]}`, {
+      fontSize: '12px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
+    }).setOrigin(0.5);
+
+    // Story
+    if (pet.story) {
+      this.add.text(cx, 275, `"${pet.story}"`, {
+        fontSize: '10px', fontFamily: 'Georgia, serif', color: '#998877',
+        fontStyle: 'italic', wordWrap: { width: width - 60 }, align: 'center',
+      }).setOrigin(0.5);
+    }
+
+    // Happiness big display
+    const happyEmoji = pet.happiness >= 75 ? '😊' : pet.happiness >= 50 ? '😐' : '😢';
+    this.add.text(cx, 310, `${happyEmoji} Glück: ${Math.round(pet.happiness)}%`, {
+      fontSize: '16px', fontFamily: 'monospace', color: '#ffcc88', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    // === NEEDS SECTION ===
+    const needsY = 345;
+    this.add.rectangle(cx, needsY + 50, width - 30, 120, 0x252035, 0.7)
+      .setStrokeStyle(1, 0x443355);
+    this.add.text(cx, needsY, 'Bedürfnisse', {
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ccbbdd', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    const needs = [
+      { key: 'hunger', label: 'Hunger', emoji: '🍖', color: 0xff8844, cost: 5, puzzle: 'SortPuzzle' },
+      { key: 'hygiene', label: 'Pflege', emoji: '🧼', color: 0x44aaff, cost: 3, puzzle: 'MemoryPuzzle' },
+      { key: 'play', label: 'Spielen', emoji: '🎾', color: 0x44dd44, cost: 3, puzzle: null },
+      { key: 'health', label: 'Gesundheit', emoji: '💊', color: 0xff4466, cost: 0, puzzle: null },
+    ];
+
+    needs.forEach((need, ni) => {
+      const ny = needsY + 20 + ni * 28;
+      const val = pet.needs[need.key];
+      const barW = 180;
+
+      // Label
+      this.add.text(25, ny, `${need.emoji} ${need.label}`, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+      });
+
+      // Bar background
+      this.add.rectangle(170 + barW / 2, ny + 7, barW, 12, 0x333344)
+        .setStrokeStyle(1, 0x444455);
+      // Bar fill
+      const fillW = Math.max(1, barW * (val / 100));
+      this.add.rectangle(170, ny + 7, fillW, 12, need.color).setOrigin(0, 0.5);
+      // Value text
+      this.add.text(170 + barW + 8, ny, `${Math.round(val)}%`, {
+        fontSize: '10px', fontFamily: 'monospace', color: val > 40 ? '#aaaaaa' : '#ff6644',
+      });
+
+      // Action button (if need is low and has action)
+      if (need.cost > 0 && val < 80) {
+        const btnX = width - 40;
+        const canAfford = save.hearts >= need.cost;
+        this.add.rectangle(btnX, ny + 6, 55, 20, canAfford ? 0x553388 : 0x332233, 0.6)
+          .setStrokeStyle(1, canAfford ? 0x7744aa : 0x444444);
+        this.add.text(btnX, ny + 6, `${need.cost}❤️`, {
+          fontSize: '10px', fontFamily: 'monospace', color: canAfford ? '#ccaaff' : '#555555',
+        }).setOrigin(0.5);
+        if (canAfford) {
+          this.addHitArea(btnX, ny + 6, 55, 22, () => {
+            this.feedPet(petIdx, need.key, need.cost);
+          });
+        }
+      }
+    });
+
+    // === BADGES SECTION ===
+    const badgeY = 480;
+    let bx = 25;
+    if (pet.insured) {
+      this.add.text(bx, badgeY, '🛡️ Versichert', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#4488aa',
+      });
+      bx += 120;
+    }
+    if (pet.groomed) {
+      this.add.text(bx, badgeY, '✨ Gepflegt (+25%)', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#cc88ff',
+      });
+      bx += 140;
+    }
+    if (pet.tricks && pet.tricks.length > 0) {
+      this.add.text(bx, badgeY, `🎓 ${pet.tricks.join(', ')}`, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#44aa44',
+      });
+    }
+
+    // === ACTION BUTTONS ===
+    const actY = 520;
+
+    // Adoption progress
+    pet.adoptionProgress = Math.min(100, pet.happiness * 1.2);
+    const adoptBarW = width - 60;
+    this.add.rectangle(cx, actY, adoptBarW, 16, 0x333344).setStrokeStyle(1, 0x444455);
+    this.add.rectangle(30, actY, adoptBarW * (pet.adoptionProgress / 100), 16, 0x44aa66)
+      .setOrigin(0, 0.5);
+    this.add.text(cx, actY, `Vermittlung: ${Math.round(pet.adoptionProgress)}%`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#ffffff',
+    }).setOrigin(0.5);
+
+    if (pet.adoptionProgress >= 95) {
+      // Adoption button
+      this.add.rectangle(cx, actY + 40, 280, 46, 0x337733, 0.5)
+        .setStrokeStyle(2, 0x44aa44);
+      this.add.text(cx, actY + 40, '🏠 Vermitteln & Spenden!', {
+        fontSize: '15px', fontFamily: 'Georgia, serif', color: '#88ff88', fontStyle: 'bold',
+      }).setOrigin(0.5);
+      this.addHitArea(cx, actY + 40, 280, 46, () => this.adoptPet(petIdx));
+
+      const rarityBonus = { common: 20, rare: 50, epic: 120, legendary: 300 };
+      const bonus = rarityBonus[pet.rarity] || 20;
+      this.add.text(cx, actY + 72, `Belohnung: +${bonus}❤️ + 0.5kg Futterspende`, {
+        fontSize: '10px', fontFamily: 'monospace', color: '#88aa88',
+      }).setOrigin(0.5);
+    } else {
+      this.add.text(cx, actY + 40, 'Mach das Tier glücklicher um es zu vermitteln!', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#776688',
+      }).setOrigin(0.5);
+    }
+
+    // Insurance button (if not insured)
+    if (!pet.insured) {
+      const insY = actY + 100;
+      const canAffordIns = save.hearts >= 30;
+      this.add.rectangle(cx, insY, 240, 36, canAffordIns ? 0x334466 : 0x222233, 0.5)
+        .setStrokeStyle(1, canAffordIns ? 0x4488aa : 0x333344);
+      this.add.text(cx, insY, '🛡️ Versichern (30❤️)', {
+        fontSize: '12px', fontFamily: 'monospace', color: canAffordIns ? '#88ccff' : '#555555',
+      }).setOrigin(0.5);
+      if (canAffordIns) {
+        this.addHitArea(cx, insY, 240, 36, () => {
+          this.save.hearts -= 30;
+          pet.insured = true;
+          if (!save.insuredPets) save.insuredPets = [];
+          save.insuredPets.push(pet.id);
+          addXp(this.save, 10);
+          writeSave(this.save);
+          this.drawUI();
+        });
+      }
+      this.add.text(cx, insY + 25, 'Halbiert Tierarztkosten!', {
+        fontSize: '9px', fontFamily: 'monospace', color: '#556677',
+      }).setOrigin(0.5);
+    }
+  }
+
   feedPet(petIdx, need, cost) {
     const pet = this.save.pets[petIdx];
     if (!pet || this.save.hearts < cost) return;
 
-    // Launch appropriate puzzle
     this.registry.set('pendingFeed', { petIdx, need, cost });
 
     if (need === 'hunger') {
@@ -161,7 +368,6 @@ export class ShelterScene extends Phaser.Scene {
     } else if (need === 'hygiene') {
       this.scene.start('MemoryPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
     } else {
-      // Play need - direct action (no puzzle)
       this.save.hearts -= cost;
       pet.needs[need] = Math.min(100, pet.needs[need] + 30);
       pet.happiness = calculateHappiness(pet);
@@ -171,42 +377,22 @@ export class ShelterScene extends Phaser.Scene {
     }
   }
 
-  checkPuzzleResult() {
-    const result = this.registry.get('puzzleResult');
-    const pending = this.registry.get('pendingFeed');
-    if (!result || !pending) return;
-
-    this.registry.remove('puzzleResult');
-    this.registry.remove('pendingFeed');
-
-    const pet = this.save.pets[pending.petIdx];
-    if (pet && result.success) {
-      this.save.hearts -= pending.cost;
-      pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 40); // +40 with puzzle vs +30
-      pet.happiness = calculateHappiness(pet);
-      addXp(this.save, 10); // more XP with puzzle
-      writeSave(this.save);
-    }
-  }
-
   adoptPet(petIdx) {
     const pet = this.save.pets[petIdx];
     if (!pet) return;
 
-    // Adoption rewards
     const rarityBonus = { common: 20, rare: 50, epic: 120, legendary: 300 };
     const bonus = rarityBonus[pet.rarity] || 20;
     this.save.hearts += bonus;
     this.save.adopted++;
-    this.save.totalDonatedKg += 0.5; // Each adoption = 0.5kg donation
+    this.save.totalDonatedKg += 0.5;
 
-    // Add to collection
     if (!this.save.collection.includes(pet.breedId)) {
       this.save.collection.push(pet.breedId);
     }
 
-    // Remove pet
     this.save.pets.splice(petIdx, 1);
+    this.selectedPet = null;
     addXp(this.save, bonus);
     writeSave(this.save);
     this.drawUI();

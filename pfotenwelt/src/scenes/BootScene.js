@@ -13,17 +13,15 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.load.on('progress', (p) => { fill.width = 196 * p; });
 
-    // Animal face sprites (Kenney Animal Pack CC0 - cute round style)
-    this.load.image('animal_rabbit', 'assets/animal_rabbit.png');
-    this.load.image('animal_panda', 'assets/animal_panda.png');
-    this.load.image('animal_monkey', 'assets/animal_monkey.png');
-    this.load.image('animal_pig', 'assets/animal_pig.png');
-    this.load.image('animal_penguin', 'assets/animal_penguin.png');
-    this.load.image('animal_parrot', 'assets/animal_parrot.png');
-    this.load.image('animal_elephant', 'assets/animal_elephant.png');
-    this.load.image('animal_giraffe', 'assets/animal_giraffe.png');
-    this.load.image('animal_hippo', 'assets/animal_hippo.png');
-    this.load.image('animal_snake', 'assets/animal_snake.png');
+    // AI-generated breed portraits (Gemini, kawaii style)
+    const breeds = [
+      'labrador', 'dackel', 'schaeferhund', 'golden', 'husky',
+      'pudel', 'corgi', 'dalmatiner', 'samojede',
+      'hauskatze', 'tiger_katze', 'schwarze', 'perser',
+      'maine_coon', 'siam', 'bengal',
+      'kaninchen', 'hamster', 'meerschwein',
+    ];
+    breeds.forEach((b) => this.load.image(`breed_${b}`, `assets/breed_${b}.png`));
 
     // Pet sprites (Kenney Tiny Dungeon CC0 - pixel style fallback)
     this.load.image('pet_cat', 'assets/pet_mage.png');

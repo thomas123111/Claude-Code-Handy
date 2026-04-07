@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.5.0';
+export const GAME_VERSION = 'v0.6.1';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -84,13 +84,10 @@ export class MenuScene extends Phaser.Scene {
       // Show pet sprites in a row
       const showPets = save.pets.slice(0, 6);
       showPets.forEach((p, i) => {
-        const px = cx - ((showPets.length - 1) * 25) + i * 50;
-        // Map pet type to sprite
-        const spriteMap = { dogs: 'pet_dog', cats: 'pet_cat', small: 'pet_small' };
-        const category = p.breedId && this.getPetCategory(p.breedId);
-        const tex = spriteMap[category] || 'pet_cute';
-        if (this.textures.exists(tex)) {
-          this.add.image(px, panelY + 55, tex).setScale(2.5);
+        const px = cx - ((showPets.length - 1) * 28) + i * 56;
+        const breedTex = `breed_${p.breedId}`;
+        if (this.textures.exists(breedTex)) {
+          this.add.image(px, panelY + 55, breedTex).setScale(0.12).setDepth(5);
         } else {
           this.add.text(px, panelY + 50, p.emoji, { fontSize: '24px' }).setOrigin(0.5);
         }
