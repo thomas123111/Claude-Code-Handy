@@ -73,8 +73,8 @@ export const EQUIPMENT_SHOP = [
 ];
 
 export const MECH_UNLOCK_COSTS = {
-  tank: { credits: 100, scrap: 30 },
-  scout: { credits: 80, scrap: 25 },
+  titan: { credits: 100, scrap: 30 },
+  phantom: { credits: 80, scrap: 25 },
 };
 
 // Ammo types - basic is infinite, others are consumable

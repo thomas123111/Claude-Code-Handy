@@ -40,44 +40,45 @@ export class GameOverScene extends Phaser.Scene {
 
     writeSave(save);
 
-    // UI
-    this.add.text(width / 2, 100, 'DESTROYED', {
-      fontSize: '32px', fontFamily: 'monospace', color: '#ff4444', fontStyle: 'bold',
+    // UI - landscape two-column layout
+    // Left: Title + Stats
+    this.add.text(width * 0.3, 30, 'DESTROYED', {
+      fontSize: '28px', fontFamily: 'monospace', color: '#ff4444', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(width / 2, 150, `Reached Arena ${this.arenaIndex + 1}`, {
-      fontSize: '16px', fontFamily: 'monospace', color: '#aaaaaa',
+    this.add.text(width * 0.3, 60, `Reached Arena ${this.arenaIndex + 1}`, {
+      fontSize: '13px', fontFamily: 'monospace', color: '#aaaaaa',
     }).setOrigin(0.5);
 
-    let y = 210;
+    let y = 90;
     const lines = [
-      ['Earned credits', `${this.runCredits}`, '#ffdd00'],
-      ['Kept (50%)', `${keptCredits}`, '#ffffff'],
-      ['Earned scrap', `${this.runScrap}`, '#88aacc'],
-      ['Kept (50%)', `${keptScrap}`, '#ffffff'],
+      ['Earned', `${this.runCredits}cr`, '#ffdd00'],
+      ['Kept (50%)', `${keptCredits}cr`, '#ffffff'],
+      ['Scrap kept', `${keptScrap}`, '#88aacc'],
       ['XP kept', `${keptXp}`, '#aaffaa'],
     ];
 
     lines.forEach(([label, value, color]) => {
-      this.add.text(60, y, label, {
-        fontSize: '13px', fontFamily: 'monospace', color: '#888888',
+      this.add.text(width * 0.1, y, label, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#888888',
       });
-      this.add.text(width - 60, y, value, {
-        fontSize: '13px', fontFamily: 'monospace', color, fontStyle: 'bold',
+      this.add.text(width * 0.48, y, value, {
+        fontSize: '11px', fontFamily: 'monospace', color, fontStyle: 'bold',
       }).setOrigin(1, 0);
-      y += 28;
+      y += 22;
     });
 
-    this.add.text(width / 2, 420, 'Death costs 50% of run earnings.\nCash out between arenas to keep everything!', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#666666', align: 'center',
+    this.add.text(width * 0.3, height - 20, 'Death costs 50%. Cash out to keep everything!', {
+      fontSize: '9px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Retry button
-    const bg = this.add.rectangle(width / 2, 500, 260, 50, 0x3399ff, 0.2)
+    // Right: Button
+    const bx = width * 0.72;
+    const bg = this.add.rectangle(bx, height * 0.45, 200, 44, 0x3399ff, 0.2)
       .setStrokeStyle(2, 0x3399ff)
       .setInteractive({ useHandCursor: true });
-    this.add.text(width / 2, 500, 'BACK TO MENU', {
-      fontSize: '18px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
+    this.add.text(bx, height * 0.45, 'BACK TO MENU', {
+      fontSize: '16px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
     }).setOrigin(0.5);
     bg.on('pointerdown', () => this.scene.start('Menu'));
   }

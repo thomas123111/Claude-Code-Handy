@@ -15,43 +15,72 @@ export class BootScene extends Phaser.Scene {
     // Player mech - triangle ship
     const pg = this.add.graphics();
 
-    // Striker - balanced blue mech
+    // STRIKER - Assault Mech (blue arrow ship)
     pg.clear();
-    pg.fillStyle(0x3399ff, 1);
+    pg.fillStyle(0x2277dd, 1);
     pg.beginPath();
-    pg.moveTo(16, 0);
-    pg.lineTo(32, 32);
-    pg.lineTo(16, 26);
-    pg.lineTo(0, 32);
-    pg.closePath();
-    pg.fill();
-    pg.fillStyle(0x66bbff, 1);
-    pg.fillRect(12, 10, 8, 12);
+    pg.moveTo(16, 0); pg.lineTo(30, 28); pg.lineTo(16, 22); pg.lineTo(2, 28);
+    pg.closePath(); pg.fill();
+    pg.fillStyle(0x3399ff, 1);
+    pg.fillRect(12, 8, 8, 14);
+    pg.fillStyle(0x66ccff, 1);
+    pg.fillCircle(16, 12, 3);
+    // Pulse cannon barrels
+    pg.fillStyle(0x44aaff, 1);
+    pg.fillRect(6, 2, 3, 8);
+    pg.fillRect(23, 2, 3, 8);
     pg.generateTexture('mech_striker', 32, 32);
 
-    // Tank - wide heavy mech
+    // TITAN - Heavy Mech (wide green fortress)
     pg.clear();
+    pg.fillStyle(0x2a7a2a, 1);
+    pg.fillRect(2, 6, 28, 22);
     pg.fillStyle(0x44aa44, 1);
-    pg.fillRect(2, 4, 28, 24);
+    pg.fillRect(4, 4, 24, 18);
+    // Shoulder armor
+    pg.fillStyle(0x338833, 1);
+    pg.fillRect(0, 8, 6, 12);
+    pg.fillRect(26, 8, 6, 12);
+    // Shotgun barrel (wide)
     pg.fillStyle(0x66cc66, 1);
-    pg.fillRect(10, 0, 12, 28);
-    pg.fillStyle(0x88ee88, 1);
-    pg.fillRect(13, 2, 6, 8);
-    pg.generateTexture('mech_tank', 32, 32);
+    pg.fillRect(8, 0, 16, 6);
+    // Visor
+    pg.fillStyle(0xaaffaa, 1);
+    pg.fillRect(10, 10, 12, 4);
+    // Shield emblem
+    pg.fillStyle(0x88ee88, 0.5);
+    pg.fillCircle(16, 18, 5);
+    pg.generateTexture('mech_titan', 32, 32);
 
-    // Scout - sleek small mech
+    // PHANTOM - Stealth Mech (sleek pink/purple)
     pg.clear();
-    pg.fillStyle(0xffaa00, 1);
+    pg.fillStyle(0x882266, 1);
     pg.beginPath();
-    pg.moveTo(16, 0);
-    pg.lineTo(28, 28);
-    pg.lineTo(16, 22);
-    pg.lineTo(4, 28);
-    pg.closePath();
-    pg.fill();
-    pg.fillStyle(0xffcc44, 1);
-    pg.fillRect(13, 8, 6, 8);
-    pg.generateTexture('mech_scout', 32, 32);
+    pg.moveTo(16, 0); pg.lineTo(26, 24); pg.lineTo(16, 32); pg.lineTo(6, 24);
+    pg.closePath(); pg.fill();
+    pg.fillStyle(0xcc4488, 1);
+    pg.beginPath();
+    pg.moveTo(16, 4); pg.lineTo(22, 20); pg.lineTo(16, 26); pg.lineTo(10, 20);
+    pg.closePath(); pg.fill();
+    // Laser sight line
+    pg.lineStyle(1, 0xff4488, 0.8);
+    pg.lineBetween(16, 0, 16, -4);
+    // Eyes
+    pg.fillStyle(0xff88cc, 1);
+    pg.fillCircle(13, 12, 2);
+    pg.fillCircle(19, 12, 2);
+    // Cloak shimmer effect
+    pg.fillStyle(0xffffff, 0.15);
+    pg.fillRect(8, 6, 16, 2);
+    pg.generateTexture('mech_phantom', 32, 32);
+
+    // Shield effect (for Titan special)
+    pg.clear();
+    pg.lineStyle(3, 0x44ff88, 0.6);
+    pg.strokeCircle(20, 20, 18);
+    pg.lineStyle(1, 0xaaffcc, 0.3);
+    pg.strokeCircle(20, 20, 14);
+    pg.generateTexture('shield_effect', 40, 40);
 
     // Bullet - basic (yellow)
     pg.clear();

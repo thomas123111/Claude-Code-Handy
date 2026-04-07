@@ -24,37 +24,41 @@ export class ArenaCompleteScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(400);
 
-    this.add.text(width / 2, 80, `ARENA ${this.arenaIndex + 1}\nCOMPLETE!`, {
-      fontSize: '28px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold', align: 'center',
+    // Left side: Stats
+    this.add.text(width * 0.3, 30, `ARENA ${this.arenaIndex + 1} COMPLETE!`, {
+      fontSize: '22px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    let y = 170;
+    let y = 65;
     const stats = [
-      [`Credits earned`, `${this.runCredits}`],
-      [`Scrap earned`, `${this.runScrap}`],
-      [`XP earned`, `${this.runXp}`],
+      [`Credits`, `${this.runCredits}`],
+      [`Scrap`, `${this.runScrap}`],
+      [`XP`, `${this.runXp}`],
     ];
-    if (this.timeBonus > 0) {
-      stats.push([`Speed bonus`, `+${this.timeBonus} credits`]);
-    }
-    stats.push([`HP remaining`, `${Math.round(this.playerHpPercent * 100)}%`]);
+    if (this.timeBonus > 0) stats.push([`Speed bonus`, `+${this.timeBonus}cr`]);
+    stats.push([`HP`, `${Math.round(this.playerHpPercent * 100)}%`]);
 
     stats.forEach(([label, value]) => {
-      this.add.text(40, y, label, {
-        fontSize: '14px', fontFamily: 'monospace', color: '#aaaaaa',
+      this.add.text(width * 0.1, y, label, {
+        fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa',
       });
-      this.add.text(width - 40, y, value, {
-        fontSize: '14px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+      this.add.text(width * 0.48, y, value, {
+        fontSize: '12px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
       }).setOrigin(1, 0);
-      y += 30;
+      y += 22;
     });
 
-    // Next arena button - route to maze or combat
+    this.add.text(width * 0.3, height - 25, 'Cash out saves earnings. Continuing risks losing on death!', {
+      fontSize: '9px', fontFamily: 'monospace', color: '#555555',
+    }).setOrigin(0.5);
+
+    // Right side: Buttons
+    const bx = width * 0.72;
     const nextType = getArenaType(nextArena);
-    const nextLabel = nextType === 'maze' ? 'NEXT: MAZE ARENA →' : 'NEXT ARENA →';
+    const nextLabel = nextType === 'maze' ? 'MAZE ARENA →' : 'NEXT ARENA →';
     const nextColor = nextType === 'maze' ? '#4466aa' : '#3399ff';
 
-    this.createButton(width / 2, 420, nextLabel, nextColor, () => {
+    this.createButton(bx, height * 0.3, nextLabel, nextColor, () => {
       this.scene.start(getArenaSceneName(nextArena), {
         arenaIndex: nextArena,
         runCredits: this.runCredits,
@@ -65,15 +69,9 @@ export class ArenaCompleteScene extends Phaser.Scene {
       });
     });
 
-    // Cash out button - end run and save
-    this.createButton(width / 2, 500, 'CASH OUT & SAVE', '#ffaa00', () => {
+    this.createButton(bx, height * 0.6, 'CASH OUT & SAVE', '#ffaa00', () => {
       this.cashOut();
     });
-
-    // Info
-    this.add.text(width / 2, 580, 'Cash out saves your earnings.\nContinuing risks losing on death!', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#666666', align: 'center',
-    }).setOrigin(0.5);
   }
 
   cashOut() {
