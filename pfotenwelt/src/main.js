@@ -24,13 +24,13 @@ import { SwipePuzzle } from './scenes/puzzles/SwipePuzzle.js';
 import { TimingPuzzle } from './scenes/puzzles/TimingPuzzle.js';
 
 const config = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   width: 540,
   height: 960,
   backgroundColor: '#1a1520',
   input: {
     activePointers: 2,
-    touch: { capture: true },
+    touch: { capture: true, target: document.body },
   },
   scale: {
     mode: Phaser.Scale.FIT,
