@@ -90,40 +90,83 @@ export class TownScene extends Phaser.Scene {
       fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
 
-    // === ANIMATED CHARACTERS on paths (proper sprites, correct scale) ===
-    this.walkers = [];
+    // === AMBIENT EFFECTS (subtle, professional, no cheap sprites) ===
+    this.ambientEffects = [];
 
-    // Paths follow the cobblestone roads in the image
-    // Scale: buildings are ~100px wide in 1024 map, so characters should be ~25-35px
-    const walkerDefs = [
-      // Dog walker along horizontal path (middle road)
-      { tex: 'sprite_dog_walker', scale: 0.5, speed: 18, depth: 3,
-        path: [[100, 480], [450, 480], [450, 350], [600, 350], [900, 350]] },
-      // Cat sitting near the salon, moves occasionally
-      { tex: 'sprite_cat_sitting', scale: 0.35, speed: 5, depth: 3,
-        path: [[280, 620], [320, 640], [260, 660], [280, 620]] },
-      // Jogger on the lower path
-      { tex: 'sprite_jogger', scale: 0.4, speed: 30, depth: 3,
-        path: [[900, 750], [500, 750], [500, 880], [100, 880]] },
-      // Child playing near the fountain
-      { tex: 'sprite_child', scale: 0.35, speed: 8, depth: 3,
-        path: [[460, 520], [540, 520], [540, 450], [460, 450], [460, 520]] },
-      // Bicycle on upper road
-      { tex: 'sprite_bicycle', scale: 0.4, speed: 35, depth: 3,
-        path: [[50, 200], [450, 200], [700, 200], [950, 200]] },
-      // Bird flying high above
-      { tex: 'sprite_bird', scale: 0.3, speed: 25, depth: 4,
-        path: [[100, 100], [500, 80], [900, 120], [600, 60], [100, 100]] },
-    ];
+    // Chimney smoke on buildings (small white particles rising)
+    const chimneyPositions = [[220, 230], [560, 150], [800, 230]];
+    chimneyPositions.forEach(([cx, cy]) => {
+      // Spawn smoke particles periodically
+      this.time.addEvent({
+        delay: 800, loop: true,
+        callback: () => {
+          const smoke = this.add.circle(
+            cx + Phaser.Math.Between(-3, 3), cy,
+            Phaser.Math.Between(2, 4), 0xffffff, 0.3
+          ).setDepth(3);
+          this.tweens.add({
+            targets: smoke,
+            y: cy - Phaser.Math.Between(20, 40),
+            x: cx + Phaser.Math.Between(-10, 10),
+            alpha: 0, scale: { from: 1, to: 2.5 },
+            duration: Phaser.Math.Between(1500, 2500),
+            onComplete: () => smoke.destroy(),
+          });
+        },
+      });
+    });
 
-    walkerDefs.forEach((wd) => {
-      if (!this.textures.exists(wd.tex)) return;
-      const start = wd.path[0];
-      const sprite = this.add.image(start[0], start[1], wd.tex)
-        .setScale(wd.scale).setDepth(wd.depth);
-      this.walkers.push({
-        sprite, path: wd.path, speed: wd.speed,
-        currentTarget: 1,
+    // Fountain water sparkle
+    this.time.addEvent({
+      delay: 400, loop: true,
+      callback: () => {
+        const fx = 580 + Phaser.Math.Between(-15, 15);
+        const fy = 440 + Phaser.Math.Between(-10, 10);
+        const sparkle = this.add.circle(fx, fy, 2, 0x88ddff, 0.7).setDepth(3);
+        this.tweens.add({
+          targets: sparkle,
+          y: fy - Phaser.Math.Between(8, 18),
+          alpha: 0, scale: { from: 1, to: 0.3 },
+          duration: 600,
+          onComplete: () => sparkle.destroy(),
+        });
+      },
+    });
+
+    // Floating leaves from trees
+    const treePositions = [[100, 300], [350, 200], [650, 250], [450, 650], [850, 650]];
+    treePositions.forEach(([tx, ty]) => {
+      this.time.addEvent({
+        delay: Phaser.Math.Between(3000, 6000), loop: true,
+        callback: () => {
+          const colors = [0x44aa44, 0x88cc44, 0xaacc22, 0x66bb33];
+          const leaf = this.add.circle(
+            tx + Phaser.Math.Between(-10, 10), ty,
+            Phaser.Math.Between(1, 3),
+            Phaser.Utils.Array.GetRandom(colors), 0.6
+          ).setDepth(3);
+          this.tweens.add({
+            targets: leaf,
+            x: tx + Phaser.Math.Between(-30, 30),
+            y: ty + Phaser.Math.Between(30, 60),
+            alpha: 0, duration: Phaser.Math.Between(2000, 4000),
+            ease: 'Sine.easeInOut',
+            onComplete: () => leaf.destroy(),
+          });
+        },
+      });
+    });
+
+    // Window lights that gently flicker (warm glow)
+    const windowPositions = [[180, 290], [210, 310], [530, 210], [550, 190], [770, 290], [790, 270]];
+    windowPositions.forEach(([wx, wy]) => {
+      const light = this.add.circle(wx, wy, 3, 0xffcc44, 0).setDepth(2);
+      this.tweens.add({
+        targets: light,
+        alpha: { from: 0, to: 0.4 },
+        duration: Phaser.Math.Between(1000, 2000),
+        yoyo: true, repeat: -1,
+        delay: Phaser.Math.Between(0, 2000),
       });
     });
 
@@ -219,26 +262,5 @@ export class TownScene extends Phaser.Scene {
     this.scene.restart();
   }
 
-  update(time, delta) {
-    // Animate walker sprites along paths
-    if (!this.walkers) return;
-    this.walkers.forEach((w) => {
-      const target = w.path[w.currentTarget];
-      const dx = target[0] - w.sprite.x;
-      const dy = target[1] - w.sprite.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < 3) {
-        // Reached waypoint, go to next
-        w.currentTarget = (w.currentTarget + 1) % w.path.length;
-        // Flip sprite based on horizontal direction
-        const next = w.path[w.currentTarget];
-        w.sprite.setFlipX(next[0] < w.sprite.x);
-      } else {
-        const spd = w.speed * (delta / 1000);
-        w.sprite.x += (dx / dist) * spd;
-        w.sprite.y += (dy / dist) * spd;
-      }
-    });
-  }
+  // No update needed - all ambient effects use tweens/timers
 }
