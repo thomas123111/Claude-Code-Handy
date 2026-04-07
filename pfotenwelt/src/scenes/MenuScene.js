@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
-import { loadSave, regenerateEnergy, checkDailyLogin } from '../data/SaveManager.js';
+import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/SaveManager.js';
+import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 
-export const GAME_VERSION = 'v0.1.0';
+export const GAME_VERSION = 'v0.2.0';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -15,8 +16,32 @@ export class MenuScene extends Phaser.Scene {
     // Check daily login
     const login = checkDailyLogin(save);
     if (login.isNew) {
+      writeSave(save);
       this.scene.start('DailyReward', { streak: login.streak, save });
       return;
+    }
+
+    // Check story triggers
+    const story = checkStoryTrigger(save);
+    if (story) {
+      this.scene.start('Story', { chapter: story, returnTo: 'Menu' });
+      return;
+    }
+
+    // Random event (10% chance on each menu visit)
+    if (Math.random() < 0.1 && save.pets.length > 0) {
+      const evt = getRandomEvent();
+      if (evt.effect.hearts) {
+        save.hearts += evt.effect.hearts;
+      }
+      if (evt.effect.need) {
+        save.pets.forEach((p) => {
+          p.needs[evt.effect.need] = Math.max(0, Math.min(100, p.needs[evt.effect.need] + evt.effect.change));
+        });
+      }
+      writeSave(save);
+      // Show event briefly (stored for display below)
+      this.eventText = evt;
     }
 
     // Background gradient feel
@@ -70,8 +95,16 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '12px', fontFamily: 'monospace', color: '#88cc88',
     }).setOrigin(0.5);
 
+    // Random event message
+    if (this.eventText) {
+      this.add.text(cx, panelY + 155, `${this.eventText.emoji} ${this.eventText.text}`, {
+        fontSize: '10px', fontFamily: 'monospace', color: '#ccaa88',
+        wordWrap: { width: width - 60 }, align: 'center',
+      }).setOrigin(0.5);
+    }
+
     // Login streak
-    this.add.text(cx, panelY + 158, `📅 Tag ${save.loginStreak} Streak`, {
+    this.add.text(cx, panelY + 180, `📅 Tag ${save.loginStreak} Streak`, {
       fontSize: '11px', fontFamily: 'monospace', color: '#aa9977',
     }).setOrigin(0.5);
 
@@ -84,7 +117,7 @@ export class MenuScene extends Phaser.Scene {
       this.scene.start('Shelter');
     });
     this.drawButton(cx, 560, '🏥  STATIONEN', '#4488aa', () => {
-      // TODO: Stations scene
+      this.scene.start('Stations');
     });
 
     // Bottom info
