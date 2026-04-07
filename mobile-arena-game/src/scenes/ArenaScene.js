@@ -193,9 +193,8 @@ export class ArenaScene extends Phaser.Scene {
     this.eKey.on('down', () => this.activateSpecial());
 
     // Camera follows player
-    // Camera follows player, zoomed out to see more of the map
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(0.85);
+    this.cameras.main.setZoom(1.0);
 
     // Unfreeze after 1 second
     const readyText = this.add.text(this.player.x, this.player.y - 40, 'GET READY...', {
@@ -584,9 +583,9 @@ export class ArenaScene extends Phaser.Scene {
     this.aimOrigin = null;
 
     this.input.on('pointerdown', (pointer) => {
-      // pointer.x/y are already screen-relative in Phaser 3
-      const sx = pointer.x;
-      const sy = pointer.y;
+      // Use downX/downY which are the initial touch position in game coords
+      const sx = pointer.downX;
+      const sy = pointer.downY;
 
       if (sx < halfW) {
         // LEFT: Movement joystick
@@ -608,7 +607,6 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
-      // pointer.x/y are already screen-relative in Phaser 3
       const sx = pointer.x;
       const sy = pointer.y;
 
@@ -684,48 +682,38 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const sf = 0; // scrollFactor 0 = fixed to camera
 
-    // Compact single-line HUD for landscape
-    this.arenaLabel = this.add.text(5, 4, `A${this.arenaIndex + 1}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    // HUD - bigger, more visible
+    // Hearts system: each heart = 25 HP
+    this.heartSize = 25;
+    this.maxHearts = Math.ceil(this.maxHp / this.heartSize);
+
+    this.heartsText = this.add.text(8, 6, '', {
+      fontSize: '18px', fontFamily: 'Arial',
+    }).setDepth(102).setScrollFactor(sf);
+
+    // Arena + Wave info
+    this.waveText = this.add.text(8, 30, '', {
+      fontSize: '13px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
     }).setDepth(100).setScrollFactor(sf);
 
-    // HP bar
-    const hpBarX = 40;
-    const hpBarW = 180;
-    this.add.rectangle(hpBarX + hpBarW / 2, 10, hpBarW, 10, 0x333333, 0.8).setDepth(100).setScrollFactor(sf);
-    this.hpBar = this.add.rectangle(hpBarX, 10, hpBarW, 10, 0x44ff44, 0.9)
-      .setOrigin(0, 0.5).setDepth(101).setScrollFactor(sf);
-    this.hpText = this.add.text(hpBarX + hpBarW / 2, 10, `${this.playerHp}/${this.maxHp}`, {
-      fontSize: '8px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(0.5).setDepth(102).setScrollFactor(sf);
-
-    // Crate bar
-    const crateBarW = 120;
-    this.add.rectangle(5 + crateBarW / 2, 26, crateBarW, 8, 0x333333, 0.5).setDepth(100).setScrollFactor(sf);
-    this.crateBar = this.add.rectangle(5, 26, 0, 8, 0xffaa00, 0.8)
-      .setOrigin(0, 0.5).setDepth(101).setScrollFactor(sf);
-    this.crateText = this.add.text(5 + crateBarW / 2, 26, '', {
-      fontSize: '7px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(0.5).setDepth(102).setScrollFactor(sf);
-
-    // Wave info
-    this.waveText = this.add.text(240, 4, '', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#aaaaaa',
+    // Crate progress
+    this.crateText = this.add.text(8, 48, '', {
+      fontSize: '12px', fontFamily: 'monospace', color: '#ffaa00',
     }).setDepth(100).setScrollFactor(sf);
 
-    // Timer
-    this.timerText = this.add.text(width - 5, 4, '', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#888888',
+    // Timer (top right, big)
+    this.timerText = this.add.text(width - 8, 6, '', {
+      fontSize: '14px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf);
 
-    // Loot display
-    this.lootText = this.add.text(140, 22, '', {
-      fontSize: '9px', fontFamily: 'monospace', color: '#ffdd00',
-    }).setDepth(100).setScrollFactor(sf);
+    // Loot display (below timer)
+    this.lootText = this.add.text(width - 8, 26, '', {
+      fontSize: '12px', fontFamily: 'monospace', color: '#ffdd00',
+    }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf);
 
-    // Ammo indicator
-    this.ammoText = this.add.text(width - 5, 18, '', {
-      fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
+    // Ammo indicator (below loot)
+    this.ammoText = this.add.text(width - 8, 44, '', {
+      fontSize: '12px', fontFamily: 'monospace', color: '#ffffff',
     }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf);
 
     // Portal direction arrow (shows when portal is off-screen)
@@ -1065,7 +1053,9 @@ export class ArenaScene extends Phaser.Scene {
   takeDamage(amount) {
     if (this.playerInvuln) return;
 
-    this.playerHp -= amount;
+    // Minimum damage = 1/4 heart
+    const minDmg = Math.ceil(this.heartSize * 0.25);
+    this.playerHp -= Math.max(amount, minDmg);
     this.playerInvuln = true;
 
     // Flash player
@@ -1413,21 +1403,27 @@ export class ArenaScene extends Phaser.Scene {
 
   updateHUD() {
     const { width } = this.scale;
-    const hpPercent = Math.max(0, this.playerHp / this.maxHp);
-    this.hpBar.width = 180 * hpPercent;
-    this.hpBar.fillColor = hpPercent > 0.5 ? 0x44ff44 : hpPercent > 0.25 ? 0xffaa00 : 0xff4444;
-    this.hpText.setText(`${Math.ceil(this.playerHp)}/${this.maxHp}`);
+
+    // Hearts display
+    const fullHearts = Math.floor(this.playerHp / this.heartSize);
+    const partialHp = this.playerHp % this.heartSize;
+    const hasHalf = partialHp >= this.heartSize * 0.25;
+    let hearts = '';
+    for (let i = 0; i < this.maxHearts; i++) {
+      if (i < fullHearts) hearts += '\u2764\uFE0F'; // red heart
+      else if (i === fullHearts && hasHalf) hearts += '\uD83E\uDE76'; // half heart or orange
+      else hearts += '\uD83D\uDDA4'; // black heart (empty)
+    }
+    this.heartsText.setText(hearts);
 
     const aliveEnemies = this.enemies.getChildren().filter((e) => e.active).length;
     this.waveText.setText(
       this.arenaCleared
-        ? 'CLEARED - Enter Portal!'
-        : `Wave ${this.currentWave}/${this.arenaConfig.totalWaves} | Enemies: ${aliveEnemies}`
+        ? 'A' + (this.arenaIndex + 1) + ' CLEARED!'
+        : `A${this.arenaIndex + 1} W${this.currentWave}/${this.arenaConfig.totalWaves} E:${aliveEnemies}`
     );
 
     // Crate progress
-    const cratePercent = this.cratesTotal > 0 ? this.cratesCollected / this.cratesTotal : 0;
-    this.crateBar.width = 120 * cratePercent;
     this.crateText.setText(`Crates: ${this.cratesCollected}/${this.cratesTotal}`);
 
     // Timer countdown

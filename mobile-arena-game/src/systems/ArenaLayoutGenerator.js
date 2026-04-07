@@ -286,7 +286,7 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
   });
 
   // Build occupancy grid
-  const occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
+  let occupied = Array.from({ length: rows }, () => Array(cols).fill(false));
   walls.forEach((w) => {
     const c = Math.floor(w.x / CELL);
     const r = Math.floor((w.y - topMargin) / CELL);
@@ -298,6 +298,52 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
   for (let c = 0; c < cols; c++) {
     if (rows - 1 >= 0) occupied[rows - 1][c] = false;
     if (rows - 2 >= 0) occupied[rows - 2][c] = false;
+  }
+
+  // Reachability check: flood-fill from bottom, remove blocking walls
+  let attempts = 0;
+  while (attempts < 30) {
+    // BFS from bottom 2 rows
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+    const queue = [];
+    for (let c = 0; c < cols; c++) {
+      if (!occupied[rows - 1][c]) { visited[rows - 1][c] = true; queue.push([rows - 1, c]); }
+      if (rows - 2 >= 0 && !occupied[rows - 2][c]) { visited[rows - 2][c] = true; queue.push([rows - 2, c]); }
+    }
+    let head = 0;
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+    while (head < queue.length) {
+      const [cr, cc] = queue[head++];
+      for (const [dr, dc] of dirs) {
+        const nr = cr + dr, nc = cc + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc] && !occupied[nr][nc]) {
+          visited[nr][nc] = true;
+          queue.push([nr, nc]);
+        }
+      }
+    }
+    // Check top 3 rows reachable
+    let reachable = false;
+    for (let c = 0; c < cols; c++) {
+      if (visited[0][c] || visited[1][c] || visited[2][c]) { reachable = true; break; }
+    }
+    if (reachable) break;
+    // Remove walls from most blocked row
+    let worstRow = 0, worstCount = 0;
+    for (let r = 1; r < rows - 2; r++) {
+      let cnt = 0;
+      for (let c = 0; c < cols; c++) if (occupied[r][c]) cnt++;
+      if (cnt > worstCount) { worstCount = cnt; worstRow = r; }
+    }
+    // Clear that row
+    for (let c = 0; c < cols; c++) occupied[worstRow][c] = false;
+    // Remove wall segments in that row from walls array
+    const rowYmin = topMargin + worstRow * CELL;
+    const rowYmax = rowYmin + CELL;
+    for (let i = walls.length - 1; i >= 0; i--) {
+      if (walls[i].y >= rowYmin && walls[i].y < rowYmax) walls.splice(i, 1);
+    }
+    attempts++;
   }
 
   const openSpaces = [];
