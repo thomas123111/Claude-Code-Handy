@@ -9,50 +9,79 @@ const DEFAULT_SAVE = {
     {
       id: 'striker',
       name: 'Striker',
+      title: 'Assault Mech',
+      description: 'Balanced fighter. Rapid-fire pulse cannon.',
       unlocked: true,
       level: 1,
       xp: 0,
+      // Stats
       baseHp: 100,
       baseSpeed: 200,
-      baseDamage: 10,
-      baseFireRate: 400,
-      equipment: {
-        weapon: null,
-        armor: null,
-        engine: null,
-      },
-    },
-    {
-      id: 'tank',
-      name: 'Tank',
-      unlocked: false,
-      level: 1,
-      xp: 0,
-      baseHp: 200,
-      baseSpeed: 130,
-      baseDamage: 15,
-      baseFireRate: 600,
-      equipment: {
-        weapon: null,
-        armor: null,
-        engine: null,
-      },
-    },
-    {
-      id: 'scout',
-      name: 'Scout',
-      unlocked: false,
-      level: 1,
-      xp: 0,
-      baseHp: 70,
-      baseSpeed: 280,
       baseDamage: 8,
-      baseFireRate: 250,
-      equipment: {
-        weapon: null,
-        armor: null,
-        engine: null,
-      },
+      baseFireRate: 300,    // fast fire
+      // Unique weapon behavior
+      weaponType: 'pulse',  // rapid single shots
+      bulletCount: 1,       // bullets per shot
+      bulletSpread: 0,      // spread angle in radians
+      bulletSize: 1.0,
+      bulletColor: 0x3399ff,
+      // Special ability: Dash - short burst of speed + invulnerability
+      specialType: 'dash',
+      specialCharge: 0,       // current charge (0-100)
+      specialChargeRate: 8,   // charge gained per enemy killed
+      specialDuration: 400,   // ms
+      specialCooldown: 0,
+      equipment: { weapon: null, armor: null, engine: null },
+    },
+    {
+      id: 'titan',
+      name: 'Titan',
+      title: 'Heavy Mech',
+      description: 'Slow but devastating. Shotgun spread + shield.',
+      unlocked: false,
+      level: 1,
+      xp: 0,
+      baseHp: 220,
+      baseSpeed: 120,
+      baseDamage: 5,          // per pellet
+      baseFireRate: 700,      // slow fire
+      weaponType: 'shotgun',  // multiple pellets in spread
+      bulletCount: 5,         // 5 pellets per shot
+      bulletSpread: 0.6,      // wide spread
+      bulletSize: 0.8,
+      bulletColor: 0x44aa44,
+      // Special ability: Shield - absorbs damage for a duration
+      specialType: 'shield',
+      specialCharge: 0,
+      specialChargeRate: 12,
+      specialDuration: 2000,
+      specialCooldown: 0,
+      equipment: { weapon: null, armor: null, engine: null },
+    },
+    {
+      id: 'phantom',
+      name: 'Phantom',
+      title: 'Stealth Mech',
+      description: 'Fragile sniper. Long-range piercing laser + cloak.',
+      unlocked: false,
+      level: 1,
+      xp: 0,
+      baseHp: 65,
+      baseSpeed: 240,
+      baseDamage: 18,         // high per-shot
+      baseFireRate: 800,      // very slow fire
+      weaponType: 'laser',    // long-range piercing beam
+      bulletCount: 1,
+      bulletSpread: 0,
+      bulletSize: 0.6,
+      bulletColor: 0xff4488,
+      // Special ability: Cloak - become invisible to enemies
+      specialType: 'cloak',
+      specialCharge: 0,
+      specialChargeRate: 10,
+      specialDuration: 3000,
+      specialCooldown: 0,
+      equipment: { weapon: null, armor: null, engine: null },
     },
   ],
   inventory: [],

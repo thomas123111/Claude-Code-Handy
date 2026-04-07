@@ -20,6 +20,7 @@ export class ArenaScene extends Phaser.Scene {
     const save = loadSave();
     const mechData = getSelectedMech(save);
     this.mechStats = getMechStats(mechData);
+    this.mechData = mechData; // full mech data for weapon/special
     this.mechId = mechData.id;
     this.arenaConfig = getArenaConfig(this.arenaIndex);
 
@@ -27,6 +28,11 @@ export class ArenaScene extends Phaser.Scene {
     this.ammoStock = { ...save.ammo };
     this.currentAmmoType = 'basic';
     this.ammoTypeOrder = ['basic', 'plasma', 'explosive', 'piercing'];
+
+    // Special ability state
+    this.specialCharge = 0;
+    this.specialActive = false;
+    this.specialTimer = 0;
 
     const { width: viewW, height: viewH } = this.scale;
 
@@ -658,6 +664,19 @@ export class ArenaScene extends Phaser.Scene {
     // Portal direction arrow (shows when portal is off-screen)
     this.portalArrow = this.add.triangle(0, 0, 0, 12, 6, 0, 12, 12, 0x9944ff, 1)
       .setDepth(150).setScrollFactor(sf).setVisible(false);
+
+    // Special ability button (bottom center)
+    const specLabel = this.mechData.specialType === 'dash' ? 'DASH' :
+      this.mechData.specialType === 'shield' ? 'SHIELD' : 'CLOAK';
+    this.specialBtn = this.add.text(width / 2, height - 15, `[ ${specLabel} ]`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#444444', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(100).setScrollFactor(sf).setInteractive({ useHandCursor: true });
+    this.specialBtn.on('pointerdown', () => this.activateSpecial());
+
+    // Special charge bar (above button)
+    this.add.rectangle(width / 2, height - 30, 80, 6, 0x333333, 0.6).setDepth(100).setScrollFactor(sf);
+    this.specialBar = this.add.rectangle(width / 2 - 40, height - 30, 0, 6, 0xffaa00, 0.8)
+      .setOrigin(0, 0.5).setDepth(101).setScrollFactor(sf);
   }
 
   startWave() {
@@ -896,6 +915,7 @@ export class ArenaScene extends Phaser.Scene {
     enemy.destroy();
     this.enemiesKilled++;
     this.waveEnemiesLeft--;
+    this.chargeSpecial(); // charge special on kill
 
     // Check wave complete - all active enemies dead
     const allDead = this.enemies.getChildren().filter((e) => e.active).length === 0;
@@ -1037,36 +1057,112 @@ export class ArenaScene extends Phaser.Scene {
   fireInFacingDirection() {
     if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5) return;
 
-    // Check ammo - if not basic, deduct 1
+    // Check ammo
     const ammoType = AMMO_TYPES[this.currentAmmoType];
     if (!ammoType.infinite) {
       if ((this.ammoStock[this.currentAmmoType] || 0) <= 0) {
-        // Out of this ammo, switch to basic
         this.currentAmmoType = 'basic';
-        return; // skip this shot, will fire basic next frame
+        return;
       }
       this.ammoStock[this.currentAmmoType]--;
     }
 
     this.lastFireTime = this.time.now;
-
-    const textureName = `bullet_${this.currentAmmoType}`;
-    const bullet = this.bullets.get(this.player.x, this.player.y, textureName);
-    if (!bullet) return;
-
-    bullet.setActive(true).setVisible(true);
-    bullet.body.enable = true;
-    bullet.setDepth(8);
-    bullet.setTexture(textureName);
-    bullet.setData('spawnTime', this.time.now);
-    bullet.setData('ammoType', this.currentAmmoType);
-    bullet.setData('damageMult', ammoType.damageMult);
-    bullet.setData('piercing', ammoType.piercing);
-    bullet.setData('splash', ammoType.splash);
-
+    const mech = this.mechData;
     const angle = this.playerFacingAngle;
-    bullet.body.velocity.x = Math.cos(angle) * ammoType.speed;
-    bullet.body.velocity.y = Math.sin(angle) * ammoType.speed;
+    const bulletCount = mech.bulletCount || 1;
+    const spread = mech.bulletSpread || 0;
+
+    // Fire multiple bullets for shotgun, single for others
+    for (let i = 0; i < bulletCount; i++) {
+      let shotAngle = angle;
+      if (bulletCount > 1) {
+        // Spread pellets evenly across spread arc
+        shotAngle = angle - spread / 2 + (spread / (bulletCount - 1)) * i;
+        // Add tiny random variation
+        shotAngle += (Math.random() - 0.5) * 0.1;
+      }
+
+      const textureName = `bullet_${this.currentAmmoType}`;
+      const bullet = this.bullets.get(this.player.x, this.player.y, textureName);
+      if (!bullet) continue;
+
+      bullet.setActive(true).setVisible(true);
+      bullet.body.enable = true;
+      bullet.setDepth(8);
+      bullet.setTexture(textureName);
+      bullet.setScale(mech.bulletSize || 1);
+      bullet.setData('spawnTime', this.time.now);
+      bullet.setData('ammoType', this.currentAmmoType);
+      bullet.setData('damageMult', ammoType.damageMult);
+      // Phantom's laser always pierces, others depend on ammo type
+      bullet.setData('piercing', ammoType.piercing || mech.weaponType === 'laser');
+      bullet.setData('splash', ammoType.splash);
+      // Tint bullet to mech color if using basic ammo
+      if (this.currentAmmoType === 'basic') {
+        bullet.setTint(mech.bulletColor || 0xffff44);
+      } else {
+        bullet.clearTint();
+      }
+
+      bullet.body.velocity.x = Math.cos(shotAngle) * ammoType.speed;
+      bullet.body.velocity.y = Math.sin(shotAngle) * ammoType.speed;
+
+      // Shotgun pellets have shorter range
+      if (mech.weaponType === 'shotgun') {
+        bullet.setData('spawnTime', this.time.now - 1500); // shorter lifetime
+      }
+    }
+  }
+
+  // === SPECIAL ABILITIES ===
+  activateSpecial() {
+    if (this.specialActive || this.specialCharge < 100) return;
+    this.specialCharge = 0;
+    this.specialActive = true;
+    const mech = this.mechData;
+
+    if (mech.specialType === 'dash') {
+      // Striker: burst of speed + invulnerable
+      this.playerInvuln = true;
+      const dashSpeed = this.mechStats.speed * 3;
+      const angle = this.playerFacingAngle;
+      this.player.body.velocity.x = Math.cos(angle) * dashSpeed;
+      this.player.body.velocity.y = Math.sin(angle) * dashSpeed;
+      // Trail effect
+      const trail = this.add.circle(this.player.x, this.player.y, 8, 0x3399ff, 0.6).setDepth(5);
+      this.tweens.add({ targets: trail, alpha: 0, scale: 2, duration: 300, onComplete: () => trail.destroy() });
+      this.time.delayedCall(mech.specialDuration, () => {
+        this.specialActive = false;
+        this.playerInvuln = false;
+      });
+
+    } else if (mech.specialType === 'shield') {
+      // Titan: damage shield
+      this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shield_effect')
+        .setDepth(11).setScale(1.5);
+      this.playerInvuln = true;
+      this.time.delayedCall(mech.specialDuration, () => {
+        this.specialActive = false;
+        this.playerInvuln = false;
+        if (this.shieldSprite) { this.shieldSprite.destroy(); this.shieldSprite = null; }
+      });
+
+    } else if (mech.specialType === 'cloak') {
+      // Phantom: invisible to enemies
+      this.player.setAlpha(0.2);
+      this.playerCloaked = true;
+      this.time.delayedCall(mech.specialDuration, () => {
+        this.specialActive = false;
+        this.playerCloaked = false;
+        this.player.setAlpha(1);
+      });
+    }
+  }
+
+  chargeSpecial(amount) {
+    if (!this.mechData) return;
+    this.specialCharge = Math.min(100, this.specialCharge + (amount || this.mechData.specialChargeRate));
   }
 
   switchAmmo() {
@@ -1084,6 +1180,16 @@ export class ArenaScene extends Phaser.Scene {
 
   enemyAI(enemy, delta) {
     if (!enemy.active || !this.player.active) return;
+
+    // Cloaked: enemies wander randomly instead of chasing
+    if (this.playerCloaked) {
+      const wanderAngle = enemy.getData('wanderAngle') || Math.random() * Math.PI * 2;
+      if (Math.random() < 0.02) enemy.setData('wanderAngle', Math.random() * Math.PI * 2);
+      const ws = enemy.getData('speed') * 0.4;
+      enemy.body.velocity.x = Math.cos(wanderAngle) * ws;
+      enemy.body.velocity.y = Math.sin(wanderAngle) * ws;
+      return;
+    }
 
     const speed = enemy.getData('speed');
     const directAngle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
@@ -1276,6 +1382,17 @@ export class ArenaScene extends Phaser.Scene {
     const colorMap = { basic: '#ffff44', plasma: '#44ddff', explosive: '#ff6622', piercing: '#cc44ff' };
     this.ammoText.setText(`[${ammo.name}: ${stock}] TAP`);
     this.ammoText.setColor(colorMap[this.currentAmmoType] || '#ffffff');
+
+    // Special charge bar
+    this.specialBar.width = 80 * (this.specialCharge / 100);
+    this.specialBar.fillColor = this.specialCharge >= 100 ? 0x44ff44 : 0xffaa00;
+    const specColor = this.specialCharge >= 100 ? '#44ff44' : '#444444';
+    this.specialBtn.setColor(specColor);
+
+    // Shield sprite follows player
+    if (this.shieldSprite && this.shieldSprite.active) {
+      this.shieldSprite.setPosition(this.player.x, this.player.y);
+    }
 
     // Portal arrow - show when portal is active and off-screen
     this.updatePortalArrow();
