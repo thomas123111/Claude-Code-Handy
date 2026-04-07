@@ -1,13 +1,12 @@
-name: Deploy Game to GitHub Pages
+name: Deploy Pfotenwelt to GitHub Pages
 
 on:
   push:
     branches: ['claude/mobile-arena-game-DZAAt', 'main']
     paths:
-      - 'mobile-arena-game/**'
+      - 'pfotenwelt/**'
       - '.github/workflows/deploy-game.yml'
   workflow_dispatch:
-  # Auto-deploys from feature branch and main
 
 permissions:
   contents: read
@@ -28,20 +27,20 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: mobile-arena-game/package-lock.json
+          cache-dependency-path: pfotenwelt/package-lock.json
 
       - name: Install dependencies
-        working-directory: mobile-arena-game
+        working-directory: pfotenwelt
         run: npm ci
 
       - name: Build
-        working-directory: mobile-arena-game
+        working-directory: pfotenwelt
         run: npx vite build --base /Claude-Code-Handy/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: mobile-arena-game/dist
+          path: pfotenwelt/dist
 
   deploy:
     environment:
