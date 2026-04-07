@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, getSelectedMech, getMechStats } from '../systems/SaveSystem.js';
-import { getArenaConfig } from '../systems/ArenaConfig.js';
+import { getArenaConfig, AMMO_TYPES } from '../systems/ArenaConfig.js';
 import { generateArenaLayout, getRandomOpenPositions } from '../systems/ArenaLayoutGenerator.js';
 
 export class ArenaScene extends Phaser.Scene {
@@ -22,6 +22,11 @@ export class ArenaScene extends Phaser.Scene {
     this.mechStats = getMechStats(mechData);
     this.mechId = mechData.id;
     this.arenaConfig = getArenaConfig(this.arenaIndex);
+
+    // Ammo system - load from save, basic is always available
+    this.ammoStock = { ...save.ammo };
+    this.currentAmmoType = 'basic';
+    this.ammoTypeOrder = ['basic', 'plasma', 'explosive', 'piercing'];
 
     const { width, height } = this.scale;
 
@@ -278,10 +283,16 @@ export class ArenaScene extends Phaser.Scene {
       const offX = Phaser.Math.Between(-25, 25);
       const offY = Phaser.Math.Between(-25, 25);
       const pos = this.findOpenPosition(x + offX, y + offY);
-      if (Math.random() < 0.6) {
+      const roll = Math.random();
+      if (roll < 0.4) {
         this.spawnLoot(pos.x, pos.y, 'credit', Phaser.Math.Between(1, 2));
-      } else {
+      } else if (roll < 0.65) {
         this.spawnLoot(pos.x, pos.y, 'scrap', 1);
+      } else {
+        // Ammo drop
+        const ammoTypes = ['plasma', 'explosive', 'piercing'];
+        const ammoType = ammoTypes[Math.floor(Math.random() * ammoTypes.length)];
+        this.spawnLoot(pos.x, pos.y, 'ammo', Phaser.Math.Between(3, 8), ammoType);
       }
     }
 
@@ -627,6 +638,12 @@ export class ArenaScene extends Phaser.Scene {
     this.lootText = this.add.text(140, 22, '', {
       fontSize: '9px', fontFamily: 'monospace', color: '#ffdd00',
     }).setDepth(100);
+
+    // Ammo type indicator (top center-right, tappable to switch)
+    this.ammoText = this.add.text(width - 5, 18, '', {
+      fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
+    }).setOrigin(1, 0).setDepth(100).setInteractive({ useHandCursor: true });
+    this.ammoText.on('pointerdown', () => this.switchAmmo());
   }
 
   startWave() {
@@ -791,10 +808,18 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   onBulletHitEnemy(bullet, enemy) {
-    bullet.setActive(false).setVisible(false);
-    bullet.body.enable = false;
+    const isPiercing = bullet.getData('piercing');
+    const isSplash = bullet.getData('splash');
+    const damageMult = bullet.getData('damageMult') || 1;
 
-    const hp = enemy.getData('hp') - this.mechStats.damage;
+    // Piercing bullets don't stop on hit
+    if (!isPiercing) {
+      bullet.setActive(false).setVisible(false);
+      bullet.body.enable = false;
+    }
+
+    const damage = Math.floor(this.mechStats.damage * damageMult);
+    const hp = enemy.getData('hp') - damage;
     enemy.setData('hp', hp);
 
     // Flash white
@@ -802,6 +827,24 @@ export class ArenaScene extends Phaser.Scene {
     this.time.delayedCall(60, () => {
       if (enemy.active) enemy.setTint(this.arenaConfig.theme.enemyTint);
     });
+
+    // Splash damage: hurt nearby enemies
+    if (isSplash) {
+      const splashR = 50;
+      this.enemies.getChildren().forEach((other) => {
+        if (!other.active || other === enemy) return;
+        const d = Phaser.Math.Distance.Between(enemy.x, enemy.y, other.x, other.y);
+        if (d < splashR) {
+          const splashDmg = Math.floor(damage * 0.5);
+          other.setData('hp', other.getData('hp') - splashDmg);
+          other.setTint(0xffaa00);
+          this.time.delayedCall(60, () => {
+            if (other.active) other.setTint(this.arenaConfig.theme.enemyTint);
+          });
+          if (other.getData('hp') <= 0) this.killEnemy(other);
+        }
+      });
+    }
 
     if (hp <= 0) {
       this.killEnemy(enemy);
@@ -852,9 +895,10 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  spawnLoot(x, y, type, value) {
-    const textures = { credit: 'loot_credit', scrap: 'loot_scrap', health: 'loot_health' };
-    const loot = this.physics.add.image(x, y, textures[type]);
+  spawnLoot(x, y, type, value, ammoType) {
+    const textures = { credit: 'loot_credit', scrap: 'loot_scrap', health: 'loot_health', ammo: 'loot_ammo' };
+    const loot = this.physics.add.image(x, y, textures[type] || 'loot_credit');
+    if (ammoType) loot.setData('ammoType', ammoType);
     loot.setData('type', type);
     loot.setData('value', value);
     loot.setDepth(5);
@@ -892,6 +936,11 @@ export class ArenaScene extends Phaser.Scene {
       this.runScrap += value;
     } else if (type === 'health') {
       this.playerHp = Math.min(this.maxHp, this.playerHp + value);
+    } else if (type === 'ammo') {
+      const ammoType = loot.getData('ammoType');
+      if (ammoType && this.ammoStock[ammoType] !== undefined) {
+        this.ammoStock[ammoType] += value;
+      }
     }
 
     loot.destroy();
@@ -955,6 +1004,7 @@ export class ArenaScene extends Phaser.Scene {
         timeBonus: this.timeBonus || 0,
         playerHpPercent: this.playerHp / this.maxHp,
         runSeed: this.runSeed,
+        ammoStock: this.ammoStock,
       });
     });
   }
@@ -966,26 +1016,56 @@ export class ArenaScene extends Phaser.Scene {
       runCredits: this.runCredits,
       runScrap: this.runScrap,
       runXp: this.runXp,
+      ammoStock: this.ammoStock,
     });
   }
 
   fireInFacingDirection() {
     if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5) return;
+
+    // Check ammo - if not basic, deduct 1
+    const ammoType = AMMO_TYPES[this.currentAmmoType];
+    if (!ammoType.infinite) {
+      if ((this.ammoStock[this.currentAmmoType] || 0) <= 0) {
+        // Out of this ammo, switch to basic
+        this.currentAmmoType = 'basic';
+        return; // skip this shot, will fire basic next frame
+      }
+      this.ammoStock[this.currentAmmoType]--;
+    }
+
     this.lastFireTime = this.time.now;
 
-    const bullet = this.bullets.get(this.player.x, this.player.y, 'bullet');
+    const textureName = `bullet_${this.currentAmmoType}`;
+    const bullet = this.bullets.get(this.player.x, this.player.y, textureName);
     if (!bullet) return;
 
     bullet.setActive(true).setVisible(true);
     bullet.body.enable = true;
     bullet.setDepth(8);
+    bullet.setTexture(textureName);
     bullet.setData('spawnTime', this.time.now);
+    bullet.setData('ammoType', this.currentAmmoType);
+    bullet.setData('damageMult', ammoType.damageMult);
+    bullet.setData('piercing', ammoType.piercing);
+    bullet.setData('splash', ammoType.splash);
 
-    // Shoot in the direction the player is facing
     const angle = this.playerFacingAngle;
-    const speed = 450;
-    bullet.body.velocity.x = Math.cos(angle) * speed;
-    bullet.body.velocity.y = Math.sin(angle) * speed;
+    bullet.body.velocity.x = Math.cos(angle) * ammoType.speed;
+    bullet.body.velocity.y = Math.sin(angle) * ammoType.speed;
+  }
+
+  switchAmmo() {
+    // Cycle to next ammo type that has stock (or basic)
+    const idx = this.ammoTypeOrder.indexOf(this.currentAmmoType);
+    for (let i = 1; i <= this.ammoTypeOrder.length; i++) {
+      const nextType = this.ammoTypeOrder[(idx + i) % this.ammoTypeOrder.length];
+      if (nextType === 'basic' || (this.ammoStock[nextType] || 0) > 0) {
+        this.currentAmmoType = nextType;
+        return;
+      }
+    }
+    this.currentAmmoType = 'basic';
   }
 
   enemyAI(enemy, delta) {
@@ -1175,5 +1255,12 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     this.lootText.setText(`Credits: ${this.runCredits}  Scrap: ${this.runScrap}`);
+
+    // Ammo display
+    const ammo = AMMO_TYPES[this.currentAmmoType];
+    const stock = ammo.infinite ? '∞' : (this.ammoStock[this.currentAmmoType] || 0);
+    const colorMap = { basic: '#ffff44', plasma: '#44ddff', explosive: '#ff6622', piercing: '#cc44ff' };
+    this.ammoText.setText(`[${ammo.name}: ${stock}] TAP`);
+    this.ammoText.setColor(colorMap[this.currentAmmoType] || '#ffffff');
   }
 }

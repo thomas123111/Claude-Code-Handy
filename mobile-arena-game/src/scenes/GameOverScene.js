@@ -11,6 +11,7 @@ export class GameOverScene extends Phaser.Scene {
     this.runCredits = data.runCredits;
     this.runScrap = data.runScrap;
     this.runXp = data.runXp;
+    this.ammoStock = data.ammoStock || {};
   }
 
   create() {
@@ -33,6 +34,10 @@ export class GameOverScene extends Phaser.Scene {
 
     const mech = getSelectedMech(save);
     addXpToMech(mech, keptXp);
+
+    // Save remaining ammo (keep what's left, no penalty on ammo)
+    save.ammo = { ...save.ammo, ...this.ammoStock };
+
     writeSave(save);
 
     // UI

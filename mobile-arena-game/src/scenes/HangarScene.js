@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, getSelectedMech, getMechStats, xpForLevel } from '../systems/SaveSystem.js';
-import { EQUIPMENT_SHOP, MECH_UNLOCK_COSTS } from '../systems/ArenaConfig.js';
+import { EQUIPMENT_SHOP, MECH_UNLOCK_COSTS, AMMO_SHOP } from '../systems/ArenaConfig.js';
 
 export class HangarScene extends Phaser.Scene {
   constructor() {
@@ -27,21 +27,33 @@ export class HangarScene extends Phaser.Scene {
       fontSize: '13px', fontFamily: 'monospace', color: '#aaaaaa',
     }).setOrigin(0.5);
 
+    // Ammo stock display
+    const ammo = save.ammo || {};
+    this.add.text(width / 2, 72, `Plasma: ${ammo.plasma || 0}  Explosive: ${ammo.explosive || 0}  Piercing: ${ammo.piercing || 0}`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#888888',
+    }).setOrigin(0.5);
+
     // Tabs
     const tabY = 90;
-    this.createTab(width * 0.25, tabY, 'MECHS', this.selectedTab === 'mechs', () => {
+    this.createTab(width * 0.17, tabY, 'MECHS', this.selectedTab === 'mechs', () => {
       this.selectedTab = 'mechs';
       this.drawUI();
     });
-    this.createTab(width * 0.75, tabY, 'SHOP', this.selectedTab === 'shop', () => {
+    this.createTab(width * 0.5, tabY, 'SHOP', this.selectedTab === 'shop', () => {
       this.selectedTab = 'shop';
+      this.drawUI();
+    });
+    this.createTab(width * 0.83, tabY, 'AMMO', this.selectedTab === 'ammo', () => {
+      this.selectedTab = 'ammo';
       this.drawUI();
     });
 
     if (this.selectedTab === 'mechs') {
       this.drawMechsTab(save);
-    } else {
+    } else if (this.selectedTab === 'shop') {
       this.drawShopTab(save);
+    } else {
+      this.drawAmmoTab(save);
     }
 
     // Back button
@@ -186,6 +198,52 @@ export class HangarScene extends Phaser.Scene {
       });
 
       y += 10;
+    });
+  }
+
+  drawAmmoTab(save) {
+    const { width } = this.scale;
+    this.add.text(width / 2, 115, 'BUY AMMO', {
+      fontSize: '14px', fontFamily: 'monospace', color: '#ff8800', fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    let y = 140;
+    AMMO_SHOP.forEach((item) => {
+      const canAfford = save.credits >= item.cost && save.scrap >= item.costScrap;
+      const bgColor = 0x222233;
+      this.add.rectangle(width / 2, y + 14, width - 30, 28, bgColor, 0.5);
+
+      const colorMap = { plasma: '#44ddff', explosive: '#ff6622', piercing: '#cc44ff' };
+      this.add.text(20, y + 4, `${item.name} (x${item.amount})`, {
+        fontSize: '11px', fontFamily: 'monospace', color: colorMap[item.id] || '#cccccc',
+      });
+
+      const costStr = `${item.cost}cr ${item.costScrap}sc`;
+      const col = canAfford ? '#ffaa00' : '#664422';
+      const btn = this.add.text(width - 20, y + 4, costStr, {
+        fontSize: '10px', fontFamily: 'monospace', color: col,
+      }).setOrigin(1, 0);
+
+      if (canAfford) {
+        btn.setInteractive({ useHandCursor: true });
+        btn.on('pointerdown', () => {
+          this.save.credits -= item.cost;
+          this.save.scrap -= item.costScrap;
+          if (!this.save.ammo) this.save.ammo = { plasma: 0, explosive: 0, piercing: 0 };
+          this.save.ammo[item.id] = (this.save.ammo[item.id] || 0) + item.amount;
+          writeSave(this.save);
+          this.drawUI();
+        });
+      }
+
+      y += 32;
+    });
+
+    // Current stock
+    y += 10;
+    const ammo = save.ammo || {};
+    this.add.text(20, y, `Stock: Plasma ${ammo.plasma || 0} | Explosive ${ammo.explosive || 0} | Piercing ${ammo.piercing || 0}`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#aaaaaa',
     });
   }
 

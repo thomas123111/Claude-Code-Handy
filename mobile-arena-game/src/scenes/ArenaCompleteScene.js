@@ -15,6 +15,7 @@ export class ArenaCompleteScene extends Phaser.Scene {
     this.timeBonus = data.timeBonus || 0;
     this.playerHpPercent = data.playerHpPercent || 1;
     this.runSeed = data.runSeed || 1;
+    this.ammoStock = data.ammoStock || {};
   }
 
   create() {
@@ -60,6 +61,7 @@ export class ArenaCompleteScene extends Phaser.Scene {
         runScrap: this.runScrap,
         runXp: this.runXp,
         runSeed: this.runSeed,
+        ammoStock: this.ammoStock,
       });
     });
 
@@ -86,6 +88,9 @@ export class ArenaCompleteScene extends Phaser.Scene {
 
     const mech = getSelectedMech(save);
     addXpToMech(mech, this.runXp);
+
+    // Save ammo stock back
+    save.ammo = { ...save.ammo, ...this.ammoStock };
 
     writeSave(save);
     this.scene.start('Menu');

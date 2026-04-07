@@ -76,3 +76,54 @@ export const MECH_UNLOCK_COSTS = {
   tank: { credits: 100, scrap: 30 },
   scout: { credits: 80, scrap: 25 },
 };
+
+// Ammo types - basic is infinite, others are consumable
+export const AMMO_TYPES = {
+  basic: {
+    name: 'Basic',
+    color: 0xffff44,
+    damageMult: 1.0,
+    speed: 450,
+    infinite: true,
+    piercing: false,
+    splash: false,
+  },
+  plasma: {
+    name: 'Plasma',
+    color: 0x44ddff,
+    damageMult: 1.5,
+    speed: 500,
+    infinite: false,
+    piercing: false,
+    splash: false,
+  },
+  explosive: {
+    name: 'Explosive',
+    color: 0xff6622,
+    damageMult: 2.0,
+    speed: 350,
+    infinite: false,
+    piercing: false,
+    splash: true,    // damages nearby enemies on hit
+    splashRadius: 50,
+  },
+  piercing: {
+    name: 'Piercing',
+    color: 0xcc44ff,
+    damageMult: 1.2,
+    speed: 550,
+    infinite: false,
+    piercing: true,  // goes through enemies
+    splash: false,
+  },
+};
+
+// Ammo shop prices (buy in Hangar)
+export const AMMO_SHOP = [
+  { id: 'plasma', name: 'Plasma Rounds', amount: 20, cost: 10, costScrap: 3 },
+  { id: 'plasma', name: 'Plasma Rounds x50', amount: 50, cost: 22, costScrap: 6 },
+  { id: 'explosive', name: 'Explosive Shells', amount: 10, cost: 12, costScrap: 4 },
+  { id: 'explosive', name: 'Explosive Shells x30', amount: 30, cost: 30, costScrap: 10 },
+  { id: 'piercing', name: 'Piercing Bolts', amount: 15, cost: 8, costScrap: 2 },
+  { id: 'piercing', name: 'Piercing Bolts x40', amount: 40, cost: 18, costScrap: 5 },
+];

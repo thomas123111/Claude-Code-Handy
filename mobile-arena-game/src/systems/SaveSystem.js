@@ -57,6 +57,12 @@ const DEFAULT_SAVE = {
   ],
   inventory: [],
   selectedMechId: 'striker',
+  // Ammo stock (basic is infinite, others are counted)
+  ammo: {
+    plasma: 0,    // +50% damage
+    explosive: 0, // +100% damage, splash
+    piercing: 0,  // goes through enemies
+  },
 };
 
 export function loadSave() {

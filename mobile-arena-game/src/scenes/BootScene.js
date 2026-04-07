@@ -53,11 +53,44 @@ export class BootScene extends Phaser.Scene {
     pg.fillRect(13, 8, 6, 8);
     pg.generateTexture('mech_scout', 32, 32);
 
-    // Bullet
+    // Bullet - basic (yellow)
     pg.clear();
     pg.fillStyle(0xffff44, 1);
     pg.fillCircle(4, 4, 4);
     pg.generateTexture('bullet', 8, 8);
+    pg.generateTexture('bullet_basic', 8, 8);
+
+    // Bullet - plasma (cyan, bigger)
+    pg.clear();
+    pg.fillStyle(0x44ddff, 1);
+    pg.fillCircle(5, 5, 5);
+    pg.fillStyle(0xaaeeff, 0.5);
+    pg.fillCircle(5, 5, 3);
+    pg.generateTexture('bullet_plasma', 10, 10);
+
+    // Bullet - explosive (orange, big)
+    pg.clear();
+    pg.fillStyle(0xff6622, 1);
+    pg.fillCircle(5, 5, 5);
+    pg.fillStyle(0xffaa44, 0.7);
+    pg.fillCircle(5, 5, 2);
+    pg.generateTexture('bullet_explosive', 10, 10);
+
+    // Bullet - piercing (purple, elongated)
+    pg.clear();
+    pg.fillStyle(0xcc44ff, 1);
+    pg.fillRect(1, 2, 6, 4);
+    pg.fillStyle(0xee88ff, 0.6);
+    pg.fillRect(2, 3, 4, 2);
+    pg.generateTexture('bullet_piercing', 8, 8);
+
+    // Loot - ammo pickup
+    pg.clear();
+    pg.fillStyle(0xff8800, 1);
+    pg.fillRect(2, 1, 8, 10);
+    pg.fillStyle(0xffaa44, 1);
+    pg.fillRect(4, 0, 4, 3);
+    pg.generateTexture('loot_ammo', 12, 12);
 
     // Enemy bullet
     pg.clear();
