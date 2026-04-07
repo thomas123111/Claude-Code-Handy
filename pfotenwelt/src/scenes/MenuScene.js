@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/SaveManager.js';
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
+import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.2.0';
+export const GAME_VERSION = 'v0.3.0';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -80,11 +81,20 @@ export class MenuScene extends Phaser.Scene {
         fontSize: '12px', fontFamily: 'monospace', color: '#887799', align: 'center',
       }).setOrigin(0.5);
     } else {
-      // Show pet emojis
-      const petLine = save.pets.slice(0, 6).map((p) => p.emoji).join('  ');
-      this.add.text(cx, panelY + 55, petLine, {
-        fontSize: '28px',
-      }).setOrigin(0.5);
+      // Show pet sprites in a row
+      const showPets = save.pets.slice(0, 6);
+      showPets.forEach((p, i) => {
+        const px = cx - ((showPets.length - 1) * 25) + i * 50;
+        // Map pet type to sprite
+        const spriteMap = { dogs: 'pet_dog', cats: 'pet_cat', small: 'pet_small' };
+        const category = p.breedId && this.getPetCategory(p.breedId);
+        const tex = spriteMap[category] || 'pet_cute';
+        if (this.textures.exists(tex)) {
+          this.add.image(px, panelY + 55, tex).setScale(2.5);
+        } else {
+          this.add.text(px, panelY + 50, p.emoji, { fontSize: '24px' }).setOrigin(0.5);
+        }
+      });
       this.add.text(cx, panelY + 95, `${save.pets.length} Tiere | ${save.adopted} vermittelt`, {
         fontSize: '11px', fontFamily: 'monospace', color: '#998899',
       }).setOrigin(0.5);
@@ -119,6 +129,9 @@ export class MenuScene extends Phaser.Scene {
     this.drawButton(cx, 560, '🏥  STATIONEN', '#4488aa', () => {
       this.scene.start('Stations');
     });
+    this.drawButton(cx, 630, '📖  SAMMELBUCH', '#886644', () => {
+      this.scene.start('Collection');
+    });
 
     // Bottom info
     this.add.text(cx, height - 60, `Vermittelte Tiere: ${save.adopted}`, {
@@ -139,6 +152,12 @@ export class MenuScene extends Phaser.Scene {
         }
       }
     });
+  }
+
+  getPetCategory(breedId) {
+    if (BREEDS.dogs.some((b) => b.id === breedId)) return 'dogs';
+    if (BREEDS.cats.some((b) => b.id === breedId)) return 'cats';
+    return 'small';
   }
 
   drawButton(x, y, text, color, action) {
