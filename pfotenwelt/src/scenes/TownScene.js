@@ -88,25 +88,30 @@ export class TownScene extends Phaser.Scene {
   constructor() { super('Town'); }
 
   create() {
+    try {
+      this._createInner();
+    } catch (e) {
+      this.cameras.main.setBackgroundColor('#330000');
+      this.add.text(20, 20, `TOWN ERROR:\n${e.message}`, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#ff4444', wordWrap: { width: 500 },
+      });
+      this.input.on('pointerdown', () => this.scene.start('Menu'));
+    }
+  }
+
+  _createInner() {
     this.save = loadSave();
     regenerateEnergy(this.save);
 
-    // Process guild NPC help
-    if (this.save.guild) {
-      processNPCHelp(this.save);
-      writeSave(this.save);
-    }
-
-    // Check for random event
-    if (shouldTriggerEvent(this.save)) {
-      const evt = getRandomEvent(this.save);
-      if (evt) {
-        this.save.lastEventTime = Date.now();
+    // Process guild NPC help (safely)
+    try {
+      if (this.save.guild) {
+        processNPCHelp(this.save);
         writeSave(this.save);
-        this.scene.start('Event', { event: evt });
-        return;
       }
-    }
+    } catch (e) { /* guild processing failed, continue */ }
+
+    // Events disabled on town load for now - trigger from menu instead
 
     const { width, height } = this.scale;
     const mapW = 1024;
