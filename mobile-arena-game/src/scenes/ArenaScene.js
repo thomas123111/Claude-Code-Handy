@@ -859,8 +859,8 @@ export class ArenaScene extends Phaser.Scene {
       ammoStock: this.ammoStock,
     };
 
-    // Set flag - transition happens in update() loop
-    this.pendingTransition = this.time.now + 2000;
+    // Set flag - transition happens in update() loop via frame counter
+    this.transitionFrames = 120; // ~2 seconds at 60fps
     this.clearTapHandler = true;
   }
 
@@ -1405,21 +1405,22 @@ export class ArenaScene extends Phaser.Scene {
     if (!this.player || !this.player.active) return;
     if (this.startFrozen) return;
 
-    // Pending arena transition (timer or tap to skip)
-    if (this.pendingTransition && !this.transitioning) {
-      if (this.time.now >= this.pendingTransition ||
-          (this.clearTapHandler && this.input.activePointer.isDown)) {
+    // Pending arena transition (frame counter or tap to skip)
+    if (this.transitionFrames !== undefined && this.transitionFrames >= 0 && !this.transitioning) {
+      this.transitionFrames--;
+      const tapped = this.clearTapHandler && this.input.activePointer.isDown;
+      if (this.transitionFrames <= 0 || tapped) {
         this.transitioning = true;
-        this.clearTapHandler = false;
         // Auto-collect all loot
-        this.lootItems.getChildren().forEach((l) => {
-          if (!l.active) return;
-          const t = l.getData('type'), v = l.getData('value');
-          if (t === 'credit') this.nextArenaData.runCredits += v;
-          else if (t === 'scrap') this.nextArenaData.runScrap += v;
-        });
-        // Go via Transition scene (scene can't restart itself reliably)
-        this.scene.start('Transition', this.nextArenaData);
+        if (this.nextArenaData) {
+          this.lootItems.getChildren().forEach((l) => {
+            if (!l.active) return;
+            const t = l.getData('type'), v = l.getData('value');
+            if (t === 'credit') this.nextArenaData.runCredits += v;
+            else if (t === 'scrap') this.nextArenaData.runScrap += v;
+          });
+          this.scene.start('Transition', this.nextArenaData);
+        }
         return;
       }
     }
