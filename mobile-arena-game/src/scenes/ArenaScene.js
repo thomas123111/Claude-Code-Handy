@@ -168,6 +168,10 @@ export class ArenaScene extends Phaser.Scene {
 
     // Keyboard shoot: Space bar
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+    this.eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.qKey.on('down', () => this.switchAmmo());
+    this.eKey.on('down', () => this.activateSpecial());
 
     // Camera follows player
     // Camera follows player, zoomed out to see more of the map
@@ -703,8 +707,7 @@ export class ArenaScene extends Phaser.Scene {
     // Ammo indicator
     this.ammoText = this.add.text(width - 5, 18, '', {
       fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf).setInteractive({ useHandCursor: true });
-    this.ammoText.on('pointerdown', () => this.switchAmmo());
+    }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf);
 
     // Portal direction arrow (shows when portal is off-screen)
     this.portalArrow = this.add.triangle(0, 0, 0, 12, 6, 0, 12, 12, 0x9944ff, 1)
@@ -715,8 +718,7 @@ export class ArenaScene extends Phaser.Scene {
       this.mechData.specialType === 'shield' ? 'SHIELD' : 'CLOAK';
     this.specialBtn = this.add.text(width / 2, height - 15, `[ ${specLabel} ]`, {
       fontSize: '11px', fontFamily: 'monospace', color: '#444444', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(100).setScrollFactor(sf).setInteractive({ useHandCursor: true });
-    this.specialBtn.on('pointerdown', () => this.activateSpecial());
+    }).setOrigin(0.5).setDepth(100).setScrollFactor(sf);
 
     // Special charge bar (above button)
     this.add.rectangle(width / 2, height - 30, 80, 6, 0x333333, 0.6).setDepth(100).setScrollFactor(sf);
