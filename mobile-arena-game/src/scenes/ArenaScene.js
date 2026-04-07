@@ -121,7 +121,8 @@ export class ArenaScene extends Phaser.Scene {
       wall.body.setSize(w.w, w.h);
       wall.refreshBody();
       wall.setDepth(3);
-      wall.setAlpha(0.85);
+      wall.setAlpha(1);
+      wall.setTint(0xccddee); // bright so walls are clearly visible
     });
 
     // Player - starts at bottom center of world
@@ -194,7 +195,7 @@ export class ArenaScene extends Phaser.Scene {
     // Camera follows player
     // Camera follows player, zoomed out to see more of the map
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(0.65);
+    this.cameras.main.setZoom(0.85);
 
     // Unfreeze after 1 second
     const readyText = this.add.text(this.player.x, this.player.y - 40, 'GET READY...', {
@@ -563,16 +564,16 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const halfW = width / 2;
 
-    // RIGHT side: Movement joystick
-    this.joystickBase = this.add.image(width - 100, height - 100, 'joystick_base')
+    // LEFT side: Movement joystick (white)
+    this.joystickBase = this.add.image(100, height - 100, 'joystick_base')
       .setDepth(100).setAlpha(0).setScrollFactor(0);
-    this.joystickThumb = this.add.image(width - 100, height - 100, 'joystick_thumb')
+    this.joystickThumb = this.add.image(100, height - 100, 'joystick_thumb')
       .setDepth(101).setAlpha(0).setScrollFactor(0);
 
-    // LEFT side: Aim joystick (drag to aim, fires while held)
-    this.aimBase = this.add.image(100, height - 100, 'joystick_base')
+    // RIGHT side: Aim joystick (orange, drag to aim, fires while held)
+    this.aimBase = this.add.image(width - 100, height - 100, 'joystick_base')
       .setDepth(100).setAlpha(0).setScrollFactor(0);
-    this.aimThumb = this.add.image(100, height - 100, 'joystick_thumb')
+    this.aimThumb = this.add.image(width - 100, height - 100, 'joystick_thumb')
       .setDepth(101).setAlpha(0).setScrollFactor(0);
     this.aimThumb.setTint(0xff6644); // orange tint to distinguish from move
 
@@ -587,15 +588,15 @@ export class ArenaScene extends Phaser.Scene {
       const sx = pointer.x;
       const sy = pointer.y;
 
-      if (sx >= halfW) {
-        // RIGHT: Movement joystick
+      if (sx < halfW) {
+        // LEFT: Movement joystick
         this.joystickActive = true;
         this.joystickPointerId = pointer.id;
         this.joystickBase.setPosition(sx, sy).setAlpha(1);
         this.joystickThumb.setPosition(sx, sy).setAlpha(1);
         this.joystickOrigin = { x: sx, y: sy };
       } else {
-        // LEFT: Aim joystick - drag to set aim direction, fires while held
+        // RIGHT: Aim joystick - drag to set aim direction, fires while held
         this.aimActive = true;
         this.shootHeld = true;
         this.aimPointerId = pointer.id;
