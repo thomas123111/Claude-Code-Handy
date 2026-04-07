@@ -830,15 +830,38 @@ export class ArenaScene extends Phaser.Scene {
       fontSize: '14px', fontFamily: 'monospace', color: methodColors[this.clearMethod] || '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(200);
 
-    this.add.text(width / 2, 132, 'Enter Portal →', {
-      fontSize: '16px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(200);
-
     if (this.timeBonus > 0) {
-      this.add.text(width / 2, 155, `Speed Bonus: +${this.timeBonus} credits!`, {
+      this.add.text(width / 2, 140, `Speed Bonus: +${this.timeBonus} credits!`, {
         fontSize: '12px', fontFamily: 'monospace', color: '#ffdd00',
       }).setOrigin(0.5).setDepth(200);
     }
+
+    // Tappable NEXT button (no need to walk to portal)
+    const { height } = this.scale;
+    const nextBtn = this.add.rectangle(width / 2, height / 2 + 30, 200, 50, 0x9944ff, 0.4)
+      .setStrokeStyle(3, 0xcc88ff).setDepth(200);
+    this.add.text(width / 2, height / 2 + 30, 'TAP TO CONTINUE', {
+      fontSize: '14px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(201);
+
+    // Tap anywhere after 1 second to proceed
+    this.time.delayedCall(500, () => {
+      this.input.once('pointerdown', () => {
+        if (this.arenaCleared && !this.transitioning) {
+          this.transitioning = true;
+          this.scene.start('ArenaComplete', {
+            arenaIndex: this.arenaIndex,
+            runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
+            runScrap: this.runScrap + this.arenaConfig.scrapReward,
+            runXp: this.runXp + this.arenaConfig.xpReward,
+            timeBonus: this.timeBonus || 0,
+            playerHpPercent: this.playerHp / this.maxHp,
+            runSeed: this.runSeed,
+            ammoStock: this.ammoStock,
+          });
+        }
+      });
+    });
   }
 
   onBulletHitEnemy(bullet, enemy) {
