@@ -121,22 +121,22 @@ export class ArenaScene extends Phaser.Scene {
     this.arenaLayout.walls.forEach((w) => {
       const wall = this.walls.create(w.x, w.y, 'arena_wall');
       wall.setDisplaySize(w.w, w.h);
-      wall.setTint(this.arenaConfig.theme.color);
+      wall.setTint(0x8b6b4a); // dungeon brown
       wall.body.setSize(w.w, w.h);
       wall.refreshBody();
       wall.setDepth(3);
-      wall.setAlpha(1);
-      wall.setTint(0xccddee); // bright so walls are clearly visible
     });
 
     // Player - starts at bottom center of world
     // Player at bottom center
-    const mechTexture = this.textures.exists(`mech_${this.mechId}`) ? `mech_${this.mechId}` : 'mech_striker';
-    this.player = this.physics.add.image(width / 2, height - 60, mechTexture);
+    // Map mech IDs to dungeon hero sprites
+    const heroMap = { striker: 'hero_knight', titan: 'hero_knight', phantom: 'hero_mage' };
+    const heroTex = heroMap[this.mechId] || 'hero_knight';
+    this.player = this.physics.add.image(width / 2, height - 60, heroTex);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
-    this.player.setScale(1.5);
-    this.player.body.setSize(20, 20);
+    this.player.setScale(2.5); // 16x16 sprite scaled to ~40px
+    this.player.body.setSize(14, 14);
 
     // 1 second freeze at start
     this.startFrozen = true;
@@ -716,27 +716,41 @@ export class ArenaScene extends Phaser.Scene {
     const roll = Math.random();
     let texture, hp, speed, damage, size;
 
-    if (roll < 0.15 && this.arenaIndex > 1) {
-      // Tank enemy
-      texture = 'enemy_tank';
-      hp = config.enemyHp * 2.5;
-      speed = config.enemySpeed * 0.6;
+    if (roll < 0.1 && this.arenaIndex > 2) {
+      // Demon (boss-like)
+      texture = 'enemy_demon';
+      hp = config.enemyHp * 3;
+      speed = config.enemySpeed * 0.5;
+      damage = config.enemyDamage * 2;
+      size = 14;
+    } else if (roll < 0.25 && this.arenaIndex > 1) {
+      // Orc (tanky)
+      texture = 'enemy_orc';
+      hp = config.enemyHp * 2;
+      speed = config.enemySpeed * 0.7;
       damage = config.enemyDamage * 1.5;
-      size = 28;
-    } else if (roll < 0.4) {
-      // Fast enemy
-      texture = 'enemy_fast';
-      hp = config.enemyHp * 0.6;
+      size = 14;
+    } else if (roll < 0.45) {
+      // Ghost (fast, phasing)
+      texture = 'enemy_ghost';
+      hp = config.enemyHp * 0.5;
       speed = config.enemySpeed * 1.8;
       damage = config.enemyDamage * 0.8;
-      size = 20;
-    } else {
-      // Basic enemy
-      texture = 'enemy_basic';
+      size = 14;
+    } else if (roll < 0.7) {
+      // Skeleton (balanced)
+      texture = 'enemy_skeleton';
       hp = config.enemyHp;
       speed = config.enemySpeed;
       damage = config.enemyDamage;
-      size = 20;
+      size = 14;
+    } else {
+      // Slime (basic)
+      texture = 'enemy_slime';
+      hp = config.enemyHp * 0.8;
+      speed = config.enemySpeed * 0.9;
+      damage = config.enemyDamage * 0.7;
+      size = 14;
     }
 
     // Spawn in open space, preferring spots far from player
@@ -754,7 +768,7 @@ export class ArenaScene extends Phaser.Scene {
     const y = bestPos.y;
 
     const enemy = this.physics.add.image(x, y, texture);
-    enemy.setTint(config.theme.enemyTint);
+    enemy.setScale(2); // 16x16 → 32px
     enemy.body.setSize(size, size);
     enemy.setData('hp', hp);
     enemy.setData('maxHp', hp);
@@ -845,7 +859,7 @@ export class ArenaScene extends Phaser.Scene {
     // Flash white
     enemy.setTint(0xffffff);
     this.time.delayedCall(60, () => {
-      if (enemy.active) enemy.setTint(this.arenaConfig.theme.enemyTint);
+      if (enemy.active) enemy.clearTint();
     });
 
     // Splash damage: hurt nearby enemies
@@ -859,7 +873,7 @@ export class ArenaScene extends Phaser.Scene {
           other.setData('hp', other.getData('hp') - splashDmg);
           other.setTint(0xffaa00);
           this.time.delayedCall(60, () => {
-            if (other.active) other.setTint(this.arenaConfig.theme.enemyTint);
+            if (other.active) other.clearTint();
           });
           if (other.getData('hp') <= 0) this.killEnemy(other);
         }

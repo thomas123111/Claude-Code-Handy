@@ -8,9 +8,9 @@ const DEFAULT_SAVE = {
   mechs: [
     {
       id: 'striker',
-      name: 'Striker',
-      title: 'Assault Mech',
-      description: 'Balanced fighter. Rapid-fire pulse cannon.',
+      name: 'Knight',
+      title: 'Warrior',
+      description: 'Balanced fighter. Rapid sword strikes.',
       unlocked: true,
       level: 1,
       xp: 0,
@@ -35,9 +35,9 @@ const DEFAULT_SAVE = {
     },
     {
       id: 'titan',
-      name: 'Titan',
-      title: 'Heavy Mech',
-      description: 'Slow but devastating. Shotgun spread + shield.',
+      name: 'Guardian',
+      title: 'Tank',
+      description: 'Slow but devastating. Axe sweep + shield.',
       unlocked: false,
       level: 1,
       xp: 0,
@@ -60,9 +60,9 @@ const DEFAULT_SAVE = {
     },
     {
       id: 'phantom',
-      name: 'Phantom',
-      title: 'Stealth Mech',
-      description: 'Fragile sniper. Long-range piercing laser + cloak.',
+      name: 'Mage',
+      title: 'Sorcerer',
+      description: 'Fragile but powerful. Piercing magic bolts + cloak.',
       unlocked: false,
       level: 1,
       xp: 0,

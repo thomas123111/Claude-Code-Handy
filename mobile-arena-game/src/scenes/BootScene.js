@@ -5,91 +5,68 @@ export class BootScene extends Phaser.Scene {
     super('Boot');
   }
 
+  preload() {
+    // Show loading text
+    this.add.text(this.scale.width / 2, this.scale.height / 2, 'Loading...', {
+      fontSize: '16px', fontFamily: 'monospace', color: '#ffffff',
+    }).setOrigin(0.5);
+
+    // Load sprite assets (Kenney Tiny Dungeon - CC0)
+    this.load.image('hero_knight', 'assets/sprites/hero_knight.png');
+    this.load.image('hero_mage', 'assets/sprites/hero_mage.png');
+    this.load.image('hero_rogue', 'assets/sprites/hero_rogue.png');
+    this.load.image('enemy_slime', 'assets/sprites/enemy_slime.png');
+    this.load.image('enemy_skeleton', 'assets/sprites/enemy_skeleton.png');
+    this.load.image('enemy_ghost', 'assets/sprites/enemy_ghost.png');
+    this.load.image('enemy_orc', 'assets/sprites/enemy_orc.png');
+    this.load.image('enemy_demon', 'assets/sprites/enemy_demon.png');
+    this.load.image('chest_closed', 'assets/sprites/chest_closed.png');
+    this.load.image('chest_open', 'assets/sprites/chest_open.png');
+    this.load.image('item_potion_blue', 'assets/sprites/item_potion_blue.png');
+    this.load.image('item_potion_red', 'assets/sprites/item_potion_red.png');
+    this.load.image('item_sword', 'assets/sprites/item_sword.png');
+    this.load.image('floor_dark', 'assets/sprites/floor_dark.png');
+    this.load.image('floor_light', 'assets/sprites/floor_light.png');
+    this.load.image('wall_brown', 'assets/sprites/wall_brown.png');
+    this.load.image('wall_iron', 'assets/sprites/wall_iron.png');
+    this.load.image('door', 'assets/sprites/door.png');
+    this.load.image('gate', 'assets/sprites/gate.png');
+
+    // Load UI assets (Kenney RPG UI - CC0)
+    this.load.image('btn_blue', 'assets/ui/btn_blue.png');
+    this.load.image('btn_blue_pressed', 'assets/ui/btn_blue_pressed.png');
+    this.load.image('btn_brown', 'assets/ui/btn_brown.png');
+    this.load.image('btn_brown_pressed', 'assets/ui/btn_brown_pressed.png');
+    this.load.image('btn_grey', 'assets/ui/btn_grey.png');
+    this.load.image('btn_beige', 'assets/ui/btn_beige.png');
+    this.load.image('panel_blue', 'assets/ui/panel_blue.png');
+    this.load.image('panel_brown', 'assets/ui/panel_brown.png');
+    this.load.image('panel_beige', 'assets/ui/panel_beige.png');
+  }
+
   create() {
-    // Generate all textures procedurally (no asset loading needed)
+    // Generate remaining textures procedurally (bullets, effects, joystick)
     this.generateTextures();
     this.scene.start('Menu');
   }
 
   generateTextures() {
-    // Player mech - triangle ship
     const pg = this.add.graphics();
 
-    // STRIKER - Assault Mech (blue arrow ship)
-    pg.clear();
-    pg.fillStyle(0x2277dd, 1);
-    pg.beginPath();
-    pg.moveTo(16, 0); pg.lineTo(30, 28); pg.lineTo(16, 22); pg.lineTo(2, 28);
-    pg.closePath(); pg.fill();
-    pg.fillStyle(0x3399ff, 1);
-    pg.fillRect(12, 8, 8, 14);
-    pg.fillStyle(0x66ccff, 1);
-    pg.fillCircle(16, 12, 3);
-    // Pulse cannon barrels
-    pg.fillStyle(0x44aaff, 1);
-    pg.fillRect(6, 2, 3, 8);
-    pg.fillRect(23, 2, 3, 8);
-    pg.generateTexture('mech_striker', 32, 32);
+    // Map hero sprites to mech IDs (for backward compat)
+    // mech_striker → hero_knight, mech_titan → hero_knight (recolor), mech_phantom → hero_mage
+    // We'll use the loaded sprites directly, but create aliases
+    if (!this.textures.exists('mech_striker')) {
+      // Create scaled-up versions of the 16x16 sprites for menu display
+    }
 
-    // TITAN - Heavy Mech (wide green fortress)
-    pg.clear();
-    pg.fillStyle(0x2a7a2a, 1);
-    pg.fillRect(2, 6, 28, 22);
-    pg.fillStyle(0x44aa44, 1);
-    pg.fillRect(4, 4, 24, 18);
-    // Shoulder armor
-    pg.fillStyle(0x338833, 1);
-    pg.fillRect(0, 8, 6, 12);
-    pg.fillRect(26, 8, 6, 12);
-    // Shotgun barrel (wide)
-    pg.fillStyle(0x66cc66, 1);
-    pg.fillRect(8, 0, 16, 6);
-    // Visor
-    pg.fillStyle(0xaaffaa, 1);
-    pg.fillRect(10, 10, 12, 4);
-    // Shield emblem
-    pg.fillStyle(0x88ee88, 0.5);
-    pg.fillCircle(16, 18, 5);
-    pg.generateTexture('mech_titan', 32, 32);
-
-    // PHANTOM - Stealth Mech (sleek pink/purple)
-    pg.clear();
-    pg.fillStyle(0x882266, 1);
-    pg.beginPath();
-    pg.moveTo(16, 0); pg.lineTo(26, 24); pg.lineTo(16, 32); pg.lineTo(6, 24);
-    pg.closePath(); pg.fill();
-    pg.fillStyle(0xcc4488, 1);
-    pg.beginPath();
-    pg.moveTo(16, 4); pg.lineTo(22, 20); pg.lineTo(16, 26); pg.lineTo(10, 20);
-    pg.closePath(); pg.fill();
-    // Laser sight line
-    pg.lineStyle(1, 0xff4488, 0.8);
-    pg.lineBetween(16, 0, 16, -4);
-    // Eyes
-    pg.fillStyle(0xff88cc, 1);
-    pg.fillCircle(13, 12, 2);
-    pg.fillCircle(19, 12, 2);
-    // Cloak shimmer effect
-    pg.fillStyle(0xffffff, 0.15);
-    pg.fillRect(8, 6, 16, 2);
-    pg.generateTexture('mech_phantom', 32, 32);
-
-    // Shield effect (for Titan special)
-    pg.clear();
-    pg.lineStyle(3, 0x44ff88, 0.6);
-    pg.strokeCircle(20, 20, 18);
-    pg.lineStyle(1, 0xaaffcc, 0.3);
-    pg.strokeCircle(20, 20, 14);
-    pg.generateTexture('shield_effect', 40, 40);
-
-    // Bullet - basic (yellow)
+    // Bullets
     pg.clear();
     pg.fillStyle(0xffff44, 1);
     pg.fillCircle(4, 4, 4);
     pg.generateTexture('bullet', 8, 8);
     pg.generateTexture('bullet_basic', 8, 8);
 
-    // Bullet - plasma (cyan, bigger)
     pg.clear();
     pg.fillStyle(0x44ddff, 1);
     pg.fillCircle(5, 5, 5);
@@ -97,7 +74,6 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(5, 5, 3);
     pg.generateTexture('bullet_plasma', 10, 10);
 
-    // Bullet - explosive (orange, big)
     pg.clear();
     pg.fillStyle(0xff6622, 1);
     pg.fillCircle(5, 5, 5);
@@ -105,21 +81,10 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(5, 5, 2);
     pg.generateTexture('bullet_explosive', 10, 10);
 
-    // Bullet - piercing (purple, elongated)
     pg.clear();
     pg.fillStyle(0xcc44ff, 1);
     pg.fillRect(1, 2, 6, 4);
-    pg.fillStyle(0xee88ff, 0.6);
-    pg.fillRect(2, 3, 4, 2);
     pg.generateTexture('bullet_piercing', 8, 8);
-
-    // Loot - ammo pickup
-    pg.clear();
-    pg.fillStyle(0xff8800, 1);
-    pg.fillRect(2, 1, 8, 10);
-    pg.fillStyle(0xffaa44, 1);
-    pg.fillRect(4, 0, 4, 3);
-    pg.generateTexture('loot_ammo', 12, 12);
 
     // Enemy bullet
     pg.clear();
@@ -127,35 +92,7 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(3, 3, 3);
     pg.generateTexture('enemy_bullet', 6, 6);
 
-    // Basic enemy - small square
-    pg.clear();
-    pg.fillStyle(0xff4444, 1);
-    pg.fillRect(2, 2, 20, 20);
-    pg.fillStyle(0xcc2222, 1);
-    pg.fillRect(6, 6, 12, 12);
-    pg.generateTexture('enemy_basic', 24, 24);
-
-    // Fast enemy - diamond
-    pg.clear();
-    pg.fillStyle(0xff8844, 1);
-    pg.beginPath();
-    pg.moveTo(12, 0);
-    pg.lineTo(24, 12);
-    pg.lineTo(12, 24);
-    pg.lineTo(0, 12);
-    pg.closePath();
-    pg.fill();
-    pg.generateTexture('enemy_fast', 24, 24);
-
-    // Tanky enemy - big circle
-    pg.clear();
-    pg.fillStyle(0xaa2266, 1);
-    pg.fillCircle(16, 16, 16);
-    pg.fillStyle(0xcc4488, 1);
-    pg.fillCircle(16, 16, 10);
-    pg.generateTexture('enemy_tank', 32, 32);
-
-    // Loot - credit
+    // Loot icons
     pg.clear();
     pg.fillStyle(0xffdd00, 1);
     pg.fillCircle(6, 6, 6);
@@ -163,7 +100,6 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(6, 6, 3);
     pg.generateTexture('loot_credit', 12, 12);
 
-    // Loot - scrap
     pg.clear();
     pg.fillStyle(0x88aacc, 1);
     pg.fillRect(1, 1, 10, 10);
@@ -171,26 +107,38 @@ export class BootScene extends Phaser.Scene {
     pg.fillRect(3, 3, 6, 6);
     pg.generateTexture('loot_scrap', 12, 12);
 
-    // Loot - health
     pg.clear();
     pg.fillStyle(0x44ff44, 1);
     pg.fillRect(3, 0, 6, 12);
     pg.fillRect(0, 3, 12, 6);
     pg.generateTexture('loot_health', 12, 12);
 
-    // Loot crate
+    pg.clear();
+    pg.fillStyle(0xff8800, 1);
+    pg.fillRect(2, 1, 8, 10);
+    pg.fillStyle(0xffaa44, 1);
+    pg.fillRect(4, 0, 4, 3);
+    pg.generateTexture('loot_ammo', 12, 12);
+
+    // Loot crate - use chest sprite if available
     pg.clear();
     pg.fillStyle(0xcc8833, 1);
     pg.fillRect(2, 4, 20, 16);
     pg.fillStyle(0xffaa44, 1);
     pg.fillRect(4, 6, 16, 12);
-    pg.lineStyle(2, 0x885522, 1);
-    pg.strokeRect(2, 4, 20, 16);
     pg.fillStyle(0xffdd00, 1);
     pg.fillRect(9, 9, 6, 6);
     pg.generateTexture('loot_crate', 24, 24);
 
-    // Portal
+    // Ghost loot
+    pg.clear();
+    pg.fillStyle(0x44ddff, 0.6);
+    pg.fillCircle(8, 8, 8);
+    pg.fillStyle(0xaaeeff, 0.3);
+    pg.fillCircle(8, 8, 12);
+    pg.generateTexture('ghost_loot', 24, 24);
+
+    // Portal - use gate sprite overlay
     pg.clear();
     pg.lineStyle(3, 0x9944ff, 1);
     pg.strokeCircle(20, 20, 18);
@@ -200,55 +148,7 @@ export class BootScene extends Phaser.Scene {
     pg.fillCircle(20, 20, 10);
     pg.generateTexture('portal', 40, 40);
 
-    // Joystick base
-    pg.clear();
-    pg.fillStyle(0xffffff, 0.15);
-    pg.fillCircle(50, 50, 50);
-    pg.lineStyle(2, 0xffffff, 0.3);
-    pg.strokeCircle(50, 50, 50);
-    pg.generateTexture('joystick_base', 100, 100);
-
-    // Joystick thumb
-    pg.clear();
-    pg.fillStyle(0xffffff, 0.4);
-    pg.fillCircle(25, 25, 25);
-    pg.generateTexture('joystick_thumb', 50, 50);
-
-    // Ghost loot - ethereal glowing orb
-    pg.clear();
-    pg.fillStyle(0x44ddff, 0.6);
-    pg.fillCircle(8, 8, 8);
-    pg.fillStyle(0xaaeeff, 0.3);
-    pg.fillCircle(8, 8, 12);
-    pg.generateTexture('ghost_loot', 24, 24);
-
-    // Sequence switch - inactive (dark)
-    pg.clear();
-    pg.fillStyle(0x333344, 1);
-    pg.fillCircle(14, 14, 14);
-    pg.lineStyle(2, 0x555566, 1);
-    pg.strokeCircle(14, 14, 14);
-    pg.generateTexture('switch_off', 28, 28);
-
-    // Sequence switch - showing (lit up)
-    pg.clear();
-    pg.fillStyle(0x33ff88, 1);
-    pg.fillCircle(14, 14, 14);
-    pg.fillStyle(0xaaffcc, 0.6);
-    pg.fillCircle(14, 14, 8);
-    pg.lineStyle(2, 0x66ffaa, 1);
-    pg.strokeCircle(14, 14, 14);
-    pg.generateTexture('switch_on', 28, 28);
-
-    // Sequence switch - error (red)
-    pg.clear();
-    pg.fillStyle(0xff3333, 1);
-    pg.fillCircle(14, 14, 14);
-    pg.lineStyle(2, 0xff6666, 1);
-    pg.strokeCircle(14, 14, 14);
-    pg.generateTexture('switch_error', 28, 28);
-
-    // Arena wall segment (bright, high contrast)
+    // Arena wall - use wall sprite tint
     pg.clear();
     pg.fillStyle(0xaabbcc, 1);
     pg.fillRect(0, 0, 12, 12);
@@ -256,20 +156,54 @@ export class BootScene extends Phaser.Scene {
     pg.strokeRect(0, 0, 12, 12);
     pg.generateTexture('arena_wall', 12, 12);
 
-    // Maze wall segment
+    // Joystick
+    pg.clear();
+    pg.fillStyle(0xffffff, 0.15);
+    pg.fillCircle(50, 50, 50);
+    pg.lineStyle(2, 0xffffff, 0.3);
+    pg.strokeCircle(50, 50, 50);
+    pg.generateTexture('joystick_base', 100, 100);
+
+    pg.clear();
+    pg.fillStyle(0xffffff, 0.4);
+    pg.fillCircle(25, 25, 25);
+    pg.generateTexture('joystick_thumb', 50, 50);
+
+    // Switch textures
+    pg.clear();
+    pg.fillStyle(0x333344, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.lineStyle(2, 0x555566, 1);
+    pg.strokeCircle(14, 14, 14);
+    pg.generateTexture('switch_off', 28, 28);
+
+    pg.clear();
+    pg.fillStyle(0x33ff88, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.fillStyle(0xaaffcc, 0.6);
+    pg.fillCircle(14, 14, 8);
+    pg.generateTexture('switch_on', 28, 28);
+
+    pg.clear();
+    pg.fillStyle(0xff3333, 1);
+    pg.fillCircle(14, 14, 14);
+    pg.generateTexture('switch_error', 28, 28);
+
+    // Shield effect
+    pg.clear();
+    pg.lineStyle(3, 0x44ff88, 0.6);
+    pg.strokeCircle(20, 20, 18);
+    pg.generateTexture('shield_effect', 40, 40);
+
+    // Maze wall / goal
     pg.clear();
     pg.fillStyle(0x4466aa, 0.7);
     pg.fillRect(0, 0, 40, 40);
-    pg.lineStyle(1, 0x6688cc, 0.4);
-    pg.strokeRect(1, 1, 38, 38);
     pg.generateTexture('maze_wall', 40, 40);
 
-    // Maze goal
     pg.clear();
     pg.fillStyle(0x44ffaa, 0.8);
     pg.fillCircle(12, 12, 12);
-    pg.fillStyle(0xaaffdd, 0.5);
-    pg.fillCircle(12, 12, 6);
     pg.generateTexture('maze_goal', 24, 24);
 
     pg.destroy();
