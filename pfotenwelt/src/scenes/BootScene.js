@@ -27,17 +27,19 @@ export class BootScene extends Phaser.Scene {
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
     bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
 
-    // Town map
-    this.load.image('town_map_clean', 'assets/town_map_clean.jpg');
-    this.load.image('town_map_main', 'assets/town_map_main.jpg');
+    // Town building sprites (AI-generated, freigestellt)
+    const blds = ['shelter', 'workshop', 'vet', 'salon', 'school', 'hotel', 'cafe', 'guild'];
+    blds.forEach((b) => this.load.image(`bld_${b}`, `assets/bld_${b}.png`));
 
-    // Animated town sprites (AI-generated, pixel art style)
-    this.load.image('sprite_dog_walker', 'assets/sprite_dog_walker.png');
-    this.load.image('sprite_cat_sitting', 'assets/sprite_cat_sitting.png');
-    this.load.image('sprite_jogger', 'assets/sprite_jogger.png');
-    this.load.image('sprite_child', 'assets/sprite_child_playing.png');
-    this.load.image('sprite_bicycle', 'assets/sprite_bicycle.png');
-    this.load.image('sprite_bird', 'assets/sprite_bird.png');
+    // Town environment sprites
+    this.load.image('env_fountain', 'assets/env_fountain.png');
+    this.load.image('env_tree_big', 'assets/env_tree_big.png');
+    this.load.image('env_tree_small', 'assets/env_tree_small.png');
+    this.load.image('env_bench', 'assets/env_bench.png');
+    this.load.image('env_lamppost', 'assets/env_lamppost.png');
+    this.load.image('env_flowerbed', 'assets/env_flowerbed.png');
+    this.load.image('tile_grass', 'assets/tile_grass.png');
+    this.load.image('tile_path', 'assets/tile_path.png');
 
     // AI-generated item icons (Gemini)
     const items = ['kibble', 'treat', 'bowl', 'premium_food', 'feast',

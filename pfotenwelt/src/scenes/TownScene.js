@@ -1,16 +1,50 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy } from '../data/SaveManager.js';
 
-// Buildings mapped to ACTUAL positions in town_map_clean.jpg (1024x1024)
+// Town layout: buildings placed on a grid with exact positions
+// Map is 1200x1400 (scrollable, larger than screen)
+const MAP_W = 1200;
+const MAP_H = 1400;
+
 const BUILDINGS = [
-  { id: 'shelter', key: 'Shelter', name: 'Tierheim', x: 200, y: 280, r: 65, unlockCost: 0, unlocked: true },
-  { id: 'vet', key: 'Vet', name: 'Tierarzt', x: 540, y: 200, r: 60, unlockCost: 200 },
-  { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', x: 780, y: 280, r: 60, unlockCost: 0, unlocked: true },
-  { id: 'salon', key: 'Salon', name: 'Salon', x: 200, y: 680, r: 60, unlockCost: 350 },
-  { id: 'school', key: 'School', name: 'Schule', x: 790, y: 480, r: 60, unlockCost: 500 },
-  { id: 'cafe', key: 'Cafe', name: 'Café', x: 370, y: 780, r: 55, unlockCost: 1200 },
-  { id: 'guild', key: 'Guild', name: 'Gilde', x: 650, y: 680, r: 55, unlockCost: 300 },
-  { id: 'hotel', key: 'Hotel', name: 'Pension', x: 650, y: 850, r: 55, unlockCost: 800 },
+  { id: 'shelter', key: 'Shelter', name: 'Tierheim', tex: 'bld_shelter',
+    x: 300, y: 250, scale: 1.0, unlockCost: 0, unlocked: true },
+  { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', tex: 'bld_workshop',
+    x: 800, y: 250, scale: 1.0, unlockCost: 0, unlocked: true },
+  { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
+    x: 550, y: 500, scale: 1.0, unlockCost: 200 },
+  { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
+    x: 200, y: 700, scale: 1.0, unlockCost: 350 },
+  { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
+    x: 900, y: 700, scale: 1.0, unlockCost: 500 },
+  { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
+    x: 300, y: 1000, scale: 1.0, unlockCost: 800 },
+  { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
+    x: 800, y: 1000, scale: 1.0, unlockCost: 1200 },
+  { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
+    x: 550, y: 1200, scale: 1.0, unlockCost: 300 },
+];
+
+// Decoration placement
+const TREES = [
+  { x: 100, y: 150, type: 'big' }, { x: 500, y: 100, type: 'big' },
+  { x: 1050, y: 150, type: 'big' }, { x: 100, y: 500, type: 'small' },
+  { x: 1050, y: 500, type: 'small' }, { x: 100, y: 900, type: 'big' },
+  { x: 1050, y: 900, type: 'big' }, { x: 400, y: 600, type: 'small' },
+  { x: 700, y: 600, type: 'small' }, { x: 550, y: 850, type: 'big' },
+  { x: 200, y: 1200, type: 'small' }, { x: 950, y: 1200, type: 'small' },
+];
+
+const DECOR = [
+  { x: 550, y: 350, tex: 'env_fountain', scale: 0.8 },
+  { x: 350, y: 450, tex: 'env_bench', scale: 0.6 },
+  { x: 750, y: 450, tex: 'env_bench', scale: 0.6 },
+  { x: 150, y: 400, tex: 'env_lamppost', scale: 0.5 },
+  { x: 950, y: 400, tex: 'env_lamppost', scale: 0.5 },
+  { x: 450, y: 850, tex: 'env_flowerbed', scale: 0.6 },
+  { x: 650, y: 850, tex: 'env_flowerbed', scale: 0.6 },
+  { x: 150, y: 1100, tex: 'env_lamppost', scale: 0.5 },
+  { x: 950, y: 1100, tex: 'env_lamppost', scale: 0.5 },
 ];
 
 export class TownScene extends Phaser.Scene {
@@ -20,157 +54,144 @@ export class TownScene extends Phaser.Scene {
     this.save = loadSave();
     regenerateEnergy(this.save);
     const { width, height } = this.scale;
-    const mapW = 1024;
-    const mapH = 1024;
 
-    // Camera bounds for the map
-    this.cameras.main.setBounds(0, 0, mapW, mapH);
-    this.cameras.main.centerOn(mapW / 2, mapH / 2);
-    this.cameras.main.setZoom(Math.max(width / mapW, height / mapH) * 1.3);
+    // Camera setup
+    this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
+    this.cameras.main.centerOn(MAP_W / 2, 400);
+    this.cameras.main.setZoom(Math.min(width / MAP_W * 1.8, 1.2));
 
-    // Town map background - the KI image IS the town, no overlays
-    const mapKey = this.textures.exists('town_map_clean') ? 'town_map_clean' : 'town_map_main';
-    if (this.textures.exists(mapKey)) {
-      this.add.image(mapW / 2, mapH / 2, mapKey).setDisplaySize(mapW, mapH).setDepth(0);
-    } else {
-      // Fallback solid color
-      this.add.rectangle(mapW / 2, mapH / 2, mapW, mapH, 0x5a8a3c).setDepth(0);
+    // === GREEN GRASS BACKGROUND ===
+    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x4a8a3a).setDepth(0);
+
+    // Tile grass texture across background
+    if (this.textures.exists('tile_grass')) {
+      for (let gx = 0; gx < MAP_W; gx += 120) {
+        for (let gy = 0; gy < MAP_H; gy += 120) {
+          this.add.image(gx + 60, gy + 60, 'tile_grass')
+            .setDisplaySize(125, 125).setDepth(0).setAlpha(0.4);
+        }
+      }
     }
 
-    // Only add subtle name labels over buildings - no emojis, no walkers
-    BUILDINGS.forEach((b) => {
-      const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
+    // === PATHS (connecting buildings) ===
+    const pathColor = 0xc4a76c;
+    // Horizontal paths
+    this.drawPath(150, 250, 950, 250, pathColor); // top row
+    this.drawPath(150, 700, 1000, 700, pathColor); // middle row
+    this.drawPath(150, 1000, 950, 1000, pathColor); // bottom row
+    // Vertical paths
+    this.drawPath(300, 150, 300, 1100, pathColor); // left column
+    this.drawPath(550, 200, 550, 1300, pathColor); // center column
+    this.drawPath(800, 150, 800, 1100, pathColor); // right column
 
-      if (isUnlocked) {
-        // Small clean name label
-        const label = this.add.text(b.x, b.y + b.r - 5, b.name, {
-          fontSize: '11px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-          backgroundColor: '#00000088', padding: { x: 6, y: 2 },
-        }).setOrigin(0.5).setDepth(2);
-
-        // Pet count badge on shelter
-        if (b.id === 'shelter' && this.save.pets.length > 0) {
-          this.add.circle(b.x + 30, b.y - 30, 12, 0xff4466).setDepth(3);
-          this.add.text(b.x + 30, b.y - 30, `${this.save.pets.length}`, {
-            fontSize: '10px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-          }).setOrigin(0.5).setDepth(4);
-        }
-      } else {
-        // Locked: dark overlay circle + cost
-        this.add.circle(b.x, b.y, b.r, 0x000000, 0.5).setDepth(1);
-        this.add.text(b.x, b.y - 8, '🔒', { fontSize: '20px' }).setOrigin(0.5).setDepth(2);
-        this.add.text(b.x, b.y + 14, `${b.unlockCost}❤️`, {
-          fontSize: '10px', fontFamily: 'monospace', color: '#ffaa44',
-        }).setOrigin(0.5).setDepth(2);
+    // === DECORATIONS ===
+    TREES.forEach((t) => {
+      const tex = t.type === 'big' ? 'env_tree_big' : 'env_tree_small';
+      if (this.textures.exists(tex)) {
+        this.add.image(t.x, t.y, tex).setScale(t.type === 'big' ? 0.8 : 0.5).setDepth(1);
       }
     });
 
-    // === HUD (fixed to camera) ===
-    // Top bar
-    this.add.rectangle(width / 2, 0, width, 48, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
-    this.add.text(width / 2, 14, '🐾 Pfotenwelt', {
-      fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
-    this.add.text(12, 8, `❤️ ${this.save.hearts}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#ff6688',
-    }).setScrollFactor(0).setDepth(51);
-    this.add.text(12, 26, `⚡ ${this.save.energy}`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#ffcc00',
-    }).setScrollFactor(0).setDepth(51);
-    this.add.text(width - 12, 14, `Lv.${this.save.level}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(51);
-    this.add.text(width - 12, 30, `${this.save.pets.length}🐾`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#aa88cc',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(51);
+    DECOR.forEach((d) => {
+      if (this.textures.exists(d.tex)) {
+        this.add.image(d.x, d.y, d.tex).setScale(d.scale).setDepth(2);
+      }
+    });
 
-    // Bottom bar
-    this.add.rectangle(width / 2, height - 35, width, 40, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
-    this.add.text(width / 2, height - 18, `🎁 ${this.save.totalDonatedKg.toFixed(1)}kg gespendet`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
+    // === BUILDINGS ===
+    this.buildingSprites = [];
+    BUILDINGS.forEach((b) => {
+      const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
 
-    // === AMBIENT EFFECTS (subtle, professional, no cheap sprites) ===
-    this.ambientEffects = [];
+      if (this.textures.exists(b.tex)) {
+        const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(3);
 
-    // Chimney smoke on buildings (small white particles rising)
-    const chimneyPositions = [[220, 230], [560, 150], [800, 230]];
-    chimneyPositions.forEach(([cx, cy]) => {
-      // Spawn smoke particles periodically
+        if (!isUnlocked) {
+          img.setTint(0x444444); // greyed out
+          img.setAlpha(0.6);
+        }
+
+        b._sprite = img;
+      }
+
+      // Name label
+      this.add.text(b.x, b.y + 70, b.name, {
+        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+        backgroundColor: '#00000088', padding: { x: 8, y: 3 },
+      }).setOrigin(0.5).setDepth(5);
+
+      if (!isUnlocked) {
+        // Lock + cost
+        this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(6);
+        this.add.text(b.x, b.y + 25, `${b.unlockCost}❤️`, {
+          fontSize: '12px', fontFamily: 'monospace', color: '#ffaa44', fontStyle: 'bold',
+          backgroundColor: '#00000066', padding: { x: 4, y: 2 },
+        }).setOrigin(0.5).setDepth(6);
+      } else if (b.id === 'shelter' && this.save.pets.length > 0) {
+        // Pet count badge
+        this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(7);
+        this.add.text(b.x + 55, b.y - 55, `${this.save.pets.length}`, {
+          fontSize: '11px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(8);
+      }
+    });
+
+    // === AMBIENT EFFECTS ===
+    // Fountain sparkle
+    if (this.textures.exists('env_fountain')) {
       this.time.addEvent({
-        delay: 800, loop: true,
+        delay: 500, loop: true,
         callback: () => {
-          const smoke = this.add.circle(
-            cx + Phaser.Math.Between(-3, 3), cy,
-            Phaser.Math.Between(2, 4), 0xffffff, 0.3
-          ).setDepth(3);
+          const sparkle = this.add.circle(
+            550 + Phaser.Math.Between(-12, 12), 340 + Phaser.Math.Between(-8, 8),
+            2, 0x88ddff, 0.6
+          ).setDepth(4);
+          this.tweens.add({
+            targets: sparkle, y: sparkle.y - 15, alpha: 0,
+            duration: 800, onComplete: () => sparkle.destroy(),
+          });
+        },
+      });
+    }
+
+    // Chimney smoke on shelter and cafe
+    [[300, 200], [800, 950]].forEach(([sx, sy]) => {
+      this.time.addEvent({
+        delay: 1000, loop: true,
+        callback: () => {
+          const smoke = this.add.circle(sx + Phaser.Math.Between(-3, 3), sy, 3, 0xffffff, 0.2).setDepth(4);
           this.tweens.add({
             targets: smoke,
-            y: cy - Phaser.Math.Between(20, 40),
-            x: cx + Phaser.Math.Between(-10, 10),
-            alpha: 0, scale: { from: 1, to: 2.5 },
-            duration: Phaser.Math.Between(1500, 2500),
+            y: sy - 30, x: sx + Phaser.Math.Between(-8, 8),
+            alpha: 0, scale: 2.5, duration: 2000,
             onComplete: () => smoke.destroy(),
           });
         },
       });
     });
 
-    // Fountain water sparkle
-    this.time.addEvent({
-      delay: 400, loop: true,
-      callback: () => {
-        const fx = 580 + Phaser.Math.Between(-15, 15);
-        const fy = 440 + Phaser.Math.Between(-10, 10);
-        const sparkle = this.add.circle(fx, fy, 2, 0x88ddff, 0.7).setDepth(3);
-        this.tweens.add({
-          targets: sparkle,
-          y: fy - Phaser.Math.Between(8, 18),
-          alpha: 0, scale: { from: 1, to: 0.3 },
-          duration: 600,
-          onComplete: () => sparkle.destroy(),
-        });
-      },
-    });
+    // === HUD (fixed to camera) ===
+    this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
+    this.add.text(width / 2, 15, '🐾 Pfotenwelt', {
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
+    this.add.text(12, 8, `❤️ ${this.save.hearts}`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#ff6688',
+    }).setScrollFactor(0).setDepth(51);
+    this.add.text(12, 28, `⚡ ${this.save.energy}`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#ffcc00',
+    }).setScrollFactor(0).setDepth(51);
+    this.add.text(width - 12, 15, `Lv.${this.save.level}`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(51);
 
-    // Floating leaves from trees
-    const treePositions = [[100, 300], [350, 200], [650, 250], [450, 650], [850, 650]];
-    treePositions.forEach(([tx, ty]) => {
-      this.time.addEvent({
-        delay: Phaser.Math.Between(3000, 6000), loop: true,
-        callback: () => {
-          const colors = [0x44aa44, 0x88cc44, 0xaacc22, 0x66bb33];
-          const leaf = this.add.circle(
-            tx + Phaser.Math.Between(-10, 10), ty,
-            Phaser.Math.Between(1, 3),
-            Phaser.Utils.Array.GetRandom(colors), 0.6
-          ).setDepth(3);
-          this.tweens.add({
-            targets: leaf,
-            x: tx + Phaser.Math.Between(-30, 30),
-            y: ty + Phaser.Math.Between(30, 60),
-            alpha: 0, duration: Phaser.Math.Between(2000, 4000),
-            ease: 'Sine.easeInOut',
-            onComplete: () => leaf.destroy(),
-          });
-        },
-      });
-    });
+    // Bottom bar
+    this.add.rectangle(width / 2, height - 38, width, 42, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
+    this.add.text(width / 2, height - 20, `🎁 ${this.save.totalDonatedKg.toFixed(1)}kg gespendet | 📅 Tag ${this.save.loginStreak}`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
 
-    // Window lights that gently flicker (warm glow)
-    const windowPositions = [[180, 290], [210, 310], [530, 210], [550, 190], [770, 290], [790, 270]];
-    windowPositions.forEach(([wx, wy]) => {
-      const light = this.add.circle(wx, wy, 3, 0xffcc44, 0).setDepth(2);
-      this.tweens.add({
-        targets: light,
-        alpha: { from: 0, to: 0.4 },
-        duration: Phaser.Math.Between(1000, 2000),
-        yoyo: true, repeat: -1,
-        delay: Phaser.Math.Between(0, 2000),
-      });
-    });
-
-    // === DRAG TO SCROLL + PINCH TO ZOOM ===
+    // === INPUT: Drag to scroll, tap buildings ===
     this.isDragging = false;
     this.dragMoved = false;
     this.lastPinchDist = 0;
@@ -185,14 +206,14 @@ export class TownScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
-      // Pinch zoom with 2 fingers
       if (this.input.pointer1.isDown && this.input.pointer2.isDown) {
         const p1 = this.input.pointer1;
         const p2 = this.input.pointer2;
         const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
         if (this.lastPinchDist > 0) {
-          const delta = dist - this.lastPinchDist;
-          const newZoom = Phaser.Math.Clamp(this.cameras.main.zoom + delta * 0.005, 0.6, 3.0);
+          const newZoom = Phaser.Math.Clamp(
+            this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.004, 0.5, 2.5
+          );
           this.cameras.main.setZoom(newZoom);
         }
         this.lastPinchDist = dist;
@@ -204,7 +225,7 @@ export class TownScene extends Phaser.Scene {
       if (!this.isDragging) return;
       const dx = pointer.x - this.dragStartX;
       const dy = pointer.y - this.dragStartY;
-      if (Math.abs(dx) > 8 || Math.abs(dy) > 8) this.dragMoved = true;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) this.dragMoved = true;
       if (this.dragMoved) {
         const z = this.cameras.main.zoom;
         this.cameras.main.scrollX = this.camStartX - dx / z;
@@ -217,15 +238,23 @@ export class TownScene extends Phaser.Scene {
       this.lastPinchDist = 0;
       if (this.dragMoved) return;
 
-      // Tap: check buildings in world coords
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
+      // Check building taps - the tap zone IS the sprite image
       for (const b of BUILDINGS) {
-        const dist = Math.sqrt((wp.x - b.x) ** 2 + (wp.y - b.y) ** 2);
-        if (dist < b.r) {
+        if (!b._sprite) continue;
+        const bx = b.x, by = b.y;
+        const halfW = 60, halfH = 70; // approximate clickable area
+        if (wp.x >= bx - halfW && wp.x <= bx + halfW &&
+            wp.y >= by - halfH && wp.y <= by + halfH) {
           const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
           if (isUnlocked) {
-            this.scene.start(b.key);
+            // Bounce animation then enter
+            this.tweens.add({
+              targets: b._sprite, scale: { from: 1.0, to: 1.1 },
+              duration: 100, yoyo: true,
+              onComplete: () => this.scene.start(b.key),
+            });
           } else if (this.save.hearts >= b.unlockCost) {
             this.unlockBuilding(b);
           }
@@ -233,18 +262,12 @@ export class TownScene extends Phaser.Scene {
         }
       }
 
-      // Double-tap to zoom in/out
+      // Double-tap zoom
       const now = Date.now();
       if (this.lastTapTime && now - this.lastTapTime < 300) {
-        // Double tap: toggle zoom
-        const targetZoom = this.cameras.main.zoom < 1.5 ? 2.2 : 1.0;
+        const targetZoom = this.cameras.main.zoom < 1.2 ? 1.8 : 0.8;
         this.tweens.add({
-          targets: this.cameras.main,
-          zoom: targetZoom,
-          scrollX: wp.x - width / (2 * targetZoom),
-          scrollY: wp.y - height / (2 * targetZoom),
-          duration: 300,
-          ease: 'Cubic.Out',
+          targets: this.cameras.main, zoom: targetZoom, duration: 300, ease: 'Cubic.Out',
         });
         this.lastTapTime = 0;
       } else {
@@ -253,14 +276,42 @@ export class TownScene extends Phaser.Scene {
     });
   }
 
+  drawPath(x1, y1, x2, y2, color) {
+    const isHorizontal = Math.abs(y2 - y1) < Math.abs(x2 - x1);
+    const w = isHorizontal ? Math.abs(x2 - x1) : 40;
+    const h = isHorizontal ? 40 : Math.abs(y2 - y1);
+    const cx = (x1 + x2) / 2;
+    const cy = (y1 + y2) / 2;
+    this.add.rectangle(cx, cy, w, h, color, 0.4).setDepth(0);
+    // Path border
+    this.add.rectangle(cx, cy, w + 4, h + 4, 0x8a7a5a, 0.15).setDepth(0);
+  }
+
   unlockBuilding(b) {
     this.save.hearts -= b.unlockCost;
     if (!this.save.stations[b.id]) this.save.stations[b.id] = {};
     this.save.stations[b.id].unlocked = true;
     this.save.stations[b.id].level = 1;
     writeSave(this.save);
-    this.scene.restart();
-  }
 
-  // No update needed - all ambient effects use tweens/timers
+    // Celebration
+    if (b._sprite) {
+      b._sprite.clearTint();
+      b._sprite.setAlpha(1);
+      this.tweens.add({
+        targets: b._sprite, scale: { from: 0.5, to: 1.0 },
+        duration: 500, ease: 'Back.Out',
+      });
+    }
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 / 8) * i;
+      const star = this.add.text(b.x, b.y, '⭐', { fontSize: '16px' }).setOrigin(0.5).setDepth(20);
+      this.tweens.add({
+        targets: star,
+        x: b.x + Math.cos(angle) * 70, y: b.y + Math.sin(angle) * 70,
+        alpha: 0, duration: 700, onComplete: () => star.destroy(),
+      });
+    }
+    this.time.delayedCall(800, () => this.scene.restart());
+  }
 }
