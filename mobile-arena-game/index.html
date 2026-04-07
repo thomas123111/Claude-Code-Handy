@@ -2,21 +2,68 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="landscape">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Mech Arena</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       background: #0a0a1a;
       overflow: hidden;
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
     }
-    canvas { display: block; margin: 0 auto; }
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    /* Fullscreen prompt for portrait mode */
+    #rotate-msg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0a0a1a;
+      color: #3399ff;
+      font-family: monospace;
+      font-size: 18px;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #rotate-msg .icon { font-size: 48px; }
+    @media (orientation: portrait) {
+      #rotate-msg { display: flex; }
+    }
   </style>
 </head>
 <body>
+  <div id="rotate-msg">
+    <div class="icon">&#x1F4F1;&#x21BB;</div>
+    <div>Bitte drehe dein Handy<br>ins Querformat</div>
+  </div>
+  <script>
+    // Request fullscreen on first tap
+    document.addEventListener('click', function fs() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      // Lock to landscape if supported
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+      document.removeEventListener('click', fs);
+    }, { once: true });
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
