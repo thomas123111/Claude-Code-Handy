@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.9.0';
+export const GAME_VERSION = 'v0.9.1';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -22,15 +22,19 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    // Check story triggers
-    const story = checkStoryTrigger(save);
-    if (story) {
-      this.scene.start('Story', { chapter: story, returnTo: 'Menu' });
-      return;
+    // Check story triggers (with safety: max 1 per session)
+    if (!this.registry.get('storyShownThisSession')) {
+      const story = checkStoryTrigger(save);
+      if (story) {
+        this.registry.set('storyShownThisSession', true);
+        this.scene.start('Story', { chapter: story, returnTo: 'Menu' });
+        return;
+      }
     }
 
-    // Random event (10% chance on each menu visit)
-    if (Math.random() < 0.1 && save.pets.length > 0) {
+    // Random event (10% chance, max once per session)
+    if (Math.random() < 0.1 && save.pets.length > 0 && !this.registry.get('eventShownThisVisit')) {
+      this.registry.set('eventShownThisVisit', true);
       const evt = getRandomEvent();
       if (evt.effect.hearts) {
         save.hearts += evt.effect.hearts;
@@ -115,12 +119,12 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'monospace', color: '#aa9977',
     }).setOrigin(0.5);
 
-    // Main button - enter town
+    // Main buttons - positioned to be always visible
     this.buttons = [];
-    this.drawButton(cx, 430, '🏘️  STADT BETRETEN', '#8855cc', () => {
+    this.drawButton(cx, 380, '🏘️  STADT BETRETEN', '#8855cc', () => {
       this.scene.start('Town');
     });
-    this.drawButton(cx, 500, '📖  SAMMELBUCH', '#886644', () => {
+    this.drawButton(cx, 445, '📖  SAMMELBUCH', '#886644', () => {
       this.scene.start('Collection');
     });
 
