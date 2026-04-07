@@ -90,6 +90,43 @@ export class TownScene extends Phaser.Scene {
       fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
 
+    // === ANIMATED CHARACTERS on paths (proper sprites, correct scale) ===
+    this.walkers = [];
+
+    // Paths follow the cobblestone roads in the image
+    // Scale: buildings are ~100px wide in 1024 map, so characters should be ~25-35px
+    const walkerDefs = [
+      // Dog walker along horizontal path (middle road)
+      { tex: 'sprite_dog_walker', scale: 0.5, speed: 18, depth: 3,
+        path: [[100, 480], [450, 480], [450, 350], [600, 350], [900, 350]] },
+      // Cat sitting near the salon, moves occasionally
+      { tex: 'sprite_cat_sitting', scale: 0.35, speed: 5, depth: 3,
+        path: [[280, 620], [320, 640], [260, 660], [280, 620]] },
+      // Jogger on the lower path
+      { tex: 'sprite_jogger', scale: 0.4, speed: 30, depth: 3,
+        path: [[900, 750], [500, 750], [500, 880], [100, 880]] },
+      // Child playing near the fountain
+      { tex: 'sprite_child', scale: 0.35, speed: 8, depth: 3,
+        path: [[460, 520], [540, 520], [540, 450], [460, 450], [460, 520]] },
+      // Bicycle on upper road
+      { tex: 'sprite_bicycle', scale: 0.4, speed: 35, depth: 3,
+        path: [[50, 200], [450, 200], [700, 200], [950, 200]] },
+      // Bird flying high above
+      { tex: 'sprite_bird', scale: 0.3, speed: 25, depth: 4,
+        path: [[100, 100], [500, 80], [900, 120], [600, 60], [100, 100]] },
+    ];
+
+    walkerDefs.forEach((wd) => {
+      if (!this.textures.exists(wd.tex)) return;
+      const start = wd.path[0];
+      const sprite = this.add.image(start[0], start[1], wd.tex)
+        .setScale(wd.scale).setDepth(wd.depth);
+      this.walkers.push({
+        sprite, path: wd.path, speed: wd.speed,
+        currentTarget: 1,
+      });
+    });
+
     // === DRAG TO SCROLL + PINCH TO ZOOM ===
     this.isDragging = false;
     this.dragMoved = false;
@@ -180,5 +217,28 @@ export class TownScene extends Phaser.Scene {
     this.save.stations[b.id].level = 1;
     writeSave(this.save);
     this.scene.restart();
+  }
+
+  update(time, delta) {
+    // Animate walker sprites along paths
+    if (!this.walkers) return;
+    this.walkers.forEach((w) => {
+      const target = w.path[w.currentTarget];
+      const dx = target[0] - w.sprite.x;
+      const dy = target[1] - w.sprite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 3) {
+        // Reached waypoint, go to next
+        w.currentTarget = (w.currentTarget + 1) % w.path.length;
+        // Flip sprite based on horizontal direction
+        const next = w.path[w.currentTarget];
+        w.sprite.setFlipX(next[0] < w.sprite.x);
+      } else {
+        const spd = w.speed * (delta / 1000);
+        w.sprite.x += (dx / dist) * spd;
+        w.sprite.y += (dy / dist) * spd;
+      }
+    });
   }
 }
