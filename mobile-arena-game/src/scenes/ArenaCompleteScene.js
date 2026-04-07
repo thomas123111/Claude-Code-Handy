@@ -24,12 +24,13 @@ export class ArenaCompleteScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(400);
 
-    // Left side: Stats
-    this.add.text(width * 0.3, 30, `ARENA ${this.arenaIndex + 1} COMPLETE!`, {
-      fontSize: '22px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold',
+    // Portrait layout - centered
+    const cx = width / 2;
+    this.add.text(cx, 60, `ARENA ${this.arenaIndex + 1}\nCOMPLETE!`, {
+      fontSize: '28px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold', align: 'center',
     }).setOrigin(0.5);
 
-    let y = 65;
+    let y = 140;
     const stats = [
       [`Credits`, `${this.runCredits}`],
       [`Scrap`, `${this.runScrap}`],
@@ -39,47 +40,45 @@ export class ArenaCompleteScene extends Phaser.Scene {
     stats.push([`HP`, `${Math.round(this.playerHpPercent * 100)}%`]);
 
     stats.forEach(([label, value]) => {
-      this.add.text(width * 0.1, y, label, {
-        fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa',
-      });
-      this.add.text(width * 0.48, y, value, {
-        fontSize: '12px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-      }).setOrigin(1, 0);
-      y += 22;
+      this.add.text(cx - 80, y, label, { fontSize: '14px', fontFamily: 'monospace', color: '#aaaaaa' });
+      this.add.text(cx + 80, y, value, { fontSize: '14px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0);
+      y += 28;
     });
 
-    this.add.text(width * 0.3, height - 25, 'Cash out saves earnings. Continuing risks losing on death!', {
-      fontSize: '9px', fontFamily: 'monospace', color: '#555555',
+    this.add.text(cx, height - 40, 'Cash out saves. Continuing risks losing on death!', {
+      fontSize: '10px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Right side: Buttons (manual hit detection)
-    const bx = width * 0.72;
+    // Buttons - stacked vertically
+    const bx = cx;
     const nextType = getArenaType(nextArena);
     const nextLabel = nextType === 'maze' ? 'MAZE ARENA' : 'NEXT ARENA';
     const nextColor = nextType === 'maze' ? '#4466aa' : '#3399ff';
     const nextColorVal = Phaser.Display.Color.HexStringToColor(nextColor).color;
     const cashColorVal = Phaser.Display.Color.HexStringToColor('#ffaa00').color;
 
-    this.add.rectangle(bx, height * 0.35, 220, 50, nextColorVal, 0.2).setStrokeStyle(2, nextColorVal);
-    this.add.text(bx, height * 0.35, nextLabel, {
+    const btnY1 = 400;
+    const btnY2 = 470;
+    this.add.rectangle(bx, btnY1, 280, 50, nextColorVal, 0.2).setStrokeStyle(2, nextColorVal);
+    this.add.text(bx, btnY1, nextLabel, {
       fontSize: '16px', fontFamily: 'monospace', color: nextColor, fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.rectangle(bx, height * 0.6, 220, 50, cashColorVal, 0.2).setStrokeStyle(2, cashColorVal);
-    this.add.text(bx, height * 0.6, 'CASH OUT', {
+    this.add.rectangle(bx, btnY2, 280, 50, cashColorVal, 0.2).setStrokeStyle(2, cashColorVal);
+    this.add.text(bx, btnY2, 'CASH OUT', {
       fontSize: '16px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.input.on('pointerdown', (pointer) => {
       const px = pointer.x, py = pointer.y;
-      if (px >= bx - 110 && px <= bx + 110) {
-        if (py >= height * 0.35 - 25 && py <= height * 0.35 + 25) {
+      if (px >= bx - 140 && px <= bx + 140) {
+        if (py >= btnY1 - 25 && py <= btnY1 + 25) {
           this.scene.start(getArenaSceneName(nextArena), {
             arenaIndex: nextArena, runCredits: this.runCredits,
             runScrap: this.runScrap, runXp: this.runXp,
             runSeed: this.runSeed, ammoStock: this.ammoStock,
           });
-        } else if (py >= height * 0.6 - 25 && py <= height * 0.6 + 25) {
+        } else if (py >= btnY2 - 25 && py <= btnY2 + 25) {
           this.cashOut();
         }
       }

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { loadSave, getSelectedMech, getMechStats } from '../systems/SaveSystem.js';
 import { getArenaConfig, AMMO_TYPES } from '../systems/ArenaConfig.js';
 import { generateArenaLayout, getRandomOpenPositions } from '../systems/ArenaLayoutGenerator.js';
+import { getLoadoutEffects } from '../systems/SkillSystem.js';
 
 export class ArenaScene extends Phaser.Scene {
   constructor() {
@@ -52,19 +53,22 @@ export class ArenaScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // World is larger than the viewport - camera scrolls
-    const worldW = 1600;
-    const worldH = 800;
-    this.worldW = worldW;
-    this.worldH = worldH;
-    this.physics.world.setBounds(0, 0, worldW, worldH);
+    // Load skill effects for this run
+    const save2 = loadSave();
+    const activeSkills = {};
+    (save2.loadout || []).forEach((id) => {
+      activeSkills[id] = save2.skillLevels[id] || 0;
+    });
+    this.skillEffects = getLoadoutEffects(activeSkills);
+
+    // World = screen size (no scrolling, compact rooms)
+    this.physics.world.setBounds(0, 0, width, height);
 
     // Background
     this.cameras.main.setBackgroundColor(this.arenaConfig.theme.bgColor);
-    this.cameras.main.setBounds(0, 0, worldW, worldH);
 
-    // Arena boundary visuals
-    this.add.rectangle(worldW / 2, worldH / 2, worldW - 10, worldH - 10)
+    // Arena boundary
+    this.add.rectangle(width / 2, height / 2, width - 4, height - 4)
       .setStrokeStyle(2, this.arenaConfig.theme.color, 0.5)
       .setFillStyle(0x000000, 0);
 
@@ -107,9 +111,9 @@ export class ArenaScene extends Phaser.Scene {
     this.crates = this.physics.add.group();
     this.ghostLootGroup = this.physics.add.group();
 
-    // Generate arena layout with walls - uses world size
-    const topMargin = 50;
-    this.arenaLayout = generateArenaLayout(this.arenaIndex, worldW, worldH, topMargin, this.runSeed);
+    // Generate arena layout with walls - fits screen
+    const topMargin = 70;
+    this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin, this.runSeed);
     this.arenaRng = this.seedRng(this.arenaIndex * 3571 + 13);
 
     // Build wall physics - each segment is a small block
@@ -126,9 +130,9 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     // Player - starts at bottom center of world
-    // Use mech texture, fallback to striker if texture missing
+    // Player at bottom center
     const mechTexture = this.textures.exists(`mech_${this.mechId}`) ? `mech_${this.mechId}` : 'mech_striker';
-    this.player = this.physics.add.image(worldW / 2, worldH - 40, mechTexture);
+    this.player = this.physics.add.image(width / 2, height - 60, mechTexture);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
     this.player.setScale(1.5);
@@ -175,26 +179,21 @@ export class ArenaScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
     });
 
-    // Split-screen touch controls:
-    // Left half = movement joystick, Right half = shoot (fires in facing direction)
+    // Single joystick for movement, auto-shoot when idle
     this.joystickActive = false;
     this.joystickDir = { x: 0, y: 0 };
-    this.shootHeld = false;
-    this.playerFacingAngle = -Math.PI / 2; // facing up initially
+    this.playerFacingAngle = -Math.PI / 2;
     this.joystickPointerId = null;
-    this.shootPointerId = null;
-    this.setupDualControls();
+    this.playerMoving = false;
+    this.setupSingleJoystick();
 
-    // Keyboard shoot: Space bar
-    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+    // Keyboard
     this.eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this.qKey.on('down', () => this.switchAmmo());
     this.eKey.on('down', () => this.activateSpecial());
 
-    // Camera follows player
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(1.0);
+    // No camera scroll - entire room visible
 
     // Unfreeze after 1 second
     const readyText = this.add.text(this.player.x, this.player.y - 40, 'GET READY...', {
@@ -559,63 +558,27 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  setupDualControls() {
+  setupSingleJoystick() {
     const { width, height } = this.scale;
-    const halfW = width / 2;
 
-    // LEFT side: Movement joystick (white)
-    this.joystickBase = this.add.image(100, height - 100, 'joystick_base')
-      .setDepth(100).setAlpha(0).setScrollFactor(0);
-    this.joystickThumb = this.add.image(100, height - 100, 'joystick_thumb')
-      .setDepth(101).setAlpha(0).setScrollFactor(0);
-
-    // RIGHT side: Aim joystick (orange, drag to aim, fires while held)
-    this.aimBase = this.add.image(width - 100, height - 100, 'joystick_base')
-      .setDepth(100).setAlpha(0).setScrollFactor(0);
-    this.aimThumb = this.add.image(width - 100, height - 100, 'joystick_thumb')
-      .setDepth(101).setAlpha(0).setScrollFactor(0);
-    this.aimThumb.setTint(0xff6644); // orange tint to distinguish from move
-
-    // Aim state
-    this.aimActive = false;
-    this.aimDir = { x: 0, y: 0 };
-    this.aimPointerId = null;
-    this.aimOrigin = null;
+    // Single joystick - appears wherever you touch
+    this.joystickBase = this.add.image(width / 2, height - 100, 'joystick_base')
+      .setDepth(100).setAlpha(0);
+    this.joystickThumb = this.add.image(width / 2, height - 100, 'joystick_thumb')
+      .setDepth(101).setAlpha(0);
 
     this.input.on('pointerdown', (pointer) => {
-      // Convert world coords to screen coords (camera-relative)
-      const cam = this.cameras.main;
-      const sx = pointer.x - cam.worldView.x;
-      const sy = pointer.y - cam.worldView.y;
-
-      if (sx < halfW) {
-        // LEFT: Movement joystick
-        this.joystickActive = true;
-        this.joystickPointerId = pointer.id;
-        this.joystickBase.setPosition(sx, sy).setAlpha(1);
-        this.joystickThumb.setPosition(sx, sy).setAlpha(1);
-        this.joystickOrigin = { x: sx, y: sy };
-      } else {
-        // RIGHT: Aim joystick - drag to set aim direction, fires while held
-        this.aimActive = true;
-        this.shootHeld = true;
-        this.aimPointerId = pointer.id;
-        this.aimBase.setPosition(sx, sy).setAlpha(1);
-        this.aimThumb.setPosition(sx, sy).setAlpha(1);
-        this.aimOrigin = { x: sx, y: sy };
-        this.aimDir = { x: 0, y: 0 };
-      }
+      this.joystickActive = true;
+      this.joystickPointerId = pointer.id;
+      this.joystickBase.setPosition(pointer.x, pointer.y).setAlpha(1);
+      this.joystickThumb.setPosition(pointer.x, pointer.y).setAlpha(1);
+      this.joystickOrigin = { x: pointer.x, y: pointer.y };
     });
 
     this.input.on('pointermove', (pointer) => {
-      const cam = this.cameras.main;
-      const sx = pointer.x - cam.worldView.x;
-      const sy = pointer.y - cam.worldView.y;
-
-      // Movement joystick
       if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
-        const dx = sx - this.joystickOrigin.x;
-        const dy = sy - this.joystickOrigin.y;
+        const dx = pointer.x - this.joystickOrigin.x;
+        const dy = pointer.y - this.joystickOrigin.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const maxDist = 50;
         const clampedDist = Math.min(dist, maxDist);
@@ -634,29 +597,6 @@ export class ArenaScene extends Phaser.Scene {
           this.joystickDir.y = 0;
         }
       }
-
-      // Aim joystick
-      if (this.aimActive && pointer.id === this.aimPointerId && this.aimOrigin) {
-        const dx = sx - this.aimOrigin.x;
-        const dy = sy - this.aimOrigin.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 50;
-        const clampedDist = Math.min(dist, maxDist);
-        const angle = Math.atan2(dy, dx);
-
-        this.aimThumb.setPosition(
-          this.aimOrigin.x + Math.cos(angle) * clampedDist,
-          this.aimOrigin.y + Math.sin(angle) * clampedDist,
-        );
-
-        if (dist > 10) {
-          this.aimDir.x = Math.cos(angle);
-          this.aimDir.y = Math.sin(angle);
-          // Update aim angle independently from movement
-          this.playerFacingAngle = angle;
-          this.player.rotation = angle + Math.PI / 2;
-        }
-      }
     });
 
     this.input.on('pointerup', (pointer) => {
@@ -667,15 +607,6 @@ export class ArenaScene extends Phaser.Scene {
         this.joystickDir.y = 0;
         this.joystickBase.setAlpha(0);
         this.joystickThumb.setAlpha(0);
-      }
-      if (pointer.id === this.aimPointerId) {
-        this.aimActive = false;
-        this.shootHeld = false;
-        this.aimPointerId = null;
-        this.aimDir.x = 0;
-        this.aimDir.y = 0;
-        this.aimBase.setAlpha(0);
-        this.aimThumb.setAlpha(0);
       }
     });
   }
@@ -973,6 +904,12 @@ export class ArenaScene extends Phaser.Scene {
     this.waveEnemiesLeft--;
     this.chargeSpecial(); // charge special on kill
 
+    // Lifesteal skill
+    const healOnKill = this.skillEffects ? this.skillEffects.healOnKill : 0;
+    if (healOnKill > 0) {
+      this.playerHp = Math.min(this.maxHp, this.playerHp + healOnKill);
+    }
+
     // Check wave complete - all active enemies dead
     const allDead = this.enemies.getChildren().filter((e) => e.active).length === 0;
     if (allDead) {
@@ -1112,8 +1049,30 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
+  autoShootAtNearest() {
+    // Find nearest enemy and shoot at it
+    let nearest = null;
+    let nearestDist = Infinity;
+    this.enemies.getChildren().forEach((e) => {
+      if (!e.active) return;
+      const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, e.x, e.y);
+      if (d < nearestDist) { nearestDist = d; nearest = e; }
+    });
+    if (!nearest || nearestDist > 500) return;
+
+    // Face the target
+    this.playerFacingAngle = Phaser.Math.Angle.Between(
+      this.player.x, this.player.y, nearest.x, nearest.y
+    );
+    this.player.rotation = this.playerFacingAngle + Math.PI / 2;
+
+    // Fire
+    this.fireInFacingDirection();
+  }
+
   fireInFacingDirection() {
-    if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5) return;
+    const frMult = this.skillEffects ? this.skillEffects.fireRateMult : 1;
+    if (this.time.now - this.lastFireTime < this.mechStats.fireRate * 0.5 * frMult) return;
 
     // Check ammo
     const ammoType = AMMO_TYPES[this.currentAmmoType];
@@ -1128,7 +1087,8 @@ export class ArenaScene extends Phaser.Scene {
     this.lastFireTime = this.time.now;
     const mech = this.mechData;
     const angle = this.playerFacingAngle;
-    const bulletCount = mech.bulletCount || 1;
+    const extraBullets = this.skillEffects ? this.skillEffects.extraBullets : 0;
+    const bulletCount = (mech.bulletCount || 1) + extraBullets;
     const spread = mech.bulletSpread || 0;
 
     // Fire multiple bullets for shotgun, single for others
@@ -1152,7 +1112,11 @@ export class ArenaScene extends Phaser.Scene {
       bullet.setScale(mech.bulletSize || 1);
       bullet.setData('spawnTime', this.time.now);
       bullet.setData('ammoType', this.currentAmmoType);
-      bullet.setData('damageMult', ammoType.damageMult);
+      // Apply crit chance from skills
+      const critChance = this.skillEffects ? this.skillEffects.critChance : 0;
+      const isCrit = Math.random() < critChance;
+      bullet.setData('damageMult', ammoType.damageMult * (isCrit ? 2 : 1));
+      bullet.setData('isCrit', isCrit);
       // Phantom's laser always pierces, others depend on ammo type
       bullet.setData('piercing', ammoType.piercing || mech.weaponType === 'laser');
       bullet.setData('splash', ammoType.splash);
@@ -1361,26 +1325,23 @@ export class ArenaScene extends Phaser.Scene {
       vy = this.joystickDir.y;
     }
 
-    // Normalize and apply speed
+    // Apply speed (with skill boost)
     const len = Math.sqrt(vx * vx + vy * vy);
-    if (len > 0) {
-      vx /= len;
-      vy /= len;
-    }
-    this.player.body.velocity.x = vx * this.mechStats.speed;
-    this.player.body.velocity.y = vy * this.mechStats.speed;
+    if (len > 0) { vx /= len; vy /= len; }
+    const speedMult = this.skillEffects ? this.skillEffects.speedMult : 1;
+    this.player.body.velocity.x = vx * this.mechStats.speed * speedMult;
+    this.player.body.velocity.y = vy * this.mechStats.speed * speedMult;
+    this.playerMoving = len > 0.1;
 
-    // Update facing angle:
-    // - If aim joystick is active: aim controls rotation (set in pointermove)
-    // - If not aiming: face movement direction
-    if (!this.aimActive && len > 0.1) {
+    // Face movement direction
+    if (this.playerMoving) {
       this.playerFacingAngle = Math.atan2(vy, vx);
       this.player.rotation = this.playerFacingAngle + Math.PI / 2;
     }
 
-    // Shoot: hold left aim joystick OR press Space
-    if (this.shootHeld || this.spaceKey.isDown) {
-      this.fireInFacingDirection();
+    // AUTO-SHOOT: fire at nearest enemy when NOT moving
+    if (!this.playerMoving) {
+      this.autoShootAtNearest();
     }
 
     // Enemy AI
