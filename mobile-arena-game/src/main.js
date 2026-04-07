@@ -7,6 +7,7 @@ import { ArenaCompleteScene } from './scenes/ArenaCompleteScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { MazeArenaScene } from './scenes/MazeArenaScene.js';
 import { SkillsScene } from './scenes/SkillsScene.js';
+import { TransitionScene } from './scenes/TransitionScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -28,7 +29,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene, SkillsScene],
+  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene, SkillsScene, TransitionScene],
 };
 
 new Phaser.Game(config);

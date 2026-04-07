@@ -1418,8 +1418,8 @@ export class ArenaScene extends Phaser.Scene {
           if (t === 'credit') this.nextArenaData.runCredits += v;
           else if (t === 'scrap') this.nextArenaData.runScrap += v;
         });
-        // Go directly to next arena - restart with data
-        this.scene.restart(this.nextArenaData);
+        // Go via Transition scene (scene can't restart itself reliably)
+        this.scene.start('Transition', this.nextArenaData);
         return;
       }
     }
