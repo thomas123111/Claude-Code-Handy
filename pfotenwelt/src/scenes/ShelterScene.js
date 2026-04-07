@@ -7,6 +7,7 @@ export class ShelterScene extends Phaser.Scene {
 
   create() {
     this.save = loadSave();
+    this.checkPuzzleResult();
     this.drawUI();
   }
 
@@ -152,12 +153,40 @@ export class ShelterScene extends Phaser.Scene {
     const pet = this.save.pets[petIdx];
     if (!pet || this.save.hearts < cost) return;
 
-    this.save.hearts -= cost;
-    pet.needs[need] = Math.min(100, pet.needs[need] + 30);
-    pet.happiness = calculateHappiness(pet);
-    addXp(this.save, 5);
-    writeSave(this.save);
-    this.drawUI();
+    // Launch appropriate puzzle
+    this.registry.set('pendingFeed', { petIdx, need, cost });
+
+    if (need === 'hunger') {
+      this.scene.start('SortPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
+    } else if (need === 'hygiene') {
+      this.scene.start('MemoryPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
+    } else {
+      // Play need - direct action (no puzzle)
+      this.save.hearts -= cost;
+      pet.needs[need] = Math.min(100, pet.needs[need] + 30);
+      pet.happiness = calculateHappiness(pet);
+      addXp(this.save, 5);
+      writeSave(this.save);
+      this.drawUI();
+    }
+  }
+
+  checkPuzzleResult() {
+    const result = this.registry.get('puzzleResult');
+    const pending = this.registry.get('pendingFeed');
+    if (!result || !pending) return;
+
+    this.registry.remove('puzzleResult');
+    this.registry.remove('pendingFeed');
+
+    const pet = this.save.pets[pending.petIdx];
+    if (pet && result.success) {
+      this.save.hearts -= pending.cost;
+      pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 40); // +40 with puzzle vs +30
+      pet.happiness = calculateHappiness(pet);
+      addXp(this.save, 10); // more XP with puzzle
+      writeSave(this.save);
+    }
   }
 
   adoptPet(petIdx) {
