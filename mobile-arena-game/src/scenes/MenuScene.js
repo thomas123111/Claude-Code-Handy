@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { loadSave, resetSave, getSelectedMech } from '../systems/SaveSystem.js';
 
+export const GAME_VERSION = 'v0.4.2';
+
 export class MenuScene extends Phaser.Scene {
   constructor() {
     super('Menu');
@@ -37,6 +39,11 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(width * 0.3, height - 30, 'Left stick: Aim+Shoot | Right stick: Move', {
       fontSize: '10px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
+
+    // Version number (bottom right)
+    this.add.text(width - 10, height - 10, GAME_VERSION, {
+      fontSize: '9px', fontFamily: 'monospace', color: '#333333',
+    }).setOrigin(1, 1);
 
     // Right side: Buttons (using manual hit detection)
     const bx = width * 0.72;
