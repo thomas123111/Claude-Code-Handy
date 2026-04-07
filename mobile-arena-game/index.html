@@ -19,12 +19,9 @@
       -webkit-user-select: none;
       user-select: none;
     }
-    canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
-    }
-    /* Fullscreen prompt for portrait mode */
+    /* Let Phaser handle canvas sizing - don't override with !important */
+    canvas { display: block; }
+    /* Rotate prompt for portrait */
     #rotate-msg {
       display: none;
       position: fixed;
@@ -57,12 +54,25 @@
       const el = document.documentElement;
       if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      // Lock to landscape if supported
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {});
       }
       document.removeEventListener('click', fs);
     }, { once: true });
+
+    // Force Phaser to re-fit on orientation change
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (window.game && window.game.scale) {
+          window.game.scale.refresh();
+        }
+      }, 300);
+    });
+    window.addEventListener('resize', () => {
+      if (window.game && window.game.scale) {
+        window.game.scale.refresh();
+      }
+    });
   </script>
   <script type="module" src="/src/main.js"></script>
 </body>
