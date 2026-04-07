@@ -7,44 +7,63 @@ const MAP_W = 1200;
 const MAP_H = 1400;
 
 const BUILDINGS = [
+  // Tierheim oben mittig = die Basis
   { id: 'shelter', key: 'Shelter', name: 'Tierheim', tex: 'bld_shelter',
-    x: 300, y: 250, scale: 1.0, unlockCost: 0, unlocked: true },
+    x: 600, y: 200, scale: 1.1, unlockCost: 0, unlocked: true },
+  // Werkstatt links oben
   { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', tex: 'bld_workshop',
-    x: 800, y: 250, scale: 1.0, unlockCost: 0, unlocked: true },
+    x: 200, y: 350, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Tierarzt rechts oben
   { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
-    x: 550, y: 500, scale: 1.0, unlockCost: 200 },
+    x: 1000, y: 350, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Salon links mitte
   { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
-    x: 200, y: 700, scale: 1.0, unlockCost: 350 },
+    x: 200, y: 750, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Hundeschule rechts mitte
   { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
-    x: 900, y: 700, scale: 1.0, unlockCost: 500 },
+    x: 1000, y: 750, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Hotel links unten
   { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
-    x: 300, y: 1000, scale: 1.0, unlockCost: 800 },
+    x: 200, y: 1100, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Café rechts unten
   { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
-    x: 800, y: 1000, scale: 1.0, unlockCost: 1200 },
+    x: 1000, y: 1100, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Gilde unten mitte
   { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
-    x: 550, y: 1200, scale: 1.0, unlockCost: 300 },
+    x: 600, y: 1250, scale: 1.0, unlockCost: 0, unlocked: true },
 ];
 
-// Decoration placement
+// Decoration - trees placed BETWEEN buildings, never on paths
 const TREES = [
-  { x: 100, y: 150, type: 'big' }, { x: 500, y: 100, type: 'big' },
-  { x: 1050, y: 150, type: 'big' }, { x: 100, y: 500, type: 'small' },
-  { x: 1050, y: 500, type: 'small' }, { x: 100, y: 900, type: 'big' },
-  { x: 1050, y: 900, type: 'big' }, { x: 400, y: 600, type: 'small' },
-  { x: 700, y: 600, type: 'small' }, { x: 550, y: 850, type: 'big' },
-  { x: 200, y: 1200, type: 'small' }, { x: 950, y: 1200, type: 'small' },
+  // Top corners
+  { x: 80, y: 150, type: 'big' }, { x: 1120, y: 150, type: 'big' },
+  // Left side between buildings
+  { x: 80, y: 550, type: 'small' }, { x: 80, y: 950, type: 'small' },
+  // Right side between buildings
+  { x: 1120, y: 550, type: 'small' }, { x: 1120, y: 950, type: 'small' },
+  // Around fountain area (not on paths)
+  { x: 400, y: 500, type: 'small' }, { x: 800, y: 500, type: 'small' },
+  { x: 400, y: 700, type: 'small' }, { x: 800, y: 700, type: 'small' },
+  // Bottom corners
+  { x: 80, y: 1300, type: 'big' }, { x: 1120, y: 1300, type: 'big' },
 ];
 
 const DECOR = [
-  { x: 550, y: 350, tex: 'env_fountain', scale: 0.8 },
-  { x: 350, y: 450, tex: 'env_bench', scale: 0.6 },
-  { x: 750, y: 450, tex: 'env_bench', scale: 0.6 },
-  { x: 150, y: 400, tex: 'env_lamppost', scale: 0.5 },
-  { x: 950, y: 400, tex: 'env_lamppost', scale: 0.5 },
-  { x: 450, y: 850, tex: 'env_flowerbed', scale: 0.6 },
-  { x: 650, y: 850, tex: 'env_flowerbed', scale: 0.6 },
-  { x: 150, y: 1100, tex: 'env_lamppost', scale: 0.5 },
-  { x: 950, y: 1100, tex: 'env_lamppost', scale: 0.5 },
+  // Fountain CENTER with plaza
+  { x: 600, y: 600, tex: 'env_fountain', scale: 1.0 },
+  // Benches near fountain plaza
+  { x: 480, y: 600, tex: 'env_bench', scale: 0.6 },
+  { x: 720, y: 600, tex: 'env_bench', scale: 0.6 },
+  // Lampposts along main paths
+  { x: 350, y: 200, tex: 'env_lamppost', scale: 0.5 },
+  { x: 850, y: 200, tex: 'env_lamppost', scale: 0.5 },
+  { x: 350, y: 1100, tex: 'env_lamppost', scale: 0.5 },
+  { x: 850, y: 1100, tex: 'env_lamppost', scale: 0.5 },
+  // Flowerbeds near buildings
+  { x: 320, y: 280, tex: 'env_flowerbed', scale: 0.5 },
+  { x: 880, y: 280, tex: 'env_flowerbed', scale: 0.5 },
+  { x: 600, y: 1000, tex: 'env_flowerbed', scale: 0.5 },
+];
 ];
 
 export class TownScene extends Phaser.Scene {
@@ -70,16 +89,28 @@ export class TownScene extends Phaser.Scene {
       this.add.circle(gx, gy, Phaser.Math.Between(40, 100), shade, 0.15).setDepth(0);
     }
 
-    // === PATHS (connecting buildings) ===
+    // === PATHS leading TO buildings (not through them) ===
     const pathColor = 0xc4a76c;
-    // Horizontal paths
-    this.drawPath(150, 250, 950, 250, pathColor); // top row
-    this.drawPath(150, 700, 1000, 700, pathColor); // middle row
-    this.drawPath(150, 1000, 950, 1000, pathColor); // bottom row
-    // Vertical paths
-    this.drawPath(300, 150, 300, 1100, pathColor); // left column
-    this.drawPath(550, 200, 550, 1300, pathColor); // center column
-    this.drawPath(800, 150, 800, 1100, pathColor); // right column
+
+    // Central vertical main road (spine of the town)
+    this.drawPath(600, 280, 600, 1180, pathColor);
+
+    // Horizontal branches from main road to buildings
+    // Top: main road → Werkstatt (left) and Tierarzt (right)
+    this.drawPath(250, 350, 600, 350, pathColor);
+    this.drawPath(600, 350, 950, 350, pathColor);
+
+    // Middle: main road → Salon (left) and Schule (right)
+    this.drawPath(250, 750, 600, 750, pathColor);
+    this.drawPath(600, 750, 950, 750, pathColor);
+
+    // Bottom: main road → Hotel (left) and Café (right)
+    this.drawPath(250, 1100, 600, 1100, pathColor);
+    this.drawPath(600, 1100, 950, 1100, pathColor);
+
+    // Fountain plaza - circular-ish area around center
+    this.add.circle(600, 600, 100, pathColor, 0.35).setDepth(0);
+    this.add.circle(600, 600, 110, 0x8a7a5a, 0.12).setDepth(0);
 
     // === DECORATIONS ===
     TREES.forEach((t) => {
@@ -140,7 +171,7 @@ export class TownScene extends Phaser.Scene {
         delay: 500, loop: true,
         callback: () => {
           const sparkle = this.add.circle(
-            550 + Phaser.Math.Between(-12, 12), 340 + Phaser.Math.Between(-8, 8),
+            600 + Phaser.Math.Between(-12, 12), 590 + Phaser.Math.Between(-8, 8),
             2, 0x88ddff, 0.6
           ).setDepth(4);
           this.tweens.add({
@@ -152,7 +183,8 @@ export class TownScene extends Phaser.Scene {
     }
 
     // Chimney smoke on shelter and cafe
-    [[300, 200], [800, 950]].forEach(([sx, sy]) => {
+    // Chimney smoke on shelter (top) and cafe (right bottom)
+    [[600, 150], [1000, 1050]].forEach(([sx, sy]) => {
       this.time.addEvent({
         delay: 1000, loop: true,
         callback: () => {
@@ -166,6 +198,9 @@ export class TownScene extends Phaser.Scene {
         },
       });
     });
+
+    // Stadt-Leben: nur subtile Effekte die zum Stil passen
+    // (Figuren brauchen echte Sprite-Packs, kommen später)
 
     // === HUD (fixed to camera) ===
     this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(50);
