@@ -559,8 +559,9 @@ export class ArenaScene extends Phaser.Scene {
     this.aimOrigin = null;
 
     this.input.on('pointerdown', (pointer) => {
-      const sx = pointer.x - this.cameras.main.scrollX;
-      const sy = pointer.y - this.cameras.main.scrollY;
+      // pointer.x/y are already screen-relative in Phaser 3
+      const sx = pointer.x;
+      const sy = pointer.y;
 
       if (sx >= halfW) {
         // RIGHT: Movement joystick
@@ -582,8 +583,9 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
-      const sx = pointer.x - this.cameras.main.scrollX;
-      const sy = pointer.y - this.cameras.main.scrollY;
+      // pointer.x/y are already screen-relative in Phaser 3
+      const sx = pointer.x;
+      const sy = pointer.y;
 
       // Movement joystick
       if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
