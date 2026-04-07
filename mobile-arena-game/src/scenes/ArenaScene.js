@@ -130,7 +130,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.add.overlap(this.bullets, this.enemies, this.onBulletHitEnemy, null, this);
     this.physics.add.overlap(this.enemyBullets, this.player, this.onEnemyBulletHitPlayer, null, this);
     this.physics.add.overlap(this.player, this.lootItems, this.onCollectLoot, null, this);
-    this.physics.add.overlap(this.player, this.enemies, this.onEnemyTouchPlayer, null, this);
+    this.physics.add.collider(this.player, this.enemies, this.onEnemyTouchPlayer, null, this);
     this.physics.add.overlap(this.player, this.portal, this.onEnterPortal, null, this);
     this.physics.add.overlap(this.player, this.crates, this.onCollectCrate, null, this);
     this.physics.add.overlap(this.bullets, this.ghostLootGroup, this.onShootGhostLoot, null, this);
@@ -549,27 +549,35 @@ export class ArenaScene extends Phaser.Scene {
     this.shootIndicator = this.add.circle(70, height - 120, 30, 0xff4444, 0)
       .setDepth(100).setScrollFactor(0);
 
+    // Use downX/downY which are screen-relative (not world-relative)
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.x >= halfW) {
+      // Get screen-space coordinates (not affected by camera scroll)
+      const sx = pointer.x - this.cameras.main.scrollX;
+      const sy = pointer.y - this.cameras.main.scrollY;
+
+      if (sx >= halfW) {
         // RIGHT HALF: Movement joystick
         this.joystickActive = true;
         this.joystickPointerId = pointer.id;
-        this.joystickBase.setPosition(pointer.x, pointer.y).setAlpha(1);
-        this.joystickThumb.setPosition(pointer.x, pointer.y).setAlpha(1);
-        this.joystickOrigin = { x: pointer.x, y: pointer.y };
+        this.joystickBase.setPosition(sx, sy).setAlpha(1);
+        this.joystickThumb.setPosition(sx, sy).setAlpha(1);
+        this.joystickOrigin = { x: sx, y: sy };
       } else {
         // LEFT HALF: Shoot in facing direction (hold to keep firing)
         this.shootHeld = true;
         this.shootPointerId = pointer.id;
-        this.shootIndicator.setPosition(pointer.x, pointer.y).setAlpha(0.3);
+        this.shootIndicator.setPosition(sx, sy).setAlpha(0.3);
       }
     });
 
     this.input.on('pointermove', (pointer) => {
+      const sx = pointer.x - this.cameras.main.scrollX;
+      const sy = pointer.y - this.cameras.main.scrollY;
+
       // Joystick movement
       if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
-        const dx = pointer.x - this.joystickOrigin.x;
-        const dy = pointer.y - this.joystickOrigin.y;
+        const dx = sx - this.joystickOrigin.x;
+        const dy = sy - this.joystickOrigin.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const maxDist = 50;
         const clampedDist = Math.min(dist, maxDist);
@@ -591,7 +599,7 @@ export class ArenaScene extends Phaser.Scene {
 
       // Move shoot indicator with finger
       if (this.shootHeld && pointer.id === this.shootPointerId) {
-        this.shootIndicator.setPosition(pointer.x, pointer.y);
+        this.shootIndicator.setPosition(sx, sy);
       }
     });
 
@@ -1108,10 +1116,9 @@ export class ArenaScene extends Phaser.Scene {
       bullet.body.velocity.x = Math.cos(shotAngle) * ammoType.speed;
       bullet.body.velocity.y = Math.sin(shotAngle) * ammoType.speed;
 
-      // Shotgun pellets have shorter range
-      if (mech.weaponType === 'shotgun') {
-        bullet.setData('spawnTime', this.time.now - 1500); // shorter lifetime
-      }
+      // Shotgun pellets: shorter lifetime (1.5s vs 3s for others)
+      const lifetime = mech.weaponType === 'shotgun' ? 1500 : 3000;
+      bullet.setData('lifetime', lifetime);
     }
   }
 
@@ -1333,7 +1340,8 @@ export class ArenaScene extends Phaser.Scene {
       if (!b.active) return;
       const age = now - (b.getData('spawnTime') || 0);
       const { width: sw, height: sh } = this.scale;
-      if (age > 3000 || b.y < -20 || b.y > sh + 20 || b.x < -20 || b.x > sw + 20) {
+      const maxAge = b.getData('lifetime') || 3000;
+      if (age > maxAge || b.y < -20 || b.y > sh + 20 || b.x < -20 || b.x > sw + 20) {
         b.setActive(false).setVisible(false);
         b.body.enable = false;
       }
