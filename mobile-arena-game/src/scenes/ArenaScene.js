@@ -17,6 +17,16 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   create() {
+    try {
+    this._createInner();
+    } catch (e) {
+      this.add.text(10, 10, `ERROR: ${e.message}\n${e.stack}`, {
+        fontSize: '10px', fontFamily: 'monospace', color: '#ff0000', wordWrap: { width: 900 },
+      });
+    }
+  }
+
+  _createInner() {
     const save = loadSave();
     const mechData = getSelectedMech(save);
     this.mechStats = getMechStats(mechData);
