@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, resetSave, getSelectedMech } from '../systems/SaveSystem.js';
 
-export const GAME_VERSION = 'v0.4.2';
+export const GAME_VERSION = 'v0.4.3';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -40,17 +40,17 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '10px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Version number (bottom right)
-    this.add.text(width - 10, height - 10, GAME_VERSION, {
-      fontSize: '9px', fontFamily: 'monospace', color: '#333333',
-    }).setOrigin(1, 1);
-
     // Right side: Buttons (using manual hit detection)
     const bx = width * 0.72;
     this.buttons = [];
     this.drawButton(bx, 100, 'START RUN', '#3399ff');
     this.drawButton(bx, 170, 'HANGAR', '#44aa44');
     this.drawButton(bx, 240, 'RESET SAVE', '#884444');
+
+    // Version number under buttons
+    this.add.text(bx, 310, GAME_VERSION, {
+      fontSize: '18px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+    }).setOrigin(0.5);
 
     // Global pointer handler - check which button was hit
     this.input.on('pointerdown', (pointer) => {
