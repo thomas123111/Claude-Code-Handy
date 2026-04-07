@@ -27,6 +27,10 @@ export class BootScene extends Phaser.Scene {
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
     bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
 
+    // Building sprites (AI-generated, isometric)
+    const buildings = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe', 'guild', 'workshop'];
+    buildings.forEach((b) => this.load.image(`bld_${b}`, `assets/bld_${b}.png`));
+
     // Town environment tiles (LimeZu Modern Exteriors, curated)
     this.load.image('lz_lamp', 'assets/tiles/lamp_1.png');
     this.load.image('lz_bench', 'assets/tiles/bench_1.png');
@@ -42,6 +46,20 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('char_amelia', 'assets/chars/char_amelia.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('char_alex', 'assets/chars/char_alex.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('char_bob', 'assets/chars/char_bob.png', { frameWidth: 16, frameHeight: 16 });
+
+    // Farm animal spritesheets (LimeZu Modern Farm v1.2)
+    // Dogs: 1152x416 → 48x32 frames, 24 cols × 13 rows (walk = row 4)
+    this.load.spritesheet('farm_dog_lab', 'assets/farm/Dog_Labrador_Brown_16x16.png', { frameWidth: 48, frameHeight: 32 });
+    this.load.spritesheet('farm_dog_shep', 'assets/farm/Dog_German_Shepherd_Brown_16x16.png', { frameWidth: 48, frameHeight: 32 });
+    this.load.spritesheet('farm_dog_white', 'assets/farm/Dog_Labrador_White_16x16.png', { frameWidth: 48, frameHeight: 32 });
+    // Small animals: 768x128 → 32x32 frames, 24 cols × 4 rows (walk = row 1)
+    this.load.spritesheet('farm_rabbit', 'assets/farm/Rabbit_Brown_16x16.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('farm_rabbit_w', 'assets/farm/Rabbit_White_16x16.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('farm_piglet', 'assets/farm/Piglet_Pink_Light_16x16.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('farm_cow_baby', 'assets/farm/Cow_Baby_16x16.png', { frameWidth: 32, frameHeight: 32 });
+    // Tiny animals: 384x64 → 16x16 frames, 24 cols × 4 rows (walk = row 1)
+    this.load.spritesheet('farm_chicken', 'assets/farm/Chicken_Brown_16x16.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('farm_duckling', 'assets/farm/Duckling_Yellow_16x16.png', { frameWidth: 16, frameHeight: 16 });
 
     // Town environment sprites
     this.load.image('env_fountain', 'assets/env_fountain.png');
@@ -112,8 +130,66 @@ export class BootScene extends Phaser.Scene {
       });
     });
 
+    // Create walk animations for farm animals (LimeZu Modern Farm)
+    // Farm spritesheets: all 4 directions in ONE row (6 frames each)
+    // Direction order in each row: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
+    const COLS = 24;
+
+    // Dogs: 48x32 frames, 13 rows. Walk = row 4 (row0=preview, row1=IDLE label,
+    // row2=IDLE, row3=WALK label, row4=WALK data)
+    const dogKeys = ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'];
+    const DOG_WALK_ROW = 4;
+    dogKeys.forEach((key) => {
+      if (!this.textures.exists(key)) return;
+      const base = DOG_WALK_ROW * COLS;
+      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
+    });
+
+    // Small animals (rabbit, piglet, cow_baby): 32x32, 4 rows. Walk = row 1
+    // Tiny animals (chicken, duckling): 16x16, 4 rows. Walk = row 1
+    const smallKeys = ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'];
+    const SMALL_WALK_ROW = 1;
+    smallKeys.forEach((key) => {
+      if (!this.textures.exists(key)) return;
+      const base = SMALL_WALK_ROW * COLS;
+      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
+    });
+
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
+
+    // Farm building (barn) — procedural since we don't have a bld_farm.png
+    pg.fillStyle(0x8B4513, 1); // brown barn base
+    pg.fillRect(10, 40, 100, 70);
+    pg.fillStyle(0xA0522D, 1); // lighter siding
+    pg.fillRect(15, 45, 90, 60);
+    pg.fillStyle(0xCC3333, 1); // red roof
+    pg.beginPath();
+    pg.moveTo(0, 42); pg.lineTo(60, 5); pg.lineTo(120, 42);
+    pg.closePath(); pg.fill();
+    pg.fillStyle(0xDD4444, 1); // roof highlight
+    pg.beginPath();
+    pg.moveTo(10, 42); pg.lineTo(60, 12); pg.lineTo(110, 42);
+    pg.closePath(); pg.fill();
+    pg.fillStyle(0x654321, 1); // barn door
+    pg.fillRect(42, 65, 36, 45);
+    pg.fillStyle(0x4a3520, 1); // door frame
+    pg.fillRect(42, 65, 36, 3);
+    pg.fillRect(42, 65, 3, 45);
+    pg.fillRect(75, 65, 3, 45);
+    pg.fillStyle(0xFFD700, 1); // hay window
+    pg.fillRect(50, 30, 20, 12);
+    pg.fillStyle(0xDAA520, 1);
+    pg.fillRect(20, 55, 15, 12);
+    pg.fillRect(85, 55, 15, 12);
+    pg.generateTexture('bld_farm', 120, 110);
+    pg.clear();
 
     // Heart icon
     pg.fillStyle(0xff4466, 1);

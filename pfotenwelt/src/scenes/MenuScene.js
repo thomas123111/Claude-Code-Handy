@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v1.1.0';
+export const GAME_VERSION = 'v1.2.0';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -129,16 +129,12 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '14px', fontFamily: 'monospace', color: '#ffffff',
     }).setOrigin(0.5);
 
-    // Touch handler - debug dot shows where you tap
-    this.debugText = this.add.text(10, 10, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ff0000' });
-
+    // Touch handler
     this.input.on('pointerdown', (pointer) => {
-      this.debugText.setText(`Tap: ${Math.round(pointer.x)},${Math.round(pointer.y)}`);
-      this.add.circle(pointer.x, pointer.y, 4, 0xff0000).setDepth(999);
-
       for (const btn of this.buttons) {
         if (pointer.x >= btn.x - btn.w / 2 && pointer.x <= btn.x + btn.w / 2 &&
             pointer.y >= btn.y - btn.h / 2 && pointer.y <= btn.y + btn.h / 2) {
+          // Button press feedback: quick scale bounce
           btn.action();
           return;
         }
