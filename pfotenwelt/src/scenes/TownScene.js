@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy } from '../data/SaveManager.js';
+import { startMusic, stopMusic, unlockAudio } from '../audio/MusicManager.js';
 
 // Town layout: buildings placed on a grid with exact positions
-// Map is 1200x1400 (scrollable, larger than screen)
+// Map is 1200x1700 (scrollable, larger than screen — includes farm area)
 const MAP_W = 1200;
-const MAP_H = 1400;
+const MAP_H = 1700;
 
 const BUILDINGS = [
   // Tierheim oben mittig = die Basis
@@ -31,6 +32,9 @@ const BUILDINGS = [
   // Gilde unten mitte
   { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
     x: 600, y: 1250, scale: 1.0, unlockCost: 0, unlocked: true },
+  // Bauernhof — neues Nachbar-Gebiet ganz unten
+  { id: 'farm', key: 'Farm', name: '🌾 Bauernhof', tex: 'bld_farm',
+    x: 600, y: 1550, scale: 1.2, unlockCost: 0, unlocked: true },
 ];
 
 // Decoration - trees placed BETWEEN buildings, never on paths
@@ -73,6 +77,9 @@ export class TownScene extends Phaser.Scene {
     regenerateEnergy(this.save);
     const { width, height } = this.scale;
 
+    // Fade in
+    this.cameras.main.fadeIn(400, 26, 21, 35);
+
     // Camera setup
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.centerOn(MAP_W / 2, 400);
@@ -91,8 +98,8 @@ export class TownScene extends Phaser.Scene {
     // === PATHS leading TO buildings (not through them) ===
     const pathColor = 0xc4a76c;
 
-    // Central vertical main road (spine of the town)
-    this.drawPath(600, 280, 600, 1180, pathColor);
+    // Central vertical main road (spine of the town — extends to farm)
+    this.drawPath(600, 280, 600, 1480, pathColor);
 
     // Horizontal branches from main road to buildings
     // Top: main road → Werkstatt (left) and Tierarzt (right)
@@ -111,17 +118,50 @@ export class TownScene extends Phaser.Scene {
     this.add.circle(600, 600, 100, pathColor, 0.35).setDepth(0);
     this.add.circle(600, 600, 110, 0x8a7a5a, 0.12).setDepth(0);
 
-    // === DECORATIONS ===
+    // === FARM AREA (bottom section) ===
+    // Farm ground (lighter green, tilled earth)
+    this.add.rectangle(600, 1550, 800, 250, 0x4a7a32).setDepth(0);
+    // Fence around farm area
+    const fenceColor = 0x8B6B3A;
+    for (let fx = 220; fx <= 980; fx += 40) {
+      this.add.rectangle(fx, 1430, 4, 16, fenceColor).setDepth(1);
+      this.add.rectangle(fx, 1436, 40, 3, fenceColor).setDepth(1);
+      this.add.rectangle(fx, 1426, 40, 3, fenceColor).setDepth(1);
+    }
+    // Farm fields (crop rows)
+    for (let fy = 1470; fy <= 1600; fy += 22) {
+      this.add.rectangle(350, fy, 200, 8, 0x6a5a2a, 0.4).setDepth(0);
+      this.add.rectangle(850, fy, 200, 8, 0x6a5a2a, 0.4).setDepth(0);
+      // Little green crops
+      for (let cx = 260; cx <= 440; cx += 20) {
+        this.add.circle(cx, fy - 3, 4, 0x55aa33, 0.6).setDepth(0);
+      }
+      for (let cx = 760; cx <= 940; cx += 20) {
+        this.add.circle(cx, fy - 3, 4, 0x55aa33, 0.6).setDepth(0);
+      }
+    }
+    // Gate opening in fence (at path)
+    this.add.rectangle(600, 1430, 60, 20, 0x4a7a32).setDepth(1);
+    // "Bauernhof" sign
+    this.add.text(600, 1420, '🌾', { fontSize: '18px' }).setOrigin(0.5).setDepth(200);
+
+    // Farm-area path branch to building
+    this.drawPath(400, 1550, 600, 1550, pathColor);
+    this.drawPath(600, 1550, 800, 1550, pathColor);
+
+    // === DECORATIONS (Y-sorted like buildings) ===
     TREES.forEach((t) => {
       const tex = t.type === 'big' ? 'env_tree_big' : 'env_tree_small';
       if (this.textures.exists(tex)) {
-        this.add.image(t.x, t.y, tex).setScale(t.type === 'big' ? 0.8 : 0.5).setDepth(1);
+        const treeDepth = 10 + Math.round(t.y / 10);
+        this.add.image(t.x, t.y, tex).setScale(t.type === 'big' ? 0.8 : 0.5).setDepth(treeDepth);
       }
     });
 
     DECOR.forEach((d) => {
       if (this.textures.exists(d.tex)) {
-        this.add.image(d.x, d.y, d.tex).setScale(d.scale).setDepth(2);
+        const decorDepth = 10 + Math.round(d.y / 10);
+        this.add.image(d.x, d.y, d.tex).setScale(d.scale).setDepth(decorDepth);
       }
     });
 
@@ -131,7 +171,9 @@ export class TownScene extends Phaser.Scene {
       const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
 
       if (this.textures.exists(b.tex)) {
-        const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(3);
+        // Y-sort: building depth based on bottom edge so walkers can go behind/in front
+        const bldDepth = 10 + Math.round((b.y + 50) / 10);
+        const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bldDepth);
 
         if (!isUnlocked) {
           img.setTint(0x444444); // greyed out
@@ -141,25 +183,25 @@ export class TownScene extends Phaser.Scene {
         b._sprite = img;
       }
 
-      // Name label
+      // Name label (above Y-sort layer)
       this.add.text(b.x, b.y + 70, b.name, {
         fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
         backgroundColor: '#00000088', padding: { x: 8, y: 3 },
-      }).setOrigin(0.5).setDepth(5);
+      }).setOrigin(0.5).setDepth(200);
 
       if (!isUnlocked) {
         // Lock + cost
-        this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(6);
+        this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
         this.add.text(b.x, b.y + 25, `${b.unlockCost}❤️`, {
           fontSize: '12px', fontFamily: 'monospace', color: '#ffaa44', fontStyle: 'bold',
           backgroundColor: '#00000066', padding: { x: 4, y: 2 },
-        }).setOrigin(0.5).setDepth(6);
+        }).setOrigin(0.5).setDepth(201);
       } else if (b.id === 'shelter' && this.save.pets.length > 0) {
         // Pet count badge
-        this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(7);
+        this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(202);
         this.add.text(b.x + 55, b.y - 55, `${this.save.pets.length}`, {
           fontSize: '11px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-        }).setOrigin(0.5).setDepth(8);
+        }).setOrigin(0.5).setDepth(203);
       }
     });
 
@@ -212,14 +254,58 @@ export class TownScene extends Phaser.Scene {
       if (!this.textures.exists(key)) return;
       const path = walkerPaths[i % walkerPaths.length];
       const start = path[0];
+      const next = path[1];
       const sprite = this.add.sprite(start[0], start[1], key)
-        .setScale(2.5).setDepth(4);
-      sprite.play(`${key}_walk_right`);
+        .setScale(2.5);
+      // depth is set dynamically via Y-sorting in update()
+
+      // Set correct initial direction based on first path segment
+      const initDx = next[0] - start[0];
+      const initDy = next[1] - start[1];
+      const initDir = this.getWalkDirection(initDx, initDy);
+      sprite.play(`${key}_walk_${initDir}`);
 
       this.walkers.push({
         sprite, key, path,
         targetIdx: 1,
         speed: Phaser.Math.Between(25, 40),
+        currentDir: initDir,
+      });
+    });
+
+    // === ROAMING PETS — LimeZu Modern Farm animated sprites ===
+    this.roamingPets = [];
+    const petSpriteConfigs = [
+      // Dogs patrol along main paths
+      { key: 'farm_dog_lab', scale: 2.0, paths: [[150, 350], [600, 350], [600, 600], [150, 600]], speed: 38 },
+      { key: 'farm_dog_shep', scale: 2.0, paths: [[1000, 350], [600, 350], [600, 750], [1000, 750]], speed: 32 },
+      { key: 'farm_dog_white', scale: 2.0, paths: [[600, 200], [600, 600], [1000, 600], [1000, 200]], speed: 35 },
+      // Rabbits hop around the fountain plaza
+      { key: 'farm_rabbit', scale: 2.5, paths: [[450, 500], [600, 600], [750, 500], [600, 450]], speed: 28 },
+      { key: 'farm_rabbit_w', scale: 2.5, paths: [[750, 700], [600, 600], [450, 700], [600, 750]], speed: 25 },
+      // Duckling near fountain
+      { key: 'farm_duckling', scale: 3.0, paths: [[550, 580], [650, 620], [620, 560], [560, 610]], speed: 18 },
+      // Chicken wanders near cafe/guild
+      { key: 'farm_chicken', scale: 3.0, paths: [[800, 1100], [600, 1100], [600, 1200], [800, 1200]], speed: 22 },
+    ];
+
+    petSpriteConfigs.forEach((cfg) => {
+      if (!this.textures.exists(cfg.key)) return;
+      const start = cfg.paths[0];
+      const next = cfg.paths[1];
+      const pet = this.add.sprite(start[0], start[1], cfg.key).setScale(cfg.scale);
+      const shadow = this.add.ellipse(start[0], start[1] + 10, 20, 7, 0x000000, 0.2).setDepth(1);
+
+      // Set initial direction
+      const initDx = next[0] - start[0];
+      const initDy = next[1] - start[1];
+      const initDir = this.getWalkDirection(initDx, initDy);
+      const animKey = `${cfg.key}_walk_${initDir}`;
+      if (this.anims.exists(animKey)) pet.play(animKey);
+
+      this.roamingPets.push({
+        sprite: pet, shadow, key: cfg.key, path: cfg.paths,
+        targetIdx: 1, speed: cfg.speed, currentDir: initDir,
       });
     });
 
@@ -237,7 +323,8 @@ export class TownScene extends Phaser.Scene {
     ];
     lzProps.forEach((p) => {
       if (this.textures.exists(p.tex)) {
-        this.add.image(p.x, p.y, p.tex).setScale(p.scale).setDepth(2);
+        const propDepth = 10 + Math.round(p.y / 10);
+        this.add.image(p.x, p.y, p.tex).setScale(p.scale).setDepth(propDepth);
       }
     });
 
@@ -261,6 +348,32 @@ export class TownScene extends Phaser.Scene {
     this.add.text(width / 2, height - 20, `🎁 ${this.save.totalDonatedKg.toFixed(1)}kg gespendet | 📅 Tag ${this.save.loginStreak}`, {
       fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(51);
+
+    // === MUSIC ===
+    if (this.save.musicOn !== false) {
+      this.input.once('pointerdown', () => {
+        unlockAudio();
+        startMusic('town');
+      });
+    }
+
+    // Music toggle button (top-right in HUD)
+    const musicIcon = this.save.musicOn !== false ? '🎵' : '🔇';
+    const musicBtn = this.add.text(width - 40, 35, musicIcon, {
+      fontSize: '16px',
+    }).setScrollFactor(0).setDepth(52).setInteractive();
+    musicBtn.on('pointerdown', () => {
+      this.save.musicOn = !(this.save.musicOn !== false);
+      writeSave(this.save);
+      if (this.save.musicOn) {
+        unlockAudio();
+        startMusic('town');
+        musicBtn.setText('🎵');
+      } else {
+        stopMusic();
+        musicBtn.setText('🔇');
+      }
+    });
 
     // === INPUT: Drag to scroll, tap buildings ===
     this.isDragging = false;
@@ -320,11 +433,16 @@ export class TownScene extends Phaser.Scene {
             wp.y >= by - halfH && wp.y <= by + halfH) {
           const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
           if (isUnlocked) {
-            // Bounce animation then enter
+            // Bounce animation then fade-out and enter
             this.tweens.add({
-              targets: b._sprite, scale: { from: 1.0, to: 1.1 },
+              targets: b._sprite, scale: { from: b.scale, to: b.scale * 1.1 },
               duration: 100, yoyo: true,
-              onComplete: () => this.scene.start(b.key),
+              onComplete: () => {
+                this.cameras.main.fadeOut(300, 26, 21, 35);
+                this.cameras.main.once('camerafadeoutcomplete', () => {
+                  this.scene.start(b.key);
+                });
+              },
             });
           } else if (this.save.hearts >= b.unlockCost) {
             this.unlockBuilding(b);
@@ -392,8 +510,23 @@ export class TownScene extends Phaser.Scene {
     this.time.delayedCall(800, () => this.scene.restart());
   }
 
+  // Helper: determine walk direction from delta, with dead zone to prevent flicker
+  getWalkDirection(dx, dy) {
+    // Use a threshold ratio to prevent flickering when dx ≈ dy
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    if (absDx > absDy * 1.2) {
+      return dx > 0 ? 'right' : 'left';
+    }
+    return dy > 0 ? 'down' : 'up';
+  }
+
   update(time, delta) {
     if (!this.walkers) return;
+
+    // Collect all Y-sortable objects (walkers + buildings) for proper depth
+    // Buildings get depth based on their bottom edge (y + half height)
+    // Walkers get depth based on their y position
     this.walkers.forEach((w) => {
       const target = w.path[w.targetIdx];
       const dx = target[0] - w.sprite.x;
@@ -402,20 +535,56 @@ export class TownScene extends Phaser.Scene {
 
       if (dist < 5) {
         w.targetIdx = (w.targetIdx + 1) % w.path.length;
-        // Set animation based on direction to next target
         const next = w.path[w.targetIdx];
         const ndx = next[0] - w.sprite.x;
         const ndy = next[1] - w.sprite.y;
-        if (Math.abs(ndx) > Math.abs(ndy)) {
-          w.sprite.play(ndx > 0 ? `${w.key}_walk_right` : `${w.key}_walk_left`, true);
-        } else {
-          w.sprite.play(ndy > 0 ? `${w.key}_walk_down` : `${w.key}_walk_up`, true);
+        const newDir = this.getWalkDirection(ndx, ndy);
+        if (newDir !== w.currentDir) {
+          w.currentDir = newDir;
+          w.sprite.play(`${w.key}_walk_${newDir}`, true);
         }
       } else {
         const spd = w.speed * (delta / 1000);
         w.sprite.x += (dx / dist) * spd;
         w.sprite.y += (dy / dist) * spd;
       }
+
+      // Y-sort: depth based on Y position (higher Y = closer to camera = higher depth)
+      // Base depth 10 + normalized Y so walkers sort among themselves and with buildings
+      w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
     });
+
+    // Update roaming pets (same logic as human walkers)
+    if (this.roamingPets) {
+      this.roamingPets.forEach((p) => {
+        const target = p.path[p.targetIdx];
+        const dx = target[0] - p.sprite.x;
+        const dy = target[1] - p.sprite.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 5) {
+          p.targetIdx = (p.targetIdx + 1) % p.path.length;
+          const next = p.path[p.targetIdx];
+          const ndx = next[0] - p.sprite.x;
+          const ndy = next[1] - p.sprite.y;
+          const newDir = this.getWalkDirection(ndx, ndy);
+          if (newDir !== p.currentDir) {
+            p.currentDir = newDir;
+            const animKey = `${p.key}_walk_${newDir}`;
+            if (this.anims.exists(animKey)) p.sprite.play(animKey, true);
+          }
+        } else {
+          const spd = p.speed * (delta / 1000);
+          p.sprite.x += (dx / dist) * spd;
+          p.sprite.y += (dy / dist) * spd;
+        }
+
+        // Shadow follows pet
+        p.shadow.setPosition(p.sprite.x, p.sprite.y + 10);
+        // Y-sort pets
+        p.sprite.setDepth(10 + Math.round(p.sprite.y / 10));
+        p.shadow.setDepth(1);
+      });
+    }
   }
 }

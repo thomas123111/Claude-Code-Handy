@@ -78,6 +78,18 @@ export const STORY_CHAPTERS = [
     ],
   },
   {
+    id: 'ch_farm',
+    title: 'Der Bauernhof nebenan',
+    trigger: { type: 'level', value: 3 },
+    dialogues: [
+      { speaker: '🌾', text: 'Großartige Neuigkeiten! Der Bauernhof nebenan möchte mit uns zusammenarbeiten!' },
+      { speaker: '🐄', text: 'Bauer Klaus hat Kühe, Schweine, Hühner und Enten.' },
+      { speaker: '🌾', text: 'Du kannst auf dem Hof helfen — bei der Ernte, beim Füttern und Melken.' },
+      { speaker: '🚜', text: 'Als Dankeschön liefert der Hof Futter direkt an dein Tierheim!' },
+      { speaker: '💝', text: 'So versorgen wir noch mehr Tiere. Schau mal am Stadtrand vorbei!' },
+    ],
+  },
+  {
     id: 'ch8_legend',
     title: 'Legendäre Entdeckung',
     trigger: { type: 'legendary', value: 1 },

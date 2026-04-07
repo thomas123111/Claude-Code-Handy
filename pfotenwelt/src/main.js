@@ -16,6 +16,7 @@ import { CollectionScene } from './scenes/CollectionScene.js';
 import { AdoptionScene } from './scenes/AdoptionScene.js';
 import { EventScene, EventResultScene } from './scenes/EventScene.js';
 import { GuildScene } from './scenes/GuildScene.js';
+import { FarmScene } from './scenes/FarmScene.js';
 // Mini-puzzles
 import { Match3Puzzle } from './scenes/puzzles/Match3Puzzle.js';
 import { MemoryPuzzle } from './scenes/puzzles/MemoryPuzzle.js';
@@ -45,7 +46,7 @@ const config = {
     MergeBoardScene, ShelterScene, DailyRewardScene,
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
     StoryScene, CollectionScene, AdoptionScene,
-    EventScene, EventResultScene, GuildScene,
+    EventScene, EventResultScene, GuildScene, FarmScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle,
   ],
 };
