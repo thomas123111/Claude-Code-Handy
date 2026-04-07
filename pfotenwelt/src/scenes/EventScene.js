@@ -56,9 +56,9 @@ export class EventScene extends Phaser.Scene {
       });
     }
 
-    // Choice buttons
+    // Choice buttons - start lower to avoid overlap with story text
     this.hitAreas = [];
-    let btnY = 270;
+    let btnY = evt.duration > 0 ? 320 : 280;
     evt.choices.forEach((choice, idx) => {
       const canAfford = this.save.hearts >= (choice.cost || 0);
       const btnColor = canAfford ? 0x553388 : 0x332233;
@@ -158,8 +158,16 @@ export class EventScene extends Phaser.Scene {
       fontSize: '11px', fontFamily: 'monospace', color: '#776688',
     }).setOrigin(0.5);
 
-    this.input.removeAllListeners();
-    this.input.once('pointerdown', () => this.scene.start('Town'));
+    // Use update-loop tap detection (more reliable than once listener)
+    this.resultDone = true;
+  }
+
+  update() {
+    // Tap to continue from result screen
+    if (this.resultDone && this.input.activePointer.isDown) {
+      this.resultDone = false;
+      this.scene.start('Town');
+    }
   }
 
   addHitArea(x, y, w, h, cb) {

@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.9.1';
+export const GAME_VERSION = 'v0.9.2';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -22,19 +22,11 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    // Check story triggers (with safety: max 1 per session)
-    if (!this.registry.get('storyShownThisSession')) {
-      const story = checkStoryTrigger(save);
-      if (story) {
-        this.registry.set('storyShownThisSession', true);
-        this.scene.start('Story', { chapter: story, returnTo: 'Menu' });
-        return;
-      }
-    }
+    // Check story triggers - DISABLED for now to prevent loop issues
+    // Stories are triggered from Town scene instead
 
-    // Random event (10% chance, max once per session)
-    if (Math.random() < 0.1 && save.pets.length > 0 && !this.registry.get('eventShownThisVisit')) {
-      this.registry.set('eventShownThisVisit', true);
+    // Random event (10% chance) - simple cosmetic only
+    if (Math.random() < 0.1 && save.pets.length > 0) {
       const evt = getRandomEvent();
       if (evt.effect.hearts) {
         save.hearts += evt.effect.hearts;
