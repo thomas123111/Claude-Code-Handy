@@ -60,37 +60,43 @@ export class BootScene extends Phaser.Scene {
       // Create scaled-up versions of the 16x16 sprites for menu display
     }
 
-    // Bullets
+    // Bullets - bigger and brighter for visibility
     pg.clear();
     pg.fillStyle(0xffff44, 1);
-    pg.fillCircle(4, 4, 4);
-    pg.generateTexture('bullet', 8, 8);
-    pg.generateTexture('bullet_basic', 8, 8);
+    pg.fillCircle(6, 6, 6);
+    pg.fillStyle(0xffffff, 0.5);
+    pg.fillCircle(6, 6, 3);
+    pg.generateTexture('bullet', 12, 12);
+    pg.generateTexture('bullet_basic', 12, 12);
 
     pg.clear();
     pg.fillStyle(0x44ddff, 1);
-    pg.fillCircle(5, 5, 5);
-    pg.fillStyle(0xaaeeff, 0.5);
-    pg.fillCircle(5, 5, 3);
-    pg.generateTexture('bullet_plasma', 10, 10);
+    pg.fillCircle(7, 7, 7);
+    pg.fillStyle(0xaaeeff, 0.6);
+    pg.fillCircle(7, 7, 4);
+    pg.generateTexture('bullet_plasma', 14, 14);
 
     pg.clear();
     pg.fillStyle(0xff6622, 1);
-    pg.fillCircle(5, 5, 5);
-    pg.fillStyle(0xffaa44, 0.7);
-    pg.fillCircle(5, 5, 2);
-    pg.generateTexture('bullet_explosive', 10, 10);
+    pg.fillCircle(7, 7, 7);
+    pg.fillStyle(0xffaa44, 0.8);
+    pg.fillCircle(7, 7, 3);
+    pg.generateTexture('bullet_explosive', 14, 14);
 
     pg.clear();
     pg.fillStyle(0xcc44ff, 1);
-    pg.fillRect(1, 2, 6, 4);
+    pg.fillRect(0, 2, 10, 6);
+    pg.fillStyle(0xee88ff, 0.6);
+    pg.fillRect(2, 3, 6, 4);
     pg.generateTexture('bullet_piercing', 8, 8);
 
-    // Enemy bullet
+    // Enemy bullet - red, visible
     pg.clear();
-    pg.fillStyle(0xff4444, 1);
-    pg.fillCircle(3, 3, 3);
-    pg.generateTexture('enemy_bullet', 6, 6);
+    pg.fillStyle(0xff2222, 1);
+    pg.fillCircle(5, 5, 5);
+    pg.fillStyle(0xff8888, 0.5);
+    pg.fillCircle(5, 5, 2);
+    pg.generateTexture('enemy_bullet', 10, 10);
 
     // Loot icons
     pg.clear();
