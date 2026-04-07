@@ -57,16 +57,21 @@ export class MenuScene extends Phaser.Scene {
   }
 
   createButton(x, y, text, color, callback) {
-    const bg = this.add.rectangle(x, y, 200, 44, Phaser.Display.Color.HexStringToColor(color).color, 0.2)
-      .setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(color).color)
-      .setInteractive({ useHandCursor: true });
+    const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
+    const bg = this.add.rectangle(x, y, 220, 50, colorVal, 0.2)
+      .setStrokeStyle(2, colorVal);
 
-    this.add.text(x, y, text, {
+    const label = this.add.text(x, y, text, {
       fontSize: '16px', fontFamily: 'monospace', color, fontStyle: 'bold',
-    }).setOrigin(0.5);
+      padding: { x: 20, y: 12 },
+      backgroundColor: 'transparent',
+    }).setOrigin(0.5).setInteractive(
+      new Phaser.Geom.Rectangle(-110, -25, 220, 50),
+      Phaser.Geom.Rectangle.Contains
+    );
 
-    bg.on('pointerover', () => bg.setFillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.4));
-    bg.on('pointerout', () => bg.setFillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.2));
-    bg.on('pointerdown', callback);
+    label.on('pointerover', () => bg.setFillStyle(colorVal, 0.4));
+    label.on('pointerout', () => bg.setFillStyle(colorVal, 0.2));
+    label.on('pointerdown', callback);
   }
 }

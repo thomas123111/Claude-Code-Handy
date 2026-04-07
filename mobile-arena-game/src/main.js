@@ -11,7 +11,7 @@ const config = {
   type: Phaser.AUTO,
   width: 960,
   height: 540,
-  parent: document.body,
+  parent: 'game-container',
   backgroundColor: '#0a0a1a',
   physics: {
     default: 'arcade',
@@ -26,6 +26,8 @@ const config = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    expandParent: true,
+    parent: 'game-container',
   },
   scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
 };

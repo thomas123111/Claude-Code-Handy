@@ -19,7 +19,13 @@
       -webkit-user-select: none;
       user-select: none;
     }
-    /* Let Phaser handle canvas sizing - don't override with !important */
+    #game-container {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
     canvas { display: block; }
     /* Rotate prompt for portrait */
     #rotate-msg {
@@ -44,21 +50,22 @@
   </style>
 </head>
 <body>
+  <div id="game-container"></div>
   <div id="rotate-msg">
     <div class="icon">&#x1F4F1;&#x21BB;</div>
     <div>Bitte drehe dein Handy<br>ins Querformat</div>
   </div>
   <script>
-    // Request fullscreen on first tap
-    document.addEventListener('click', function fs() {
+    // Request fullscreen on first tap (use touchend to not block Phaser)
+    document.addEventListener('touchend', function fs() {
       const el = document.documentElement;
       if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
       else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {});
       }
-      document.removeEventListener('click', fs);
-    }, { once: true });
+      document.removeEventListener('touchend', fs);
+    }, { once: true, passive: true });
 
     // Force Phaser to re-fit on orientation change
     window.addEventListener('orientationchange', () => {
