@@ -86,6 +86,19 @@ const DEFAULT_SAVE = {
   ],
   inventory: [],
   selectedMechId: 'striker',
+  // Skill levels (permanent upgrades)
+  skillLevels: {
+    multishot: 0,
+    ricochet: 0,
+    speed: 0,
+    shield: 0,
+    lifesteal: 0,
+    critChance: 0,
+    magnetRange: 0,
+    fireRate: 0,
+  },
+  // Equipped loadout (max 4 skill ids)
+  loadout: [],
   // Ammo stock (basic is infinite, others are counted)
   ammo: {
     plasma: 0,    // +50% damage
@@ -123,8 +136,10 @@ export function loadSave() {
         return defaultMech;
       });
 
-      // Ensure ammo object has all keys
+      // Ensure ammo and skills have all keys
       merged.ammo = { ...defaults.ammo, ...(save.ammo || {}) };
+      merged.skillLevels = { ...defaults.skillLevels, ...(save.skillLevels || {}) };
+      if (!merged.loadout) merged.loadout = [];
 
       // Migrate old selectedMechId
       if (merged.selectedMechId === 'tank') merged.selectedMechId = 'titan';

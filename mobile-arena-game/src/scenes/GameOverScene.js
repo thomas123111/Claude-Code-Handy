@@ -40,17 +40,17 @@ export class GameOverScene extends Phaser.Scene {
 
     writeSave(save);
 
-    // UI - landscape two-column layout
-    // Left: Title + Stats
-    this.add.text(width * 0.3, 30, 'DESTROYED', {
-      fontSize: '28px', fontFamily: 'monospace', color: '#ff4444', fontStyle: 'bold',
+    // Portrait layout - centered
+    const cx = width / 2;
+    this.add.text(cx, 80, 'DESTROYED', {
+      fontSize: '32px', fontFamily: 'monospace', color: '#ff4444', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(width * 0.3, 60, `Reached Arena ${this.arenaIndex + 1}`, {
-      fontSize: '13px', fontFamily: 'monospace', color: '#aaaaaa',
+    this.add.text(cx, 120, `Reached Arena ${this.arenaIndex + 1}`, {
+      fontSize: '14px', fontFamily: 'monospace', color: '#aaaaaa',
     }).setOrigin(0.5);
 
-    let y = 90;
+    let y = 170;
     const lines = [
       ['Earned', `${this.runCredits}cr`, '#ffdd00'],
       ['Kept (50%)', `${keptCredits}cr`, '#ffffff'],
@@ -59,29 +59,24 @@ export class GameOverScene extends Phaser.Scene {
     ];
 
     lines.forEach(([label, value, color]) => {
-      this.add.text(width * 0.1, y, label, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#888888',
-      });
-      this.add.text(width * 0.48, y, value, {
-        fontSize: '11px', fontFamily: 'monospace', color, fontStyle: 'bold',
-      }).setOrigin(1, 0);
-      y += 22;
+      this.add.text(cx - 80, y, label, { fontSize: '14px', fontFamily: 'monospace', color: '#888888' });
+      this.add.text(cx + 80, y, value, { fontSize: '14px', fontFamily: 'monospace', color, fontStyle: 'bold' }).setOrigin(1, 0);
+      y += 30;
     });
 
-    this.add.text(width * 0.3, height - 20, 'Death costs 50%. Cash out to keep everything!', {
-      fontSize: '9px', fontFamily: 'monospace', color: '#555555',
+    this.add.text(cx, height - 40, 'Death costs 50%. Cash out to keep everything!', {
+      fontSize: '10px', fontFamily: 'monospace', color: '#555555',
     }).setOrigin(0.5);
 
-    // Right: Button (manual hit detection)
-    const bx = width * 0.72;
-    const by = height * 0.45;
-    this.add.rectangle(bx, by, 220, 50, 0x3399ff, 0.2).setStrokeStyle(2, 0x3399ff);
-    this.add.text(bx, by, 'BACK TO MENU', {
-      fontSize: '16px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
+    // Button
+    const by = 420;
+    this.add.rectangle(cx, by, 280, 50, 0x3399ff, 0.2).setStrokeStyle(2, 0x3399ff);
+    this.add.text(cx, by, 'BACK TO MENU', {
+      fontSize: '18px', fontFamily: 'monospace', color: '#3399ff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.x >= bx - 110 && pointer.x <= bx + 110 &&
+      if (pointer.x >= cx - 140 && pointer.x <= cx + 140 &&
           pointer.y >= by - 25 && pointer.y <= by + 25) {
         this.scene.start('Menu');
       }

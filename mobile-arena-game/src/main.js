@@ -6,11 +6,12 @@ import { ArenaScene } from './scenes/ArenaScene.js';
 import { ArenaCompleteScene } from './scenes/ArenaCompleteScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { MazeArenaScene } from './scenes/MazeArenaScene.js';
+import { SkillsScene } from './scenes/SkillsScene.js';
 
 const config = {
   type: Phaser.AUTO,
-  width: 1280,
-  height: 540,
+  width: 540,
+  height: 960,
   backgroundColor: '#0a0a1a',
   physics: {
     default: 'arcade',
@@ -27,7 +28,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
+  scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene, SkillsScene],
 };
 
 new Phaser.Game(config);
