@@ -18,11 +18,16 @@ export class ArenaScene extends Phaser.Scene {
 
   create() {
     try {
-    this._createInner();
+      this._createInner();
     } catch (e) {
-      this.add.text(10, 10, `ERROR: ${e.message}\n${e.stack}`, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#ff0000', wordWrap: { width: 900 },
+      // Show error visibly on screen
+      this.cameras.main.setBackgroundColor('#330000');
+      this.add.text(20, 20, 'ARENA CRASH:\n' + e.message + '\n\n' + (e.stack || '').substring(0, 500), {
+        fontSize: '11px', fontFamily: 'monospace', color: '#ff4444',
+        wordWrap: { width: 900 },
       });
+      // Allow tapping to go back to menu
+      this.input.on('pointerdown', () => this.scene.start('Menu'));
     }
   }
 
@@ -119,7 +124,9 @@ export class ArenaScene extends Phaser.Scene {
     });
 
     // Player - starts at bottom center of world
-    this.player = this.physics.add.image(worldW / 2, worldH - 40, `mech_${this.mechId}`);
+    // Use mech texture, fallback to striker if texture missing
+    const mechTexture = this.textures.exists(`mech_${this.mechId}`) ? `mech_${this.mechId}` : 'mech_striker';
+    this.player = this.physics.add.image(worldW / 2, worldH - 40, mechTexture);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
     this.player.setScale(1.5);
