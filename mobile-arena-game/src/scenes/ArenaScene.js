@@ -539,34 +539,45 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const halfW = width / 2;
 
-    // Joystick visuals (right side = movement) - fixed to camera
-    this.joystickBase = this.add.image(width - 100, height - 120, 'joystick_base')
+    // RIGHT side: Movement joystick
+    this.joystickBase = this.add.image(width - 100, height - 100, 'joystick_base')
       .setDepth(100).setAlpha(0).setScrollFactor(0);
-    this.joystickThumb = this.add.image(width - 100, height - 120, 'joystick_thumb')
+    this.joystickThumb = this.add.image(width - 100, height - 100, 'joystick_thumb')
       .setDepth(101).setAlpha(0).setScrollFactor(0);
 
-    // Shoot indicator (left side = shoot) - fixed to camera
-    this.shootIndicator = this.add.circle(70, height - 120, 30, 0xff4444, 0)
-      .setDepth(100).setScrollFactor(0);
+    // LEFT side: Aim joystick (drag to aim, fires while held)
+    this.aimBase = this.add.image(100, height - 100, 'joystick_base')
+      .setDepth(100).setAlpha(0).setScrollFactor(0);
+    this.aimThumb = this.add.image(100, height - 100, 'joystick_thumb')
+      .setDepth(101).setAlpha(0).setScrollFactor(0);
+    this.aimThumb.setTint(0xff6644); // orange tint to distinguish from move
 
-    // Use downX/downY which are screen-relative (not world-relative)
+    // Aim state
+    this.aimActive = false;
+    this.aimDir = { x: 0, y: 0 };
+    this.aimPointerId = null;
+    this.aimOrigin = null;
+
     this.input.on('pointerdown', (pointer) => {
-      // Get screen-space coordinates (not affected by camera scroll)
       const sx = pointer.x - this.cameras.main.scrollX;
       const sy = pointer.y - this.cameras.main.scrollY;
 
       if (sx >= halfW) {
-        // RIGHT HALF: Movement joystick
+        // RIGHT: Movement joystick
         this.joystickActive = true;
         this.joystickPointerId = pointer.id;
         this.joystickBase.setPosition(sx, sy).setAlpha(1);
         this.joystickThumb.setPosition(sx, sy).setAlpha(1);
         this.joystickOrigin = { x: sx, y: sy };
       } else {
-        // LEFT HALF: Shoot in facing direction (hold to keep firing)
+        // LEFT: Aim joystick - drag to set aim direction, fires while held
+        this.aimActive = true;
         this.shootHeld = true;
-        this.shootPointerId = pointer.id;
-        this.shootIndicator.setPosition(sx, sy).setAlpha(0.3);
+        this.aimPointerId = pointer.id;
+        this.aimBase.setPosition(sx, sy).setAlpha(1);
+        this.aimThumb.setPosition(sx, sy).setAlpha(1);
+        this.aimOrigin = { x: sx, y: sy };
+        this.aimDir = { x: 0, y: 0 };
       }
     });
 
@@ -574,7 +585,7 @@ export class ArenaScene extends Phaser.Scene {
       const sx = pointer.x - this.cameras.main.scrollX;
       const sy = pointer.y - this.cameras.main.scrollY;
 
-      // Joystick movement
+      // Movement joystick
       if (this.joystickActive && pointer.id === this.joystickPointerId && this.joystickOrigin) {
         const dx = sx - this.joystickOrigin.x;
         const dy = sy - this.joystickOrigin.y;
@@ -597,9 +608,27 @@ export class ArenaScene extends Phaser.Scene {
         }
       }
 
-      // Move shoot indicator with finger
-      if (this.shootHeld && pointer.id === this.shootPointerId) {
-        this.shootIndicator.setPosition(sx, sy);
+      // Aim joystick
+      if (this.aimActive && pointer.id === this.aimPointerId && this.aimOrigin) {
+        const dx = sx - this.aimOrigin.x;
+        const dy = sy - this.aimOrigin.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 50;
+        const clampedDist = Math.min(dist, maxDist);
+        const angle = Math.atan2(dy, dx);
+
+        this.aimThumb.setPosition(
+          this.aimOrigin.x + Math.cos(angle) * clampedDist,
+          this.aimOrigin.y + Math.sin(angle) * clampedDist,
+        );
+
+        if (dist > 10) {
+          this.aimDir.x = Math.cos(angle);
+          this.aimDir.y = Math.sin(angle);
+          // Update aim angle independently from movement
+          this.playerFacingAngle = angle;
+          this.player.rotation = angle + Math.PI / 2;
+        }
       }
     });
 
@@ -612,10 +641,14 @@ export class ArenaScene extends Phaser.Scene {
         this.joystickBase.setAlpha(0);
         this.joystickThumb.setAlpha(0);
       }
-      if (pointer.id === this.shootPointerId) {
+      if (pointer.id === this.aimPointerId) {
+        this.aimActive = false;
         this.shootHeld = false;
-        this.shootPointerId = null;
-        this.shootIndicator.setAlpha(0);
+        this.aimPointerId = null;
+        this.aimDir.x = 0;
+        this.aimDir.y = 0;
+        this.aimBase.setAlpha(0);
+        this.aimThumb.setAlpha(0);
       }
     });
   }
@@ -1320,13 +1353,15 @@ export class ArenaScene extends Phaser.Scene {
     this.player.body.velocity.x = vx * this.mechStats.speed;
     this.player.body.velocity.y = vy * this.mechStats.speed;
 
-    // Update facing angle based on movement direction
-    if (len > 0.1) {
+    // Update facing angle:
+    // - If aim joystick is active: aim controls rotation (set in pointermove)
+    // - If not aiming: face movement direction
+    if (!this.aimActive && len > 0.1) {
       this.playerFacingAngle = Math.atan2(vy, vx);
       this.player.rotation = this.playerFacingAngle + Math.PI / 2;
     }
 
-    // Shoot: hold right side of screen OR press Space
+    // Shoot: hold left aim joystick OR press Space
     if (this.shootHeld || this.spaceKey.isDown) {
       this.fireInFacingDirection();
     }
