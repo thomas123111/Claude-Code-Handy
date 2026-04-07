@@ -170,7 +170,9 @@ export class ArenaScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     // Camera follows player
+    // Camera follows player, zoomed out to see more of the map
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setZoom(0.65);
 
     // Unfreeze after 1 second
     const readyText = this.add.text(this.player.x, this.player.y - 40, 'GET READY...', {
