@@ -9,8 +9,8 @@ import { MazeArenaScene } from './scenes/MazeArenaScene.js';
 
 const config = {
   type: Phaser.AUTO,
-  width: 844,
-  height: 390,
+  width: 960,
+  height: 540,
   parent: document.body,
   backgroundColor: '#0a0a1a',
   physics: {
@@ -21,11 +21,13 @@ const config = {
     },
   },
   input: {
-    activePointers: 3, // enable multi-touch (2 fingers + 1 extra)
+    activePointers: 3,
   },
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: '100%',
+    height: '100%',
   },
   scene: [BootScene, MenuScene, HangarScene, ArenaScene, ArenaCompleteScene, GameOverScene, MazeArenaScene],
 };
