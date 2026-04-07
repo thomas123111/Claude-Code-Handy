@@ -99,8 +99,38 @@ export function loadSave() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const save = JSON.parse(raw);
-      // Merge with defaults for forward compatibility
-      return { ...DEFAULT_SAVE, ...save };
+      const defaults = JSON.parse(JSON.stringify(DEFAULT_SAVE));
+
+      // Deep merge: keep saved progress but add any new fields from defaults
+      const merged = { ...defaults, ...save };
+
+      // Deep merge mechs: for each default mech, merge with saved mech data
+      merged.mechs = defaults.mechs.map((defaultMech) => {
+        const savedMech = (save.mechs || []).find((m) => m.id === defaultMech.id);
+        if (savedMech) {
+          // Keep saved progress (level, xp, equipment, unlocked) but add new fields
+          return { ...defaultMech, ...savedMech };
+        }
+        // Check if old mech ids exist (tank→titan, scout→phantom migration)
+        if (defaultMech.id === 'titan') {
+          const old = (save.mechs || []).find((m) => m.id === 'tank');
+          if (old) return { ...defaultMech, level: old.level, xp: old.xp, unlocked: old.unlocked, equipment: old.equipment };
+        }
+        if (defaultMech.id === 'phantom') {
+          const old = (save.mechs || []).find((m) => m.id === 'scout');
+          if (old) return { ...defaultMech, level: old.level, xp: old.xp, unlocked: old.unlocked, equipment: old.equipment };
+        }
+        return defaultMech;
+      });
+
+      // Ensure ammo object has all keys
+      merged.ammo = { ...defaults.ammo, ...(save.ammo || {}) };
+
+      // Migrate old selectedMechId
+      if (merged.selectedMechId === 'tank') merged.selectedMechId = 'titan';
+      if (merged.selectedMechId === 'scout') merged.selectedMechId = 'phantom';
+
+      return merged;
     }
   } catch (e) {
     console.warn('Failed to load save, using defaults', e);
