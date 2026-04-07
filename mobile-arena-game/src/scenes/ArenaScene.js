@@ -680,7 +680,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   createHUD() {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
     const sf = 0; // scrollFactor 0 = fixed to camera
 
     // Compact single-line HUD for landscape
