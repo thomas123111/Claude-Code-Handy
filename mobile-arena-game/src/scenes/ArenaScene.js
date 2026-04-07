@@ -12,17 +12,11 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   init(data) {
-    // Check registry for data (used when scene restarts itself)
-    const regData = this.registry.get('nextArena');
-    if (regData && (!data || !data.runSeed)) {
-      data = regData;
-      this.registry.remove('nextArena');
-    }
-    this.arenaIndex = data.arenaIndex || 0;
-    this.runCredits = data.runCredits || 0;
-    this.runScrap = data.runScrap || 0;
-    this.runXp = data.runXp || 0;
-    this.runSeed = data.runSeed || 1;
+    this.arenaIndex = (data && data.arenaIndex) || 0;
+    this.runCredits = (data && data.runCredits) || 0;
+    this.runScrap = (data && data.runScrap) || 0;
+    this.runXp = (data && data.runXp) || 0;
+    this.runSeed = (data && data.runSeed) || 1;
   }
 
   create() {
@@ -1424,11 +1418,8 @@ export class ArenaScene extends Phaser.Scene {
           if (t === 'credit') this.nextArenaData.runCredits += v;
           else if (t === 'scrap') this.nextArenaData.runScrap += v;
         });
-        // Go directly to next arena
-        const d = this.nextArenaData;
-        // Use registry to pass data since scene.start('Arena') restarts same scene
-        this.registry.set('nextArena', d);
-        this.scene.restart();
+        // Go directly to next arena - restart with data
+        this.scene.restart(this.nextArenaData);
         return;
       }
     }
