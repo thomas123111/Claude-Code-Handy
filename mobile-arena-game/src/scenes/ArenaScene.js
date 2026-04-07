@@ -843,16 +843,24 @@ export class ArenaScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(200);
     }
 
-    // Auto-transition: go to next arena after 2 seconds
+    // Auto-transition: go directly to next arena after 2 seconds
     const { height } = this.scale;
     this.add.text(width / 2, height / 2 + 30, 'ARENA CLEAR!', {
       fontSize: '18px', fontFamily: 'monospace', color: '#cc88ff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(201);
 
-    // Simply transition after 2 seconds
-    this.time.delayedCall(2000, () => this.goToArenaComplete());
+    // Store next arena data
+    this.nextArenaData = {
+      arenaIndex: this.arenaIndex + 1,
+      runCredits: this.runCredits + this.arenaConfig.creditsReward + (this.timeBonus || 0),
+      runScrap: this.runScrap + this.arenaConfig.scrapReward,
+      runXp: this.runXp + this.arenaConfig.xpReward,
+      runSeed: this.runSeed,
+      ammoStock: this.ammoStock,
+    };
 
-    // Also allow tapping to skip
+    // Set flag - transition happens in update() loop
+    this.pendingTransition = this.time.now + 2000;
     this.clearTapHandler = true;
   }
 
@@ -1397,11 +1405,24 @@ export class ArenaScene extends Phaser.Scene {
     if (!this.player || !this.player.active) return;
     if (this.startFrozen) return;
 
-    // If arena cleared and player taps, skip countdown
-    if (this.clearTapHandler && this.arenaCleared && this.input.activePointer.isDown) {
-      this.clearTapHandler = false;
-      this.goToArenaComplete();
-      return;
+    // Pending arena transition (timer or tap to skip)
+    if (this.pendingTransition && !this.transitioning) {
+      if (this.time.now >= this.pendingTransition ||
+          (this.clearTapHandler && this.input.activePointer.isDown)) {
+        this.transitioning = true;
+        this.clearTapHandler = false;
+        // Auto-collect all loot
+        this.lootItems.getChildren().forEach((l) => {
+          if (!l.active) return;
+          const t = l.getData('type'), v = l.getData('value');
+          if (t === 'credit') this.nextArenaData.runCredits += v;
+          else if (t === 'scrap') this.nextArenaData.runScrap += v;
+        });
+        // Go directly to next arena (skip ArenaComplete screen)
+        const d = this.nextArenaData;
+        this.scene.start('Arena', d);
+        return;
+      }
     }
 
     // Player movement
