@@ -13,6 +13,9 @@ import { HotelScene } from './scenes/HotelScene.js';
 import { CafeScene } from './scenes/CafeScene.js';
 import { StoryScene } from './scenes/StoryScene.js';
 import { CollectionScene } from './scenes/CollectionScene.js';
+import { AdoptionScene } from './scenes/AdoptionScene.js';
+import { EventScene, EventResultScene } from './scenes/EventScene.js';
+import { GuildScene } from './scenes/GuildScene.js';
 // Mini-puzzles
 import { Match3Puzzle } from './scenes/puzzles/Match3Puzzle.js';
 import { MemoryPuzzle } from './scenes/puzzles/MemoryPuzzle.js';
@@ -34,9 +37,11 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: [
-    BootScene, MenuScene, TownScene, MergeBoardScene, ShelterScene, DailyRewardScene,
+    BootScene, MenuScene, TownScene,
+    MergeBoardScene, ShelterScene, DailyRewardScene,
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
-    StoryScene, CollectionScene,
+    StoryScene, CollectionScene, AdoptionScene,
+    EventScene, EventResultScene, GuildScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle,
   ],
 };

@@ -381,21 +381,8 @@ export class ShelterScene extends Phaser.Scene {
     const pet = this.save.pets[petIdx];
     if (!pet) return;
 
-    const rarityBonus = { common: 20, rare: 50, epic: 120, legendary: 300 };
-    const bonus = rarityBonus[pet.rarity] || 20;
-    this.save.hearts += bonus;
-    this.save.adopted++;
-    this.save.totalDonatedKg += 0.5;
-
-    if (!this.save.collection.includes(pet.breedId)) {
-      this.save.collection.push(pet.breedId);
-    }
-
-    this.save.pets.splice(petIdx, 1);
-    this.selectedPet = null;
-    addXp(this.save, bonus);
-    writeSave(this.save);
-    this.drawUI();
+    // Go to adoption matching scene instead of instant adoption
+    this.scene.start('Adoption', { petIdx, petData: pet });
   }
 
   addHitArea(x, y, w, h, cb) {
