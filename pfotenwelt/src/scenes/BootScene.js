@@ -23,9 +23,9 @@ export class BootScene extends Phaser.Scene {
     ];
     breeds.forEach((b) => this.load.image(`breed_${b}`, `assets/breed_${b}.png`));
 
-    // AI-generated backgrounds (Gemini)
+    // AI-generated backgrounds (Gemini, compressed JPEG)
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
-    bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.png`));
+    bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
 
     // AI-generated item icons (Gemini)
     const items = ['kibble', 'treat', 'bowl', 'premium_food', 'feast',
@@ -43,7 +43,7 @@ export class BootScene extends Phaser.Scene {
 
     // App icon + splash
     this.load.image('icon_app', 'assets/icon_app.png');
-    this.load.image('splash_screen', 'assets/splash_screen.png');
+    this.load.image('splash_screen', 'assets/splash_screen.jpg');
   }
 
   create() {

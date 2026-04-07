@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v0.8.0';
+export const GAME_VERSION = 'v0.8.1';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
