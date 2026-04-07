@@ -5,18 +5,19 @@
 const CELL = 40;
 const T = 6; // wall thickness
 
-// Helper to create walls relative to arena dimensions
-// x/y are in grid units (0-based), converted to world coords
+// Scale factors - layouts designed for 9x17 grid, scaled to actual world
+let SX = 1; // horizontal scale
+let SY = 1; // vertical scale
+
 function h(col, row, lengthCells, tm) {
-  return { x: col * CELL + (lengthCells * CELL) / 2, y: tm + row * CELL, w: lengthCells * CELL, h: T };
+  return { x: col * SX * CELL + (lengthCells * SX * CELL) / 2, y: tm + row * SY * CELL, w: lengthCells * SX * CELL, h: T };
 }
 function v(col, row, lengthCells, tm) {
-  return { x: col * CELL, y: tm + row * CELL + (lengthCells * CELL) / 2, w: T, h: lengthCells * CELL };
+  return { x: col * SX * CELL, y: tm + row * SY * CELL + (lengthCells * SY * CELL) / 2, w: T, h: lengthCells * SY * CELL };
 }
 function d(col1, row1, col2, row2, tm) {
-  // Diagonal wall from (col1,row1) to (col2,row2) - built from small segments
-  const x1 = col1 * CELL, y1 = tm + row1 * CELL;
-  const x2 = col2 * CELL, y2 = tm + row2 * CELL;
+  const x1 = col1 * SX * CELL, y1 = tm + row1 * SY * CELL;
+  const x2 = col2 * SX * CELL, y2 = tm + row2 * SY * CELL;
   const segs = [];
   const dx = x2 - x1, dy = y2 - y1;
   const len = Math.sqrt(dx * dx + dy * dy);
@@ -264,9 +265,17 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
   const cols = Math.floor(arenaWidth / CELL);
   const rows = Math.floor((arenaHeight - topMargin) / CELL);
 
+  // Scale layouts from design grid (9x17) to actual world size
+  SX = cols / 9;
+  SY = rows / 17;
+
   // Shuffled layout order - uses runSeed so each run has different order
   const layoutIdx = getShuffledLayoutIndex(arenaIndex, LAYOUTS.length, runSeed || 1);
   const rawWalls = LAYOUTS[layoutIdx](topMargin).flat();
+
+  // Reset scale
+  SX = 1;
+  SY = 1;
 
   // Filter walls within playable area
   const walls = rawWalls.filter((w) => {
@@ -335,7 +344,7 @@ export function generateArenaLayout(arenaIndex, arenaWidth, arenaHeight, topMarg
     walls,
     openSpaces,
     occupied,
-    portalPosition: { x: pp.c * CELL, y: topMargin + pp.r * CELL },
+    portalPosition: { x: pp.c * (cols / 9) * CELL, y: topMargin + pp.r * (rows / 17) * CELL },
     cols,
     rows,
     cellSize: CELL,

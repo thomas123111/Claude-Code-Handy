@@ -28,13 +28,21 @@ export class ArenaScene extends Phaser.Scene {
     this.currentAmmoType = 'basic';
     this.ammoTypeOrder = ['basic', 'plasma', 'explosive', 'piercing'];
 
-    const { width, height } = this.scale;
+    const { width: viewW, height: viewH } = this.scale;
+
+    // World is larger than the viewport - camera scrolls
+    const worldW = 1600;
+    const worldH = 800;
+    this.worldW = worldW;
+    this.worldH = worldH;
+    this.physics.world.setBounds(0, 0, worldW, worldH);
 
     // Background
     this.cameras.main.setBackgroundColor(this.arenaConfig.theme.bgColor);
+    this.cameras.main.setBounds(0, 0, worldW, worldH);
 
     // Arena boundary visuals
-    this.add.rectangle(width / 2, height / 2, width - 10, height - 10)
+    this.add.rectangle(worldW / 2, worldH / 2, worldW - 10, worldH - 10)
       .setStrokeStyle(2, this.arenaConfig.theme.color, 0.5)
       .setFillStyle(0x000000, 0);
 
@@ -77,9 +85,9 @@ export class ArenaScene extends Phaser.Scene {
     this.crates = this.physics.add.group();
     this.ghostLootGroup = this.physics.add.group();
 
-    // Generate arena layout with walls
-    const topMargin = 50; // compact HUD for landscape
-    this.arenaLayout = generateArenaLayout(this.arenaIndex, width, height, topMargin, this.runSeed);
+    // Generate arena layout with walls - uses world size
+    const topMargin = 50;
+    this.arenaLayout = generateArenaLayout(this.arenaIndex, worldW, worldH, topMargin, this.runSeed);
     this.arenaRng = this.seedRng(this.arenaIndex * 3571 + 13);
 
     // Build wall physics - each segment is a small block
@@ -94,8 +102,8 @@ export class ArenaScene extends Phaser.Scene {
       wall.setAlpha(0.85);
     });
 
-    // Player - starts at very bottom
-    this.player = this.physics.add.image(width / 2, height - 40, `mech_${this.mechId}`);
+    // Player - starts at bottom center of world
+    this.player = this.physics.add.image(worldW / 2, worldH - 40, `mech_${this.mechId}`);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
     this.player.setScale(1.5);
@@ -155,9 +163,11 @@ export class ArenaScene extends Phaser.Scene {
     // Keyboard shoot: Space bar
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+    // Camera follows player
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+
     // Unfreeze after 1 second
-    const { width: w2 } = this.scale;
-    const readyText = this.add.text(w2 / 2, height / 2, 'GET READY...', {
+    const readyText = this.add.text(this.player.x, this.player.y - 40, 'GET READY...', {
       fontSize: '24px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(200);
     this.time.delayedCall(1000, () => {
@@ -523,15 +533,15 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const halfW = width / 2;
 
-    // Joystick visuals (right side = movement)
+    // Joystick visuals (right side = movement) - fixed to camera
     this.joystickBase = this.add.image(width - 100, height - 120, 'joystick_base')
-      .setDepth(100).setAlpha(0);
+      .setDepth(100).setAlpha(0).setScrollFactor(0);
     this.joystickThumb = this.add.image(width - 100, height - 120, 'joystick_thumb')
-      .setDepth(101).setAlpha(0);
+      .setDepth(101).setAlpha(0).setScrollFactor(0);
 
-    // Shoot indicator (left side = shoot)
+    // Shoot indicator (left side = shoot) - fixed to camera
     this.shootIndicator = this.add.circle(70, height - 120, 30, 0xff4444, 0)
-      .setDepth(100);
+      .setDepth(100).setScrollFactor(0);
 
     this.input.on('pointerdown', (pointer) => {
       if (pointer.x >= halfW) {
@@ -598,52 +608,56 @@ export class ArenaScene extends Phaser.Scene {
 
   createHUD() {
     const { width } = this.scale;
+    const sf = 0; // scrollFactor 0 = fixed to camera
 
     // Compact single-line HUD for landscape
-    // Top bar: Arena name | HP bar | Wave | Timer
     this.arenaLabel = this.add.text(5, 4, `A${this.arenaIndex + 1}`, {
       fontSize: '11px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-    }).setDepth(100);
+    }).setDepth(100).setScrollFactor(sf);
 
     // HP bar
     const hpBarX = 40;
     const hpBarW = 180;
-    this.add.rectangle(hpBarX + hpBarW / 2, 10, hpBarW, 10, 0x333333, 0.8).setDepth(100);
+    this.add.rectangle(hpBarX + hpBarW / 2, 10, hpBarW, 10, 0x333333, 0.8).setDepth(100).setScrollFactor(sf);
     this.hpBar = this.add.rectangle(hpBarX, 10, hpBarW, 10, 0x44ff44, 0.9)
-      .setOrigin(0, 0.5).setDepth(101);
+      .setOrigin(0, 0.5).setDepth(101).setScrollFactor(sf);
     this.hpText = this.add.text(hpBarX + hpBarW / 2, 10, `${this.playerHp}/${this.maxHp}`, {
       fontSize: '8px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(0.5).setDepth(102);
+    }).setOrigin(0.5).setDepth(102).setScrollFactor(sf);
 
-    // Crate bar (second line)
+    // Crate bar
     const crateBarW = 120;
-    this.add.rectangle(5 + crateBarW / 2, 26, crateBarW, 8, 0x333333, 0.5).setDepth(100);
+    this.add.rectangle(5 + crateBarW / 2, 26, crateBarW, 8, 0x333333, 0.5).setDepth(100).setScrollFactor(sf);
     this.crateBar = this.add.rectangle(5, 26, 0, 8, 0xffaa00, 0.8)
-      .setOrigin(0, 0.5).setDepth(101);
+      .setOrigin(0, 0.5).setDepth(101).setScrollFactor(sf);
     this.crateText = this.add.text(5 + crateBarW / 2, 26, '', {
       fontSize: '7px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(0.5).setDepth(102);
+    }).setOrigin(0.5).setDepth(102).setScrollFactor(sf);
 
-    // Wave info (right of HP bar)
+    // Wave info
     this.waveText = this.add.text(240, 4, '', {
       fontSize: '10px', fontFamily: 'monospace', color: '#aaaaaa',
-    }).setDepth(100);
+    }).setDepth(100).setScrollFactor(sf);
 
-    // Timer (top right)
+    // Timer
     this.timerText = this.add.text(width - 5, 4, '', {
       fontSize: '10px', fontFamily: 'monospace', color: '#888888',
-    }).setOrigin(1, 0).setDepth(100);
+    }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf);
 
-    // Loot display (right of crate bar)
+    // Loot display
     this.lootText = this.add.text(140, 22, '', {
       fontSize: '9px', fontFamily: 'monospace', color: '#ffdd00',
-    }).setDepth(100);
+    }).setDepth(100).setScrollFactor(sf);
 
-    // Ammo type indicator (top center-right, tappable to switch)
+    // Ammo indicator
     this.ammoText = this.add.text(width - 5, 18, '', {
       fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
-    }).setOrigin(1, 0).setDepth(100).setInteractive({ useHandCursor: true });
+    }).setOrigin(1, 0).setDepth(100).setScrollFactor(sf).setInteractive({ useHandCursor: true });
     this.ammoText.on('pointerdown', () => this.switchAmmo());
+
+    // Portal direction arrow (shows when portal is off-screen)
+    this.portalArrow = this.add.triangle(0, 0, 0, 12, 6, 0, 12, 12, 0x9944ff, 1)
+      .setDepth(150).setScrollFactor(sf).setVisible(false);
   }
 
   startWave() {
@@ -1262,5 +1276,45 @@ export class ArenaScene extends Phaser.Scene {
     const colorMap = { basic: '#ffff44', plasma: '#44ddff', explosive: '#ff6622', piercing: '#cc44ff' };
     this.ammoText.setText(`[${ammo.name}: ${stock}] TAP`);
     this.ammoText.setColor(colorMap[this.currentAmmoType] || '#ffffff');
+
+    // Portal arrow - show when portal is active and off-screen
+    this.updatePortalArrow();
+  }
+
+  updatePortalArrow() {
+    if (!this.portal || !this.portal.visible) {
+      this.portalArrow.setVisible(false);
+      return;
+    }
+
+    const cam = this.cameras.main;
+    const px = this.portal.x;
+    const py = this.portal.y;
+    const camL = cam.scrollX;
+    const camT = cam.scrollY;
+    const camR = camL + cam.width;
+    const camB = camT + cam.height;
+    const margin = 30;
+
+    // Check if portal is on screen
+    if (px >= camL + margin && px <= camR - margin && py >= camT + margin && py <= camB - margin) {
+      this.portalArrow.setVisible(false);
+      return;
+    }
+
+    // Show arrow at screen edge pointing to portal
+    this.portalArrow.setVisible(true);
+    const cx = cam.width / 2;
+    const cy = cam.height / 2;
+    const angle = Math.atan2(py - (camT + cy), px - (camL + cx));
+
+    // Clamp to screen edges
+    const edgeMargin = 25;
+    const ax = Math.max(edgeMargin, Math.min(cam.width - edgeMargin, cx + Math.cos(angle) * (cx - edgeMargin)));
+    const ay = Math.max(edgeMargin, Math.min(cam.height - edgeMargin, cy + Math.sin(angle) * (cy - edgeMargin)));
+
+    this.portalArrow.setPosition(ax, ay);
+    this.portalArrow.setRotation(angle + Math.PI / 2);
+    this.portalArrow.setAlpha(0.5 + Math.sin(this.time.now * 0.005) * 0.3);
   }
 }
