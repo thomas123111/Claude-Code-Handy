@@ -34,6 +34,15 @@ export class TimingPuzzle extends Phaser.Scene {
     // Background
     this.cameras.main.setBackgroundColor('#f0f8f0');
 
+    // Background image
+    const bgKey = 'bg_puzzle_training';
+    if (this.textures.exists(bgKey)) {
+      const bg = this.add.image(width / 2, height / 2, bgKey);
+      bg.setDisplaySize(width, height);
+      bg.setAlpha(0.18);
+      bg.setDepth(-1);
+    }
+
     // Title
     this.add.text(width / 2, 40, `${this.petName}: ${this.trickName}`, {
       fontSize: '28px',

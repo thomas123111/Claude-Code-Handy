@@ -56,6 +56,15 @@ export class MemoryPuzzle extends Phaser.Scene {
     const { width, height } = this.scale;
     this.cameras.main.setBackgroundColor('#f8f2fc');
 
+    // Background image
+    const bgKey = 'bg_puzzle_workshop';
+    if (this.textures.exists(bgKey)) {
+      const bg = this.add.image(width / 2, height / 2, bgKey);
+      bg.setDisplaySize(width, height);
+      bg.setAlpha(0.18);
+      bg.setDepth(-1);
+    }
+
     // Board dimensions
     const boardW = this.COLS * (this.CARD_SIZE + this.CARD_GAP) - this.CARD_GAP;
     const boardH = this.ROWS * (this.CARD_SIZE + this.CARD_GAP) - this.CARD_GAP;

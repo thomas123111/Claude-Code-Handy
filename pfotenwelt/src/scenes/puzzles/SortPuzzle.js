@@ -40,6 +40,15 @@ export class SortPuzzle extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#f8f2fc');
 
+    // Background image
+    const bgKey = 'bg_puzzle_kitchen';
+    if (this.textures.exists(bgKey)) {
+      const bg = this.add.image(width / 2, height / 2, bgKey);
+      bg.setDisplaySize(width, height);
+      bg.setAlpha(0.18);
+      bg.setDepth(-1);
+    }
+
     this.add.text(cx, 30, `🍽️ Fütterung: ${this.petName}`, {
       fontSize: '22px', fontFamily: 'Georgia, serif', color: '#4a3560', fontStyle: 'bold',
     }).setOrigin(0.5);

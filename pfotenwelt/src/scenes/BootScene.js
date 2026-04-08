@@ -23,9 +23,12 @@ export class BootScene extends Phaser.Scene {
     ];
     breeds.forEach((b) => this.load.image(`breed_${b}`, `assets/breed_${b}.png`));
 
-    // AI-generated backgrounds (Gemini, compressed JPEG)
+    // AI-generated backgrounds (Gemini + Nano Banana 2, compressed JPEG)
     const bgs = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe'];
     bgs.forEach((b) => this.load.image(`bg_${b}`, `assets/bg_${b}.jpg`));
+    // Puzzle scene backgrounds (Nano Banana 2)
+    const puzzleBgs = ['kitchen', 'bathroom', 'training', 'medical', 'workshop'];
+    puzzleBgs.forEach((b) => this.load.image(`bg_puzzle_${b}`, `assets/bg_puzzle_${b}.jpg`));
 
     // Building sprites (AI-generated, isometric)
     const buildings = ['shelter', 'vet', 'salon', 'school', 'hotel', 'cafe', 'guild', 'workshop'];
