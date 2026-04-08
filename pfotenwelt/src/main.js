@@ -26,8 +26,8 @@ import { TimingPuzzle } from './scenes/puzzles/TimingPuzzle.js';
 
 const config = {
   type: Phaser.AUTO,
-  width: 540,
-  height: 960,
+  width: 414,
+  height: 736,
   backgroundColor: '#1a1520',
   physics: {
     default: 'arcade',

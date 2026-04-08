@@ -43,7 +43,7 @@ export class FarmScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 26, 40, 24);
     this.cameras.main.setBounds(0, 0, FARM_W, FARM_H);
     this.cameras.main.centerOn(FARM_W / 2, FARM_H / 2);
-    this.cameras.main.setZoom(Math.min(width / FARM_W * 2.0, 1.0));
+    this.cameras.main.setZoom(Math.min(width / FARM_W * 2.61, 1.0));
 
     // Block input briefly to prevent click-through from previous scene
     this.inputBlocked = true;

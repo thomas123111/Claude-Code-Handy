@@ -89,7 +89,7 @@ export class TownScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 26, 21, 35);
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.centerOn(MAP_W / 2, 500);
-    this.cameras.main.setZoom(Math.min(width / MAP_W * 2.2, 1.0));
+    this.cameras.main.setZoom(Math.min(width / MAP_W * 2.87, 1.0));
 
     // Block input briefly to prevent click-through from previous scene
     this.inputBlocked = true;

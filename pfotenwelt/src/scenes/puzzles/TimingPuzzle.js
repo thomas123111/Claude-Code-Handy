@@ -58,9 +58,9 @@ export class TimingPuzzle extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Timing bar setup
-    this.barX = 70;
+    this.barX = 20;
     this.barY = height * 0.55;
-    this.barWidth = 400;
+    this.barWidth = width - 40;
     this.barHeight = 40;
 
     // Bar background

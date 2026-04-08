@@ -104,12 +104,12 @@ export class SchoolScene extends Phaser.Scene {
         }
 
         // Trick buttons
-        let bx = 25;
+        let bx = 10;
         const btnY = y + 68;
+        const btnW = Math.floor((width - 20) / TRICKS.length);
         TRICKS.forEach((trick) => {
           const learned = pet.tricks.includes(trick.name);
           const canAfford = save.hearts >= trick.cost;
-          const btnW = 90;
 
           if (learned) {
             this.add.text(bx + btnW / 2, btnY, `✅ ${trick.name}`, {

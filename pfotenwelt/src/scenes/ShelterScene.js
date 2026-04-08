@@ -110,11 +110,12 @@ export class ShelterScene extends Phaser.Scene {
     const { width } = this.scale;
     const save = this.save;
     const cols = 3;
-    const cardW = 160;
-    const cardH = 175;
+    const gapX = 8;
+    const gapY = 8;
+    const cardW = Math.floor((width - 20 - (cols - 1) * gapX) / cols);
+    const cardH = 155;
     const startY = 70;
-    const gapX = 12;
-    const gapY = 10;
+    const marginLeft = Math.floor((width - cols * cardW - (cols - 1) * gapX) / 2);
 
     this.add.text(width / 2, startY + 5, 'Tippe auf ein Tier für Details', {
       fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
@@ -128,7 +129,7 @@ export class ShelterScene extends Phaser.Scene {
 
       const col = idx % cols;
       const row = Math.floor(idx / cols);
-      const cx = 30 + col * (cardW + gapX) + cardW / 2;
+      const cx = marginLeft + col * (cardW + gapX) + cardW / 2;
       const cy = startY + 25 + row * (cardH + gapY) + cardH / 2;
 
       // Card
@@ -138,39 +139,39 @@ export class ShelterScene extends Phaser.Scene {
       // Breed portrait
       const breedTex = `breed_${pet.breedId}`;
       if (this.textures.exists(breedTex)) {
-        this.add.image(cx, cy - 35, breedTex).setScale(0.13);
+        this.add.image(cx, cy - 30, breedTex).setScale(0.11);
       } else {
-        this.add.text(cx, cy - 40, pet.emoji, { fontSize: '40px' }).setOrigin(0.5);
+        this.add.text(cx, cy - 35, pet.emoji, { fontSize: '34px' }).setOrigin(0.5);
       }
 
       // Name
-      this.add.text(cx, cy + 25, pet.name, {
-        fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
+      this.add.text(cx, cy + 20, pet.name, {
+        fontSize: '14px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
       }).setOrigin(0.5);
 
       // Breed + rarity
-      this.add.text(cx, cy + 42, pet.breed, {
-        fontSize: '13px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
+      this.add.text(cx, cy + 36, pet.breed, {
+        fontSize: '11px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
       }).setOrigin(0.5);
 
       // Happiness indicator
       const happyEmoji = pet.happiness >= 75 ? '😊' : pet.happiness >= 50 ? '😐' : '😢';
-      this.add.text(cx, cy + 60, `${happyEmoji} ${Math.round(pet.happiness)}%`, {
-        fontSize: '14px', fontFamily: 'monospace', color: pet.happiness >= 75 ? '#33aa55' : pet.happiness >= 50 ? '#dd8833' : '#dd4444',
+      this.add.text(cx, cy + 50, `${happyEmoji} ${Math.round(pet.happiness)}%`, {
+        fontSize: '13px', fontFamily: 'monospace', color: pet.happiness >= 75 ? '#33aa55' : pet.happiness >= 50 ? '#dd8833' : '#dd4444',
       }).setOrigin(0.5);
 
       // Badges
-      let badgeX = cx - 50;
+      let badgeX = cx - 30;
       if (pet.insured) {
-        this.add.text(badgeX, cy + 75, '🛡️', { fontSize: '15px' });
-        badgeX += 20;
+        this.add.text(badgeX, cy + 65, '🛡️', { fontSize: '13px' });
+        badgeX += 18;
       }
       if (pet.groomed) {
-        this.add.text(badgeX, cy + 75, '✨', { fontSize: '15px' });
-        badgeX += 20;
+        this.add.text(badgeX, cy + 65, '✨', { fontSize: '13px' });
+        badgeX += 18;
       }
       if (pet.tricks && pet.tricks.length > 0) {
-        this.add.text(badgeX, cy + 75, '🎓', { fontSize: '15px' });
+        this.add.text(badgeX, cy + 65, '🎓', { fontSize: '13px' });
       }
 
       // Tap to select
@@ -224,7 +225,7 @@ export class ShelterScene extends Phaser.Scene {
 
     // === NEEDS SECTION ===
     const needsY = 345;
-    drawCard(this, cx, needsY + 50, width - 30, 120);
+    drawCard(this, cx, needsY + 55, width - 20, 140);
     this.add.text(cx, needsY, 'Bedürfnisse', {
       fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -237,37 +238,44 @@ export class ShelterScene extends Phaser.Scene {
     ];
 
     needs.forEach((need, ni) => {
-      const ny = needsY + 20 + ni * 28;
+      const ny = needsY + 20 + ni * 32;
       const val = pet.needs[need.key];
-      const barW = 180;
+      const barW = Math.min(160, width - 200);
 
       // Label
-      this.add.text(25, ny, `${need.emoji} ${need.label}`, {
+      this.add.text(20, ny, `${need.emoji} ${need.label}`, {
         fontSize: '14px', fontFamily: 'monospace', color: THEME.text.body,
       });
 
       // Progress bar
-      drawProgressBar(this, 170, ny + 7, barW, 12, val / 100, need.color);
+      drawProgressBar(this, 130, ny + 7, barW, 14, val / 100, need.color);
 
       // Value text
-      this.add.text(170 + barW + 8, ny, `${Math.round(val)}%`, {
+      this.add.text(130 + barW + 6, ny, `${Math.round(val)}%`, {
         fontSize: '13px', fontFamily: 'monospace', color: val > 40 ? THEME.text.muted : THEME.text.error,
       });
 
       // Action button (if need is low and has action)
       if (need.cost > 0 && val < 80) {
-        const btnX = width - 40;
+        const btnX = width - 35;
         const canAfford = save.hearts >= need.cost;
-        drawButton(this, btnX, ny + 6, 55, 22, `${need.cost}❤️`, {
+        drawButton(this, btnX, ny + 7, 58, 28, `${need.cost}❤️`, {
           disabled: !canAfford,
           fontSize: '13px',
           textColor: canAfford ? '#fff8e8' : '#999999',
         });
-        if (canAfford) {
-          this.addHitArea(btnX, ny + 6, 55, 22, () => {
+        // Always register hit area — show feedback if can't afford
+        this.addHitArea(btnX, ny + 7, 58, 28, () => {
+          if (canAfford) {
             this.feedPet(petIdx, need.key, need.cost);
-          });
-        }
+          } else {
+            const popup = this.add.text(width / 2, ny - 10, 'Nicht genug ❤️!', {
+              fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ff4444', fontStyle: 'bold',
+              backgroundColor: '#fff0f0', padding: { x: 10, y: 4 },
+            }).setOrigin(0.5).setDepth(300);
+            this.tweens.add({ targets: popup, y: popup.y - 20, alpha: 0, duration: 1200, onComplete: () => popup.destroy() });
+          }
+        });
       }
     });
 
@@ -293,7 +301,7 @@ export class ShelterScene extends Phaser.Scene {
     }
 
     // === ACTION BUTTONS ===
-    const actY = 520;
+    const actY = 530;
 
     // Adoption progress
     pet.adoptionProgress = Math.min(100, pet.happiness * 1.2);
@@ -321,7 +329,7 @@ export class ShelterScene extends Phaser.Scene {
 
     // Insurance button (if not insured)
     if (!pet.insured) {
-      const insY = actY + 100;
+      const insY = actY + 85;
       const canAffordIns = save.hearts >= 30;
       drawButton(this, cx, insY, 240, 36, '🛡️ Versichern (30❤️)', {
         type: 'secondary',

@@ -4,9 +4,9 @@ import { BOARD_COLS, BOARD_ROWS, getItem, getMergeResult, createInitialBoard, ra
 import { generatePet } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
-const CELL_SIZE = 68;
-const BOARD_OFFSET_X = 32;
-const BOARD_OFFSET_Y = 120;
+const CELL_SIZE = 52;
+const BOARD_OFFSET_X = 15;
+const BOARD_OFFSET_Y = 110;
 
 export class MergeBoardScene extends Phaser.Scene {
   constructor() { super('MergeBoard'); }
