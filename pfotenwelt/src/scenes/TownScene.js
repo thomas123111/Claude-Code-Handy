@@ -239,14 +239,9 @@ export class TownScene extends Phaser.Scene {
       const initDir = this.getWalkDirection(next[0] - start[0], next[1] - start[1]);
       sprite.play(`${key}_walk_${initDir}`);
       sprite.setDepth(10 + Math.round(start[1] / 10));
-      // DEBUG: direction label (remove after verification)
-      const dbgLabel = this.add.text(start[0], start[1] - 30, initDir, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#ff3333', fontStyle: 'bold',
-        stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(999);
       this.walkers.push({
         sprite, key, path, targetIdx: 1, speed: Phaser.Math.Between(30, 45),
-        currentDir: initDir, dbgLabel,
+        currentDir: initDir,
         idleTimer: 0, isIdle: false, idleDuration: 0,
       });
     });
@@ -272,6 +267,32 @@ export class TownScene extends Phaser.Scene {
       pet.setDepth(10 + Math.round(start[1] / 10));
       this.roamingPets.push({ sprite: pet, shadow, key: cfg.key, path: cfg.paths, targetIdx: 1, speed: cfg.speed, currentDir: initDir });
     });
+
+    // === COMPANION PET (follows camera center) ===
+    this.companion = null;
+    const companions = this.save.companions || [];
+    if (companions.length > 0) {
+      const comp = companions[0]; // primary companion
+      // Map breedId to a sprite key
+      const companionSpriteMap = {
+        labrador: 'farm_dog_lab', dackel: 'farm_dog_lab', husky: 'farm_dog_white',
+        hauskatze: 'farm_rabbit', perser: 'farm_rabbit_w', maine_coon: 'farm_rabbit',
+      };
+      const sprKey = companionSpriteMap[comp.breedId] || 'farm_dog_lab';
+      const camCenter = this.cameras.main.getWorldPoint(this.scale.width / 2, this.scale.height / 2);
+      if (this.textures.exists(sprKey)) {
+        const compSprite = this.add.sprite(camCenter.x + 30, camCenter.y + 40, sprKey).setScale(2.2);
+        const compShadow = this.add.ellipse(camCenter.x + 30, camCenter.y + 50, 18, 6, 0x000000, 0.2);
+        const compLabel = this.add.text(camCenter.x + 30, camCenter.y + 20, comp.name, {
+          fontSize: '10px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+          stroke: '#2a1520', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(999);
+        // Play idle animation
+        const idleKey = `${sprKey}_idle`;
+        if (this.anims.exists(idleKey)) compSprite.play(idleKey);
+        this.companion = { sprite: compSprite, shadow: compShadow, label: compLabel, key: sprKey, targetX: camCenter.x + 30, targetY: camCenter.y + 40, currentDir: 'down' };
+      }
+    }
 
     // === LimeZu PROPS ===
     const lzProps = [
@@ -477,11 +498,6 @@ export class TownScene extends Phaser.Scene {
         w.sprite.x += (dx / dist) * spd; w.sprite.y += (dy / dist) * spd;
       }
       w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
-      // DEBUG: update label position & text
-      if (w.dbgLabel) {
-        w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
-        w.dbgLabel.setText(w.isIdle ? 'idle' : w.currentDir);
-      }
     });
     // Update roaming pets
     if (this.roamingPets) {
@@ -501,6 +517,40 @@ export class TownScene extends Phaser.Scene {
         p.shadow.setPosition(p.sprite.x, p.sprite.y + 10);
         p.sprite.setDepth(10 + Math.round(p.sprite.y / 10));
       });
+    }
+    // Update companion — follows camera center with a lazy offset
+    if (this.companion) {
+      const cam = this.cameras.main;
+      const targetX = cam.scrollX + cam.width / cam.zoom / 2 + 30;
+      const targetY = cam.scrollY + cam.height / cam.zoom / 2 + 40;
+      const c = this.companion;
+      const cdx = targetX - c.sprite.x;
+      const cdy = targetY - c.sprite.y;
+      const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+      if (cdist > 8) {
+        const cspd = Math.min(cdist * 0.03, 2.5);
+        c.sprite.x += cdx * cspd * (delta / 16);
+        c.sprite.y += cdy * cspd * (delta / 16);
+        // Update walk animation direction
+        const nd = this.getWalkDirection(cdx, cdy);
+        if (nd !== c.currentDir) {
+          c.currentDir = nd;
+          const ak = `${c.key}_walk_${nd}`;
+          if (this.anims.exists(ak)) c.sprite.play(ak, true);
+        }
+      } else {
+        // Idle when close enough
+        const ik = `${c.key}_idle`;
+        if (this.anims.exists(ik) && c.currentDir !== 'idle') {
+          c.sprite.play(ik, true);
+          c.currentDir = 'idle';
+        }
+      }
+      c.shadow.setPosition(c.sprite.x, c.sprite.y + 10);
+      c.label.setPosition(c.sprite.x, c.sprite.y - 18);
+      c.sprite.setDepth(10 + Math.round(c.sprite.y / 10));
+      c.shadow.setDepth(c.sprite.depth - 1);
+      c.label.setDepth(c.sprite.depth + 1);
     }
   }
 }
