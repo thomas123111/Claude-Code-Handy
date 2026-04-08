@@ -72,6 +72,6 @@ export class DailyRewardScene extends Phaser.Scene {
     }
 
     writeSave(this.save);
-    this.scene.start('Menu');
+    this.scene.start('Town');
   }
 }
