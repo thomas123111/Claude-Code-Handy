@@ -49,14 +49,8 @@ export class FarmScene extends Phaser.Scene {
     this.inputBlocked = true;
     this.time.delayedCall(400, () => { this.inputBlocked = false; });
 
-    // === GROUND ===
-    // Main farm ground (earthy green)
+    // === GROUND (clean) ===
     this.add.rectangle(FARM_W / 2, FARM_H / 2, FARM_W, FARM_H, 0x4a7a32).setDepth(-2);
-    // Dirt patches
-    for (let i = 0; i < 20; i++) {
-      this.add.circle(Phaser.Math.Between(0, FARM_W), Phaser.Math.Between(0, FARM_H),
-        Phaser.Math.Between(30, 80), 0x3a6a28, 0.2).setDepth(-2);
-    }
 
     // === PATHS ===
     const pc = 0xb89a5c;
@@ -129,10 +123,10 @@ export class FarmScene extends Phaser.Scene {
       if (this.textures.exists(b.tex)) {
         this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bDepth);
       }
-      // Label
-      this.add.text(b.x, b.y + b.hitH / 2 + 10, b.name, {
-        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-        stroke: '#2a1f35', strokeThickness: 3,
+      // Label — large, readable
+      this.add.text(b.x, b.y + b.hitH / 2 + 15, b.name, {
+        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+        stroke: '#1a2a14', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
 
       // Task status indicator
@@ -205,30 +199,22 @@ export class FarmScene extends Phaser.Scene {
       }
     });
 
-    // === HUD (same style as TownScene) ===
-    this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.text(width / 2, 15, '🌾 Nachbars Bauernhof', {
-      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    this.add.text(12, 8, `❤️ ${this.save.hearts}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#ff6688',
-    }).setScrollFactor(0).setDepth(501);
-    this.add.text(12, 28, `⚡ ${this.save.energy}`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#ffcc00',
-    }).setScrollFactor(0).setDepth(501);
+    // === MINIMAL HUD (floating text with strokes, no dark bars) ===
+    const hud = (x, y, text, size, color, originX = 0) => {
+      return this.add.text(x, y, text, {
+        fontSize: size, fontFamily: 'Georgia, serif', color, fontStyle: 'bold',
+        stroke: '#1a2a14', strokeThickness: 3,
+      }).setOrigin(originX, 0).setScrollFactor(0).setDepth(500);
+    };
+    hud(8, 6, `❤️ ${this.save.hearts}`, '13px', '#ff6688');
     const farm = this.save.farm;
-    this.add.text(width - 12, 8, `Lv.${farm.level}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
-    this.add.text(width - 12, 25, `🚜 ${farm.totalDelivered} Lieferungen`, {
-      fontSize: '9px', fontFamily: 'monospace', color: '#88aa66',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
+    hud(width - 8, 6, `🚜 Lv.${farm.level}`, '13px', '#ccdd88', 1);
 
-    // Bottom bar with back button (interactive!)
-    this.add.rectangle(width / 2, height - 38, width, 42, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    const backBtn = this.add.text(width / 2, height - 20, '← Zurück zur Stadt', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(501).setInteractive({ useHandCursor: true });
+    // Back button (floating, bottom-left)
+    const backBtn = this.add.text(8, height - 35, '← Stadt', {
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+      stroke: '#1a2a14', strokeThickness: 4,
+    }).setScrollFactor(0).setDepth(501).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', () => {
       this.cameras.main.fadeOut(300, 26, 21, 35);
       this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Town'));

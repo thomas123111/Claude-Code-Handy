@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { loadSave, writeSave, regenerateEnergy } from '../data/SaveManager.js';
+import { loadSave, writeSave, regenerateEnergy, checkDailyLogin } from '../data/SaveManager.js';
 import { startMusic, stopMusic, unlockAudio } from '../audio/MusicManager.js';
+import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 
 // Wider town: 1800x1500 — buildings at far ends of long paths
 const MAP_W = 1800;
@@ -65,6 +66,26 @@ export class TownScene extends Phaser.Scene {
     regenerateEnergy(this.save);
     const { width, height } = this.scale;
 
+    // Daily login check (moved from MenuScene)
+    const login = checkDailyLogin(this.save);
+    if (login.isNew) {
+      writeSave(this.save);
+      this.scene.start('DailyReward', { streak: login.streak, save: this.save });
+      return;
+    }
+
+    // Random event (10% chance)
+    if (Math.random() < 0.1 && this.save.pets.length > 0) {
+      const evt = getRandomEvent();
+      if (evt.effect.hearts) this.save.hearts += evt.effect.hearts;
+      if (evt.effect.need) {
+        this.save.pets.forEach((p) => {
+          p.needs[evt.effect.need] = Math.max(0, Math.min(100, p.needs[evt.effect.need] + evt.effect.change));
+        });
+      }
+      writeSave(this.save);
+    }
+
     this.cameras.main.fadeIn(400, 26, 21, 35);
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.centerOn(MAP_W / 2, 500);
@@ -74,13 +95,8 @@ export class TownScene extends Phaser.Scene {
     this.inputBlocked = true;
     this.time.delayedCall(400, () => { this.inputBlocked = false; });
 
-    // === GRASS BACKGROUND ===
+    // === GRASS BACKGROUND (clean, no ugly circles) ===
     this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x5a9a42).setDepth(-2);
-    for (let i = 0; i < 40; i++) {
-      const gx = Phaser.Math.Between(0, MAP_W);
-      const gy = Phaser.Math.Between(0, MAP_H);
-      this.add.circle(gx, gy, Phaser.Math.Between(40, 120), Phaser.Math.Between(0x4a8a3a, 0x6aaa52), 0.12).setDepth(-2);
-    }
 
     // === PATHS (depth -1, always below everything else) ===
     const pc = 0xc4a76c;
@@ -130,10 +146,10 @@ export class TownScene extends Phaser.Scene {
         if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(0.6); }
         b._sprite = img;
       }
-      // Soft rounded label with semi-transparent fill
-      const label = this.add.text(b.x, b.y + 75, b.name, {
-        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
-        stroke: '#2a1f35', strokeThickness: 3,
+      // Building name label — large, readable
+      this.add.text(b.x, b.y + 80, b.name, {
+        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+        stroke: '#2a1520', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
       if (!isUnlocked) {
         this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
@@ -215,20 +231,24 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === HUD ===
-    this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.text(width / 2, 15, '🐾 Pfotenwelt', { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    this.add.text(12, 8, `❤️ ${this.save.hearts}`, { fontSize: '11px', fontFamily: 'monospace', color: '#ff6688' }).setScrollFactor(0).setDepth(501);
-    this.add.text(12, 28, `⚡ ${this.save.energy}`, { fontSize: '10px', fontFamily: 'monospace', color: '#ffcc00' }).setScrollFactor(0).setDepth(501);
-    this.add.text(width - 12, 15, `Lv.${this.save.level}`, { fontSize: '11px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold' }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
-    this.add.rectangle(width / 2, height - 38, width, 42, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.text(width / 2, height - 20, `🎁 ${this.save.totalDonatedKg.toFixed(1)}kg gespendet | 📅 Tag ${this.save.loginStreak}`, { fontSize: '10px', fontFamily: 'monospace', color: '#88cc88' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+    // === MINIMAL HUD (no dark bars, just floating text with strokes) ===
+    const hud = (x, y, text, size, color, originX = 0) => {
+      return this.add.text(x, y, text, {
+        fontSize: size, fontFamily: 'Georgia, serif', color, fontStyle: 'bold',
+        stroke: '#1a1520', strokeThickness: 3,
+      }).setOrigin(originX, 0).setScrollFactor(0).setDepth(500);
+    };
+    hud(8, 6, `❤️ ${this.save.hearts}`, '13px', '#ff6688');
+    hud(8, 24, `⚡ ${this.save.energy}`, '11px', '#ffcc00');
+    hud(width - 8, 6, `Lv.${this.save.level}`, '13px', '#88ccff', 1);
 
-    // Music toggle
+    // Music toggle (top right, small)
     if (this.save.musicOn !== false) {
       this.input.once('pointerdown', () => { unlockAudio(); startMusic('town'); });
     }
-    const musicBtn = this.add.text(width - 40, 35, this.save.musicOn !== false ? '🎵' : '🔇', { fontSize: '16px' }).setScrollFactor(0).setDepth(502).setInteractive();
+    const musicBtn = this.add.text(width - 8, 24, this.save.musicOn !== false ? '🎵' : '🔇', {
+      fontSize: '14px',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(502).setInteractive();
     musicBtn.on('pointerdown', () => {
       this.save.musicOn = !(this.save.musicOn !== false);
       writeSave(this.save);

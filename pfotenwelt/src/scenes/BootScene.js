@@ -194,6 +194,7 @@ export class BootScene extends Phaser.Scene {
 
     pg.destroy();
 
-    this.scene.start('Menu');
+    // Skip menu — go straight to town world
+    this.scene.start('Town');
   }
 }
