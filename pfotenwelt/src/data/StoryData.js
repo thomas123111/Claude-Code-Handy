@@ -10,7 +10,7 @@ export const STORY_CHAPTERS = [
       { speaker: '📬', text: 'Ein Brief von Oma Helga...' },
       { speaker: '👵', text: '"Mein liebes Kind, ich übergebe dir mein Tierheim in Pfotendorf."' },
       { speaker: '👵', text: '"Ich bin zu alt geworden, aber die Tiere brauchen jemanden mit Herz."' },
-      { speaker: '👵', text: '"Im Keller findest du meine alte Werkstatt — da kannst du Spielzeug und Futter herstellen."' },
+      { speaker: '👵', text: '"Neben dem Tierheim steht meine alte Werkstatt — da kannst du Spielzeug und Futter herstellen."' },
       { speaker: '🐾', text: 'Du betrittst das Tierheim... und findest deinen treuen Begleiter.' },
       { speaker: '❤️', text: 'Zusammen werdet ihr Pfotendorf wieder zum Leben erwecken!' },
     ],
