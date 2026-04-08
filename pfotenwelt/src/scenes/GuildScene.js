@@ -31,7 +31,7 @@ export class GuildScene extends Phaser.Scene {
     const cx = width / 2;
     const guild = this.save.guild;
 
-    this.cameras.main.setBackgroundColor('#1a1828');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.rectangle(cx, 0, width, 50, 0x2a1f35, 0.95).setOrigin(0.5, 0);
@@ -41,12 +41,12 @@ export class GuildScene extends Phaser.Scene {
 
     // Guild stats
     this.add.text(cx, 60, `Level ${guild.level} | ${guild.members.length}/${guild.maxMembers} Mitglieder`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#aa88cc',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Members section
     this.add.text(20, 85, '👥 Mitglieder', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddccee', fontStyle: 'bold',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     });
 
     let y = 110;
@@ -58,7 +58,7 @@ export class GuildScene extends Phaser.Scene {
         fontSize: '13px', fontFamily: 'monospace', color: '#ffffff',
       });
       this.add.text(20, y + 26, `${member.specialty} · Lv.${member.level} · ${member.trait}`, {
-        fontSize: '9px', fontFamily: 'monospace', color: '#887799',
+        fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
       });
       this.add.text(width - 20, y + 18, `${member.helpCount}x geholfen`, {
         fontSize: '9px', fontFamily: 'monospace', color: '#668866',
@@ -95,20 +95,20 @@ export class GuildScene extends Phaser.Scene {
     // Help log
     y += 15;
     this.add.text(20, y, '📋 Letzte Aktionen', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddccee', fontStyle: 'bold',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     });
     y += 25;
 
     const recentHelp = guild.helpLog.slice(0, 6);
     if (recentHelp.length === 0) {
       this.add.text(cx, y + 10, 'Noch keine Aktionen...', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#665577',
+        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     } else {
       recentHelp.forEach((log) => {
         const timeAgo = this.formatTimeAgo(log.time);
         this.add.text(20, y, `${log.memberEmoji} ${log.memberName} hat ${log.petName} ${log.action.toLowerCase()} · ${timeAgo}`, {
-          fontSize: '9px', fontFamily: 'monospace', color: '#998899',
+          fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
         });
         y += 18;
       });
@@ -117,14 +117,14 @@ export class GuildScene extends Phaser.Scene {
     // Chat section
     y += 15;
     this.add.text(20, y, '💬 Gildenchat', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddccee', fontStyle: 'bold',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     });
     y += 25;
 
     const recentChat = guild.chatMessages.slice(0, 5);
     if (recentChat.length === 0) {
       this.add.text(cx, y + 10, 'Noch keine Nachrichten...', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#665577',
+        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     } else {
       recentChat.forEach((msg) => {
@@ -137,10 +137,11 @@ export class GuildScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 30, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 30, '← Zurück', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#887799',
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 30, 140, 35, () => this.scene.start('Town'));
+    this.addHitArea(cx, height - 30, 260, 40, () => this.scene.start('Town'));
 
     // Touch
     this.input.on('pointerdown', (pointer) => {

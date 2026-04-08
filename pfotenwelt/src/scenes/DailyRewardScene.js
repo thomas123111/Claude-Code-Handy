@@ -49,7 +49,7 @@ export class DailyRewardScene extends Phaser.Scene {
 
     // Claim button
     const btnY = y + 20;
-    this.add.rectangle(cx, btnY, 260, 50, 0xcc8800, 0.4)
+    this.add.rectangle(cx, btnY, 260, 50, 0x2a1f35, 0.4)
       .setStrokeStyle(2, 0xffaa00);
     this.add.text(cx, btnY, '✨ ABHOLEN!', {
       fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',

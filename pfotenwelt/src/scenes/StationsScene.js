@@ -27,15 +27,15 @@ export class StationsScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#221a2e');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '🏗️ Stationen', {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ddaa77', fontStyle: 'bold',
+      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `❤️ ${save.hearts} Herzen`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#998877',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Station cards
@@ -51,7 +51,7 @@ export class StationsScene extends Phaser.Scene {
 
       // Card background
       const bgColor = unlocked ? 0x2d2240 : 0x1a1525;
-      const borderColor = unlocked ? 0x8866bb : 0x444444;
+      const borderColor = unlocked ? 0x7744aa : 0x443355;
       this.add.rectangle(cx, y + cardH / 2, cardW, cardH, bgColor, unlocked ? 0.9 : 0.5)
         .setStrokeStyle(1, borderColor);
 
@@ -88,7 +88,7 @@ export class StationsScene extends Phaser.Scene {
       } else {
         // Lock icon and cost
         this.add.text(80, y + 54, '🔒 Gesperrt', {
-          fontSize: '10px', fontFamily: 'monospace', color: '#665555',
+          fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
         });
 
         const costColor = canAfford ? '#ffaa44' : '#554444';
@@ -116,10 +116,11 @@ export class StationsScene extends Phaser.Scene {
     });
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Town'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

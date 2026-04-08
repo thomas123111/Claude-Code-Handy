@@ -16,13 +16,13 @@ export class MergeBoardScene extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Pretty gradient background
-    this.cameras.main.setBackgroundColor('#1e1828');
+    this.cameras.main.setBackgroundColor('#231a2e');
     // Decorative top bar
     this.add.rectangle(width / 2, 0, width, 105, 0x2a2040, 0.9).setOrigin(0.5, 0);
 
     // Header with icon
     this.add.text(width / 2, 22, '🧩 Merge Board', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#cc99ff', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Stats bar
@@ -38,7 +38,7 @@ export class MergeBoardScene extends Phaser.Scene {
 
     // Pet needs info
     this.infoText = this.add.text(width / 2, 82, '', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#887799',
+      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
     this.updateTasksInfo();
 
@@ -89,14 +89,15 @@ export class MergeBoardScene extends Phaser.Scene {
 
     // Bottom buttons
     const btnY = height - 110;
-    this.add.rectangle(width / 2, btnY, 220, 46, 0x553388, 0.5)
+    this.add.rectangle(width / 2, btnY, 220, 46, 0x2a1f35, 0.5)
       .setStrokeStyle(2, 0x7744aa);
     this.add.text(width / 2, btnY, '✨ Neues Item (1⚡)', {
       fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ddbbff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
+    this.add.rectangle(width / 2, height - 55, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(width / 2, height - 55, '← Zurück zum Menü', {
-      fontSize: '13px', fontFamily: 'monospace', color: '#776688',
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // === DRAG & DROP INPUT ===
@@ -380,7 +381,7 @@ export class MergeBoardScene extends Phaser.Scene {
     const { width } = this.scale;
     const msg = this.add.text(width / 2, BOARD_OFFSET_Y - 15, text, {
       fontSize: '11px', fontFamily: 'monospace', color: '#ff8888',
-      backgroundColor: '#2a1020', padding: { x: 8, y: 4 },
+      stroke: '#2a1f35', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(30);
     this.tweens.add({ targets: msg, alpha: 0, duration: 2500, onComplete: () => msg.destroy() });
   }

@@ -49,15 +49,15 @@ export class VetScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#221a2e');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '🏥 Tierarzt', {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ddaa77', fontStyle: 'bold',
+      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `❤️ ${save.hearts} Herzen`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#998877',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Find sick pets (health < 50)
@@ -74,7 +74,7 @@ export class VetScene extends Phaser.Scene {
         fontSize: '16px', fontFamily: 'Georgia, serif', color: '#44dd88',
       }).setOrigin(0.5);
       this.add.text(cx, height / 2 + 50, 'Komm wieder, wenn ein Tier\nkrank wird.', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#776688', align: 'center',
+        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
       }).setOrigin(0.5);
     } else {
       let y = 80;
@@ -155,10 +155,11 @@ export class VetScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Stations'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Stations'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

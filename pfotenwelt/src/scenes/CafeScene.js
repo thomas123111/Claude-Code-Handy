@@ -73,19 +73,19 @@ export class CafeScene extends Phaser.Scene {
     const save = this.save;
     const cafe = save.cafe;
 
-    this.cameras.main.setBackgroundColor('#2a1a22');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '☕ Tier-Café', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#dd9966', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `Besucher: ${cafe.guests.length}/${cafe.capacity} | ❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#997766',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     this.add.text(cx, 72, 'Besucher interagieren mit deinen Tieren!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#775544',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Status message
@@ -104,9 +104,9 @@ export class CafeScene extends Phaser.Scene {
       const remaining = Math.max(0, VISIT_DURATION_MS - elapsed);
       const done = remaining <= 0;
 
-      const bgColor = done ? 0x3a2a20 : 0x2a1a1a;
+      const bgColor = done ? 0x352a40 : 0x2d2240;
       this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, bgColor, 0.8)
-        .setStrokeStyle(1, done ? 0xaa8844 : 0x553322);
+        .setStrokeStyle(1, done ? 0xaa8844 : 0x443355);
 
       // Visitor info
       this.add.text(25, y + 8, '👤', { fontSize: '26px' });
@@ -155,8 +155,8 @@ export class CafeScene extends Phaser.Scene {
     if (cafe.guests.length < cafe.capacity) {
       const canAfford = save.hearts >= INVITE_COST;
       const btnY = y + 20;
-      this.add.rectangle(cx, btnY, 280, 36, canAfford ? 0x773322 : 0x332218, canAfford ? 0.9 : 0.5)
-        .setStrokeStyle(1, canAfford ? 0xaa5533 : 0x443322);
+      this.add.rectangle(cx, btnY, 280, 36, canAfford ? 0x2a1f35 : 0x1a1525, canAfford ? 0.9 : 0.5)
+        .setStrokeStyle(2, canAfford ? 0x7744aa : 0x443355);
       this.add.text(cx, btnY, `👤 Besucher einladen (${INVITE_COST}❤️)`, {
         fontSize: '14px', fontFamily: 'monospace', color: canAfford ? '#ffcc88' : '#665544',
       }).setOrigin(0.5);
@@ -175,8 +175,8 @@ export class CafeScene extends Phaser.Scene {
       const canUpgrade = save.hearts >= upgradeCost;
       const upY = y + 20;
 
-      this.add.rectangle(cx, upY, 280, 36, canUpgrade ? 0x553322 : 0x2a1a12, canUpgrade ? 0.9 : 0.5)
-        .setStrokeStyle(1, canUpgrade ? 0x774422 : 0x443322);
+      this.add.rectangle(cx, upY, 280, 36, canUpgrade ? 0x2a1f35 : 0x1a1525, canUpgrade ? 0.9 : 0.5)
+        .setStrokeStyle(1, canUpgrade ? 0x7744aa : 0x443355);
       this.add.text(cx, upY, `⬆️ Kapazität +1 (${upgradeCost}❤️)`, {
         fontSize: '13px', fontFamily: 'monospace', color: canUpgrade ? '#ffdd88' : '#665544',
       }).setOrigin(0.5);
@@ -192,10 +192,11 @@ export class CafeScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => {
+    this.addHitArea(cx, height - 40, 260, 40, () => {
       if (this.refreshTimer) this.refreshTimer.remove();
       this.scene.start('Stations');
     });

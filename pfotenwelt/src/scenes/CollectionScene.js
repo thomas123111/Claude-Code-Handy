@@ -55,17 +55,17 @@ export class CollectionScene extends Phaser.Scene {
     const save = this.save;
     const collection = save.collection || [];
 
-    this.cameras.main.setBackgroundColor('#1a1a28');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '📖 Sammelbuch', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#aaaadd', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const discoveredCount = collection.length;
     const totalCount = ALL_BREEDS.length;
     this.add.text(cx, 52, `${discoveredCount}/${totalCount} entdeckt`, {
-      fontSize: '13px', fontFamily: 'monospace', color: '#8888aa',
+      fontSize: '13px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Filter tabs
@@ -177,10 +177,11 @@ export class CollectionScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Town'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

@@ -35,19 +35,19 @@ export class SchoolScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#1a2a1a');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '🎓 Hundeschule', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#88cc66', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#779966',
+      fontSize: '12px', fontFamily: 'monospace', color: '#ff6688',
     }).setOrigin(0.5);
 
     this.add.text(cx, 72, 'Nur Hunde. Jeder Trick: +10 Vermittlungsbonus!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#557744',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Filter dogs
@@ -62,7 +62,7 @@ export class SchoolScene extends Phaser.Scene {
 
     if (dogs.length === 0) {
       this.add.text(cx, height / 2, 'Keine Hunde im Tierheim.\n\nHunde über das Merge Board\nfreischalten!', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#557755', align: 'center',
+        fontSize: '14px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
       }).setOrigin(0.5);
     } else {
       let y = 108;
@@ -75,7 +75,7 @@ export class SchoolScene extends Phaser.Scene {
         const rarityColor = RARITY_COLORS[pet.rarity];
 
         // Card background
-        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x223322, 0.8)
+        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x2d2240, 0.8)
           .setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(rarityColor).color);
 
         // Pet emoji + name
@@ -94,7 +94,7 @@ export class SchoolScene extends Phaser.Scene {
           });
         } else {
           this.add.text(25, y + 44, 'Noch keine Tricks gelernt', {
-            fontSize: '10px', fontFamily: 'monospace', color: '#556655',
+            fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
           });
         }
 
@@ -112,10 +112,10 @@ export class SchoolScene extends Phaser.Scene {
             }).setOrigin(0.5);
           } else {
             const active = canAfford;
-            this.add.rectangle(bx + btnW / 2, btnY, btnW - 4, 22, active ? 0x338833 : 0x2a3a2a, active ? 0.9 : 0.5)
-              .setStrokeStyle(1, active ? 0x55aa55 : 0x334433);
+            this.add.rectangle(bx + btnW / 2, btnY, btnW - 4, 22, active ? 0x2a1f35 : 0x1a1525, active ? 0.9 : 0.5)
+              .setStrokeStyle(1, active ? 0x7744aa : 0x443355);
             this.add.text(bx + btnW / 2, btnY, `${trick.name} ${trick.cost}❤️`, {
-              fontSize: '9px', fontFamily: 'monospace', color: active ? '#ffffff' : '#556655',
+              fontSize: '9px', fontFamily: 'monospace', color: active ? '#ffffff' : '#776688',
             }).setOrigin(0.5);
 
             if (active) {
@@ -147,10 +147,11 @@ export class SchoolScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Town'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {
