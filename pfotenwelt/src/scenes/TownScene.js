@@ -7,26 +7,31 @@ import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 const MAP_W = 1800;
 const MAP_H = 1500;
 
-// Town buildings — positions on the map, unlock from SaveManager
+// Town buildings — all at path endpoints (never blocking paths)
 const BUILDINGS = [
+  // Top center
   { id: 'shelter', key: 'Shelter', name: 'Tierheim', tex: 'bld_shelter',
     x: 900, y: 180, scale: 1.2 },
+  // Left row (top to bottom)
   { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', tex: 'bld_workshop',
     x: 150, y: 400, scale: 1.0 },
-  { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
-    x: 1650, y: 400, scale: 1.0 },
   { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
     x: 150, y: 800, scale: 1.0 },
-  { id: 'futterladen', key: 'Futterladen', name: 'Futterladen', tex: 'bld_cafe',
-    x: 900, y: 600, scale: 1.0 },
-  { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
-    x: 1650, y: 800, scale: 1.0 },
   { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
     x: 150, y: 1150, scale: 1.0 },
-  { id: 'spielplatz', key: 'Spielplatz', name: 'Spielplatz', tex: 'bld_school',
-    x: 900, y: 950, scale: 1.0 },
+  // Right row (top to bottom)
+  { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
+    x: 1650, y: 400, scale: 1.0 },
+  { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
+    x: 1650, y: 800, scale: 1.0 },
   { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
     x: 1650, y: 1150, scale: 1.0 },
+  // New buildings — on their own branch paths (not blocking main paths)
+  { id: 'futterladen', key: 'Futterladen', name: 'Futterladen', tex: 'bld_cafe',
+    x: 500, y: 180, scale: 1.0 },
+  { id: 'spielplatz', key: 'Spielplatz', name: 'Spielplatz', tex: 'bld_school',
+    x: 1300, y: 180, scale: 1.0 },
+  // Bottom center
   { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
     x: 900, y: 1250, scale: 1.0 },
 ];
@@ -140,6 +145,9 @@ export class TownScene extends Phaser.Scene {
     this.drawPath(900, 400, 1600, 400, pc);
     this.drawPath(200, 800, 900, 800, pc);
     this.drawPath(900, 800, 1600, 800, pc);
+    // Branch paths to Futterladen (top-left) and Spielplatz (top-right)
+    this.drawPath(500, 260, 500, 400, pc);
+    this.drawPath(1300, 260, 1300, 400, pc);
     this.drawPath(200, 1150, 900, 1150, pc);
     this.drawPath(900, 1150, 1600, 1150, pc);
     // Fountain plaza
@@ -171,8 +179,7 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === BUILDINGS (sequential unlock from SaveManager) ===
-    // Find the next building that can be unlocked
+    // === BUILDINGS (sequential unlock — hidden until unlocked or next) ===
     const nextUnlock = BUILDING_UNLOCK_ORDER.find(bo =>
       !(this.save.stations[bo.id] && this.save.stations[bo.id].unlocked));
 
@@ -180,26 +187,41 @@ export class TownScene extends Phaser.Scene {
       const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
       const isNext = nextUnlock && nextUnlock.id === b.id;
 
+      // Only show unlocked buildings and the NEXT unlockable one
+      if (!isUnlocked && !isNext) {
+        b._sprite = null;
+        return; // completely hidden
+      }
+
       if (this.textures.exists(b.tex)) {
         const bldDepth = 10 + Math.round((b.y + 50) / 10);
         const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bldDepth);
-        if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(isNext ? 0.75 : 0.4); }
+        if (!isUnlocked) {
+          // Next building: show silhouette with blur effect
+          img.setTint(0x666688);
+          img.setAlpha(0.5);
+        }
         b._sprite = img;
       }
-      // Building name label
-      this.add.text(b.x, b.y - 80, b.name, {
-        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
-        stroke: '#2a1520', strokeThickness: 5,
-      }).setOrigin(0.5).setDepth(200);
-      if (!isUnlocked) {
-        this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
-        // Show unlock info for next building
-        if (isNext) {
-          this.add.text(b.x, b.y + 50, `${nextUnlock.cost}❤️ | Lv.${nextUnlock.minLevel}`, {
-            fontSize: '14px', fontFamily: 'monospace', color: '#ffcc66', fontStyle: 'bold',
-            stroke: '#000000', strokeThickness: 3,
-          }).setOrigin(0.5).setDepth(201);
-        }
+
+      if (isUnlocked) {
+        // Name label for unlocked buildings
+        this.add.text(b.x, b.y - 80, b.name, {
+          fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+          stroke: '#2a1520', strokeThickness: 5,
+        }).setOrigin(0.5).setDepth(200);
+      }
+
+      if (!isUnlocked && isNext) {
+        // Locked next building — show mystery + unlock cost
+        this.add.text(b.x, b.y - 10, '❓', { fontSize: '32px' }).setOrigin(0.5).setDepth(201);
+        this.add.text(b.x, b.y + 45, `${nextUnlock.cost}❤️ | Lv.${nextUnlock.minLevel}`, {
+          fontSize: '13px', fontFamily: 'monospace', color: '#ffcc66', fontStyle: 'bold',
+          stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(201);
+        // Pulsing glow to attract attention
+        const glow = this.add.circle(b.x, b.y, 60, 0xffcc44, 0.15).setDepth(201 - 1);
+        this.tweens.add({ targets: glow, alpha: 0.05, scale: 1.3, duration: 1200, yoyo: true, repeat: -1 });
       } else if (b.id === 'shelter' && this.save.pets.length > 0) {
         this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(202);
         this.add.text(b.x + 55, b.y - 55, `${this.save.pets.length}`, {
@@ -207,6 +229,32 @@ export class TownScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(203);
       }
     });
+
+    // === FOG OF WAR — hide unexplored areas ===
+    // Calculate the furthest unlocked Y position to determine visible area
+    let maxUnlockedY = 300; // shelter area always visible
+    BUILDINGS.forEach((b) => {
+      const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
+      const isNext = nextUnlock && nextUnlock.id === b.id;
+      if (isUnlocked || isNext) maxUnlockedY = Math.max(maxUnlockedY, b.y + 150);
+    });
+    // Clamp fog to not go above the map
+    const fogY = Math.min(maxUnlockedY + 100, MAP_H);
+    if (fogY < MAP_H - 50) {
+      // Main fog rectangle covering unexplored south
+      const fogH = MAP_H - fogY;
+      this.add.rectangle(MAP_W / 2, fogY + fogH / 2, MAP_W, fogH, 0x3a5a2a, 0.85).setDepth(399);
+      // Soft gradient edge (multiple semi-transparent strips)
+      for (let i = 0; i < 5; i++) {
+        const stripY = fogY - 20 + i * 10;
+        this.add.rectangle(MAP_W / 2, stripY, MAP_W, 12, 0x3a5a2a, 0.12 * (i + 1)).setDepth(399);
+      }
+      // Mystery text
+      this.add.text(MAP_W / 2, fogY + 60, '🌫️ Unentdecktes Gebiet', {
+        fontSize: '16px', fontFamily: 'Georgia, serif', color: '#8a9a7a', fontStyle: 'italic',
+        stroke: '#2a3a1a', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(399);
+    }
 
     // === AMBIENT EFFECTS ===
     if (this.textures.exists('env_fountain')) {
@@ -268,32 +316,6 @@ export class TownScene extends Phaser.Scene {
       this.roamingPets.push({ sprite: pet, shadow, key: cfg.key, path: cfg.paths, targetIdx: 1, speed: cfg.speed, currentDir: initDir });
     });
 
-    // === COMPANION PET (follows camera center) ===
-    this.companion = null;
-    const companions = this.save.companions || [];
-    if (companions.length > 0) {
-      const comp = companions[0]; // primary companion
-      // Map breedId to a sprite key
-      const companionSpriteMap = {
-        labrador: 'farm_dog_lab', dackel: 'farm_dog_lab', husky: 'farm_dog_white',
-        hauskatze: 'farm_rabbit', perser: 'farm_rabbit_w', maine_coon: 'farm_rabbit',
-      };
-      const sprKey = companionSpriteMap[comp.breedId] || 'farm_dog_lab';
-      const camCenter = this.cameras.main.getWorldPoint(this.scale.width / 2, this.scale.height / 2);
-      if (this.textures.exists(sprKey)) {
-        const compSprite = this.add.sprite(camCenter.x + 30, camCenter.y + 40, sprKey).setScale(2.2);
-        const compShadow = this.add.ellipse(camCenter.x + 30, camCenter.y + 50, 18, 6, 0x000000, 0.2);
-        const compLabel = this.add.text(camCenter.x + 30, camCenter.y + 20, comp.name, {
-          fontSize: '10px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
-          stroke: '#2a1520', strokeThickness: 3,
-        }).setOrigin(0.5).setDepth(999);
-        // Play idle animation
-        const idleKey = `${sprKey}_idle`;
-        if (this.anims.exists(idleKey)) compSprite.play(idleKey);
-        this.companion = { sprite: compSprite, shadow: compShadow, label: compLabel, key: sprKey, targetX: camCenter.x + 30, targetY: camCenter.y + 40, currentDir: 'down' };
-      }
-    }
-
     // === LimeZu PROPS ===
     const lzProps = [
       { x: 450, y: 400, tex: 'lz_lamp', scale: 2 }, { x: 1350, y: 400, tex: 'lz_lamp', scale: 2 },
@@ -308,13 +330,17 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === TOP BAR (sticky, with day/night info) ===
-    this.add.rectangle(width / 2, 0, width, 28, 0x000000, 0.45).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.text(8, 5, `❤️ ${this.save.hearts}`, { fontSize: '13px', fontFamily: 'monospace', color: '#ff8899', fontStyle: 'bold' }).setScrollFactor(0).setDepth(501);
-    // Day/time indicator
+    // === TOP HUD (floating pills, no ugly black bar) ===
     const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
-    this.add.text(width / 2, 5, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '13px', fontFamily: 'monospace', color: '#ffdd88', fontStyle: 'bold' }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
-    this.add.text(width - 8, 5, `Lv.${this.save.level}`, { fontSize: '13px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold' }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
+    // Hearts pill (left)
+    this.add.rectangle(50, 14, 80, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
+    this.add.text(50, 14, `❤️ ${this.save.hearts}`, { fontSize: '12px', fontFamily: 'monospace', color: '#cc4466', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+    // Day pill (center)
+    this.add.rectangle(width / 2, 14, 100, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
+    this.add.text(width / 2, 14, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '12px', fontFamily: 'monospace', color: '#6b4c8a', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+    // Level pill (right)
+    this.add.rectangle(width - 40, 14, 64, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
+    this.add.text(width - 40, 14, `Lv.${this.save.level}`, { fontSize: '12px', fontFamily: 'monospace', color: '#5588cc', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
 
     // Music toggle (top right, small)
     if (this.save.musicOn !== false) {
@@ -517,40 +543,6 @@ export class TownScene extends Phaser.Scene {
         p.shadow.setPosition(p.sprite.x, p.sprite.y + 10);
         p.sprite.setDepth(10 + Math.round(p.sprite.y / 10));
       });
-    }
-    // Update companion — follows camera center with a lazy offset
-    if (this.companion) {
-      const cam = this.cameras.main;
-      const targetX = cam.scrollX + cam.width / cam.zoom / 2 + 30;
-      const targetY = cam.scrollY + cam.height / cam.zoom / 2 + 40;
-      const c = this.companion;
-      const cdx = targetX - c.sprite.x;
-      const cdy = targetY - c.sprite.y;
-      const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
-      if (cdist > 8) {
-        const cspd = Math.min(cdist * 0.03, 2.5);
-        c.sprite.x += cdx * cspd * (delta / 16);
-        c.sprite.y += cdy * cspd * (delta / 16);
-        // Update walk animation direction
-        const nd = this.getWalkDirection(cdx, cdy);
-        if (nd !== c.currentDir) {
-          c.currentDir = nd;
-          const ak = `${c.key}_walk_${nd}`;
-          if (this.anims.exists(ak)) c.sprite.play(ak, true);
-        }
-      } else {
-        // Idle when close enough
-        const ik = `${c.key}_idle`;
-        if (this.anims.exists(ik) && c.currentDir !== 'idle') {
-          c.sprite.play(ik, true);
-          c.currentDir = 'idle';
-        }
-      }
-      c.shadow.setPosition(c.sprite.x, c.sprite.y + 10);
-      c.label.setPosition(c.sprite.x, c.sprite.y - 18);
-      c.sprite.setDepth(10 + Math.round(c.sprite.y / 10));
-      c.shadow.setDepth(c.sprite.depth - 1);
-      c.label.setDepth(c.sprite.depth + 1);
     }
   }
 }
