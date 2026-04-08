@@ -96,6 +96,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('ui_heart', 'assets/ui_heart.png');
     this.load.image('ui_energy', 'assets/ui_energy.png');
     this.load.image('ui_star', 'assets/ui_star.png');
+
+    // Wash minigame assets
+    this.load.image('wash_labrador', 'assets/wash_labrador_a.png');
     this.load.image('ui_coin', 'assets/ui_coin.png');
     this.load.image('ui_paw', 'assets/ui_paw.png');
 

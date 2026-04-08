@@ -232,7 +232,7 @@ export class ShelterScene extends Phaser.Scene {
 
     const needs = [
       { key: 'hunger', label: 'Hunger', emoji: '🍖', color: 0xff8844, cost: 5, puzzle: 'SortPuzzle' },
-      { key: 'hygiene', label: 'Pflege', emoji: '🧼', color: 0x44aaff, cost: 3, puzzle: 'MemoryPuzzle' },
+      { key: 'hygiene', label: 'Pflege', emoji: '🧼', color: 0x44aaff, cost: 3, puzzle: 'WashPuzzle' },
       { key: 'play', label: 'Spielen', emoji: '🎾', color: 0x44dd44, cost: 3, puzzle: null },
       { key: 'health', label: 'Gesundheit', emoji: '💊', color: 0xff4466, cost: 0, puzzle: null },
     ];
@@ -406,7 +406,7 @@ export class ShelterScene extends Phaser.Scene {
     if (need === 'hunger') {
       this.scene.start('SortPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
     } else if (need === 'hygiene') {
-      this.scene.start('MemoryPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
+      this.scene.start('WashPuzzle', { petName: pet.name, breedId: pet.breedId, onComplete: 'Shelter', need });
     } else {
       this.save.hearts -= cost;
       pet.needs[need] = Math.min(100, pet.needs[need] + 55);
