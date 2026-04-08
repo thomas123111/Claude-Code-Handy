@@ -37,7 +37,7 @@ export class ShelterScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#1e1628');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // === HEADER ===
     this.add.rectangle(cx, 0, width, 50, 0x2a1f35, 0.95).setOrigin(0.5, 0);
@@ -81,11 +81,12 @@ export class ShelterScene extends Phaser.Scene {
     }
 
     // === BACK BUTTON ===
-    const backLabel = this.selectedPet !== null ? '← Zurück zur Übersicht' : '← Hauptmenü';
+    const backLabel = this.selectedPet !== null ? '← Zurück zur Übersicht' : '← Zurück zur Stadt';
+    this.add.rectangle(cx, height - 30, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 30, backLabel, {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#887799',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 30, 250, 35, () => {
+    this.addHitArea(cx, height - 30, 260, 40, () => {
       if (this.selectedPet !== null) {
         this.selectedPet = null;
         this.drawUI();
@@ -229,7 +230,7 @@ export class ShelterScene extends Phaser.Scene {
     this.add.rectangle(cx, needsY + 50, width - 30, 120, 0x252035, 0.7)
       .setStrokeStyle(1, 0x443355);
     this.add.text(cx, needsY, 'Bedürfnisse', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ccbbdd', fontStyle: 'bold',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const needs = [

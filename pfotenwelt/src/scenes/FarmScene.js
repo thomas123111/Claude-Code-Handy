@@ -132,7 +132,7 @@ export class FarmScene extends Phaser.Scene {
       // Label
       this.add.text(b.x, b.y + b.hitH / 2 + 10, b.name, {
         fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-        backgroundColor: '#00000088', padding: { x: 8, y: 3 },
+        stroke: '#2a1f35', strokeThickness: 3,
       }).setOrigin(0.5).setDepth(200);
 
       // Task status indicator
