@@ -1,7 +1,7 @@
 {
   "name": "pfotenwelt",
   "version": "1.2.1",
-  "description": "Pet charity merge game",
+  "description": "Pet charity merge game - Bauernhof update",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
