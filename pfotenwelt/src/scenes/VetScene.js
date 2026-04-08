@@ -120,14 +120,14 @@ export class VetScene extends Phaser.Scene {
         const barY = y + 55;
         const healthPct = pet.needs.health / 100;
         this.add.text(25, barY, '💊 Gesundheit', {
-          fontSize: '13px', fontFamily: 'monospace', color: '#ff6688',
+          fontSize: '13px', fontFamily: 'monospace', color: THEME.text.hearts,
         });
-        this.add.rectangle(25 + 130, barY + 5, 160, 10, 0x333333)
-          .setStrokeStyle(1, 0x444444);
-        this.add.rectangle(25 + 130 - 80 + (80 * healthPct), barY + 5, 160 * healthPct, 10, 0xff4466)
-          .setOrigin(0.5, 0.5);
+        this.add.rectangle(25 + 130, barY + 5, 160, 12, THEME.bg.barBg)
+          .setStrokeStyle(1, THEME.bg.barBorder);
+        const fillW = Math.max(1, 160 * healthPct);
+        this.add.rectangle(25 + 130 - 80 + fillW / 2, barY + 5, fillW, 10, 0xff4466);
         this.add.text(25 + 130 + 90, barY + 1, `${Math.round(pet.needs.health)}%`, {
-          fontSize: '13px', fontFamily: 'monospace', color: '#ff6688',
+          fontSize: '13px', fontFamily: 'monospace', color: THEME.text.hearts,
         });
 
         // Diagnosis
@@ -136,26 +136,21 @@ export class VetScene extends Phaser.Scene {
         });
 
         // Treatment button
-        const btnY = y + 100;
+        const btnY = y + 105;
         const costLabel = isInsured
-          ? `Behandeln (${treatCost}❤️ · 🛡️ -50%)`
-          : `Behandeln (${treatCost}❤️)`;
-        this.add.text(25, btnY, costLabel, {
-          fontSize: '14px', fontFamily: 'monospace',
-          color: canAfford ? THEME.text.success : '#554444',
-        });
+          ? `Behandeln ${treatCost}❤️ (🛡️-50%)`
+          : `Behandeln ${treatCost}❤️`;
+        drawButton(this, cx - (isInsured || !canAffordInsurance ? 0 : 70), btnY, isInsured ? cardW - 20 : 180, 34, costLabel, { disabled: !canAfford, fontSize: '14px' });
         if (canAfford) {
-          this.addHitArea(140, btnY + 7, 260, 20, () => this.treatPet(idx, treatCost));
+          this.addHitArea(cx - (isInsured || !canAffordInsurance ? 0 : 70), btnY, isInsured ? cardW - 20 : 180, 34, () => this.treatPet(idx, treatCost));
         }
 
         // Insurance upsell for uninsured pets
         if (!isInsured) {
-          this.add.text(width - 20, btnY, `🛡️ Versichern (${INSURANCE_COST}❤️/Tier)`, {
-            fontSize: '13px', fontFamily: 'monospace',
-            color: canAffordInsurance ? '#88aaff' : '#554444',
-          }).setOrigin(1, 0);
+          const insBtnX = cx + 75;
+          drawButton(this, insBtnX, btnY, 150, 34, `🛡️ ${INSURANCE_COST}❤️`, { type: 'secondary', disabled: !canAffordInsurance, fontSize: '13px' });
           if (canAffordInsurance) {
-            this.addHitArea(width - 110, btnY + 6, 200, 18, () => this.insurePet(idx));
+            this.addHitArea(insBtnX, btnY, 150, 34, () => this.insurePet(idx));
           }
         }
 
