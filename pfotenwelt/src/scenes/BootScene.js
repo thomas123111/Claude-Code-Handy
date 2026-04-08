@@ -126,14 +126,15 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32, 7 rows): walk = row 2, order = DLRU
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'left', 'right', 'up']));
+    // Characters (16x32, 7 rows): walk = row 2, order = DRLU
+    // Verified: frames 6-11 = right-facing, frames 12-17 = left-facing (L/R swapped from RPG Maker)
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'right', 'left', 'up']));
 
-    // Dogs (48x32, 13 rows): walk = row 4, order = LDRU
-    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['left', 'down', 'right', 'up']));
+    // Dogs (48x32, 13 rows): walk = row 4, order = RDLU
+    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'down', 'left', 'up']));
 
-    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = LDRU
-    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['left', 'down', 'right', 'up']));
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = RDLU
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['right', 'down', 'left', 'up']));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
