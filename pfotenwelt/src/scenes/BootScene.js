@@ -126,15 +126,14 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32, 7 rows): walk = row 2, order = LURD
-    // Rotated 90° clockwise from DLRU: Down→Left, Left→Up, Right→Down, Up→Right
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['left', 'up', 'down', 'right']));
+    // Characters (16x32, 7 rows): walk = row 2, order = LDRU
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['left', 'down', 'right', 'up']));
 
-    // Dogs (48x32, 13 rows): walk = row 4, order = RDLU
-    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'down', 'left', 'up']));
+    // Dogs (48x32, 13 rows): walk = row 4, order = RULD (sideways was correct, up/down swapped)
+    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'up', 'left', 'down']));
 
-    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = RDLU
-    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['right', 'down', 'left', 'up']));
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = RULD
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['right', 'up', 'left', 'down']));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
