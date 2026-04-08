@@ -198,7 +198,7 @@ export class CafeScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.addHitArea(cx, height - 40, 260, 40, () => {
       if (this.refreshTimer) this.refreshTimer.remove();
-      this.scene.start('Stations');
+      this.scene.start('Town');
     });
 
     // Touch handler

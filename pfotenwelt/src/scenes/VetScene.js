@@ -159,7 +159,7 @@ export class VetScene extends Phaser.Scene {
     this.add.text(cx, height - 40, '← Zurück', {
       fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Stations'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {
