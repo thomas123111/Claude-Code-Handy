@@ -118,14 +118,14 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: 0 }], frameRate: 1 });
     };
 
-    // Characters (16x32 frames, 7 rows): walk = row 1
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createWalkAnims(k, 1));
+    // Characters (16x32 frames, 7 rows): walk = row 2 (row0=preview, row1=IDLE, row2=WALK)
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createWalkAnims(k, 2));
 
-    // Dogs (48x32 frames, 13 rows): walk = row 4 (after preview, IDLE label, IDLE, WALK label)
+    // Dogs (48x32 frames, 13 rows): walk = row 4 (labeled spritesheet)
     ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createWalkAnims(k, 4));
 
-    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 1
-    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createWalkAnims(k, 1));
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createWalkAnims(k, 2));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();

@@ -101,8 +101,8 @@ export class TownScene extends Phaser.Scene {
     this.drawPath(900, 1280, 900, 1450, pc);
     this.add.rectangle(900, 1430, 220, 55, 0x3a5a22, 0.8).setDepth(-1);
     const farmSign = this.add.text(900, 1430, '🌾 Zum Bauernhof →', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddeeaa', fontStyle: 'bold',
-      backgroundColor: '#33441188', padding: { x: 12, y: 6 },
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+      stroke: '#2a3518', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(200);
     // Farm portal is tappable (handled in pointerup)
 
@@ -130,9 +130,10 @@ export class TownScene extends Phaser.Scene {
         if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(0.6); }
         b._sprite = img;
       }
-      this.add.text(b.x, b.y + 70, b.name, {
-        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-        backgroundColor: '#00000088', padding: { x: 8, y: 3 },
+      // Soft rounded label with semi-transparent fill
+      const label = this.add.text(b.x, b.y + 75, b.name, {
+        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+        stroke: '#2a1f35', strokeThickness: 3,
       }).setOrigin(0.5).setDepth(200);
       if (!isUnlocked) {
         this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
