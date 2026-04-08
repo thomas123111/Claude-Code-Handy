@@ -222,23 +222,19 @@ export class MergeBoardScene extends Phaser.Scene {
             .setDisplaySize(CELL_SIZE - 14, CELL_SIZE - 14).setDepth(5);
           this.itemSprites.push(img);
         } else {
-          const em = this.add.text(x, y - 5, item.emoji, { fontSize: '30px' })
+          const em = this.add.text(x, y - 5, item.emoji, { fontSize: '28px' })
             .setOrigin(0.5).setDepth(5);
           this.itemSprites.push(em);
         }
 
-        // Level badge
-        const lvlColors = [THEME.text.muted, THEME.text.xp, THEME.text.success, THEME.text.energy, THEME.text.hearts];
-        const badge = this.add.text(x + 22, y + 20, `${item.level}`, {
-          fontSize: '13px', fontFamily: 'monospace', color: lvlColors[item.level - 1] || THEME.text.dark,
-          fontStyle: 'bold',
-        }).setOrigin(0.5).setDepth(6);
-        this.itemSprites.push(badge);
-
-        // Glow for high-level items
+        // Subtle glow for high-level items (no number badge — emojis are distinct enough)
         if (item.level >= 4) {
-          const glow = this.add.circle(x, y, 24, 0xddaa33, 0.12).setDepth(4);
+          const glow = this.add.circle(x, y, 24, 0xddaa33, 0.15).setDepth(4);
           this.itemSprites.push(glow);
+          if (item.level >= 5) {
+            // Pulsing glow for max-level
+            this.tweens.add({ targets: glow, alpha: 0.05, scale: 1.2, duration: 800, yoyo: true, repeat: -1 });
+          }
         }
       }
     }
@@ -279,20 +275,11 @@ export class MergeBoardScene extends Phaser.Scene {
       });
     }
 
-    // Central flash
-    const flash = this.add.circle(x, y, 8, 0xf0e4f6, 0.7).setDepth(21);
+    // Central flash (white burst, no confusing emoji pop)
+    const flash = this.add.circle(x, y, 10, 0xffffff, 0.8).setDepth(21);
     this.tweens.add({
-      targets: flash, scale: { from: 1, to: 3 }, alpha: 0,
-      duration: 300, onComplete: () => flash.destroy(),
-    });
-
-    // New item pop-in
-    const popEmoji = this.add.text(x, y, result.emoji, { fontSize: '36px' })
-      .setOrigin(0.5).setDepth(22).setScale(0.3);
-    this.tweens.add({
-      targets: popEmoji, scale: { from: 0.3, to: 1.2 }, duration: 200,
-      yoyo: true, hold: 100,
-      onComplete: () => popEmoji.destroy(),
+      targets: flash, scale: { from: 1, to: 2.5 }, alpha: 0,
+      duration: 250, onComplete: () => flash.destroy(),
     });
 
     // Rewards
@@ -310,8 +297,11 @@ export class MergeBoardScene extends Phaser.Scene {
       onComplete: () => reward.destroy(),
     });
 
-    // Max level = new pet!
-    if (result.value >= 50) this.spawnPetReward();
+    // Max level = new pet! Item gets consumed.
+    if (result.value >= 50) {
+      this.board[r][c] = null; // remove the max-level item from board
+      this.spawnPetReward();
+    }
 
     this.save.totalDonatedKg += 0.01;
     this.updateStats();
