@@ -383,17 +383,17 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === TOP HUD (floating pills, no ugly black bar) ===
+    // === TOP HUD (fixed at very top edge, large & readable) ===
     const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
-    // Hearts pill (left)
-    this.add.rectangle(50, 14, 80, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
-    this.add.text(50, 14, `❤️ ${this.save.hearts}`, { fontSize: '12px', fontFamily: 'monospace', color: '#cc4466', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    // Day pill (center)
-    this.add.rectangle(width / 2, 14, 100, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
-    this.add.text(width / 2, 14, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '12px', fontFamily: 'monospace', color: '#6b4c8a', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    // Level pill (right)
-    this.add.rectangle(width - 40, 14, 64, 22, 0xffffff, 0.7).setStrokeStyle(1, 0xe0c8e8).setScrollFactor(0).setDepth(500);
-    this.add.text(width - 40, 14, `Lv.${this.save.level}`, { fontSize: '12px', fontFamily: 'monospace', color: '#5588cc', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+    // Background strip
+    this.add.rectangle(width / 2, 0, width, 32, 0x1a1020, 0.55).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
+    this.add.rectangle(width / 2, 32, width, 1, 0xffffff, 0.15).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
+    // Hearts (left)
+    this.add.text(10, 7, `❤️ ${this.save.hearts}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffaabb', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setScrollFactor(0).setDepth(501);
+    // Day (center)
+    this.add.text(width / 2, 7, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffe088', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
+    // Level (right)
+    this.add.text(width - 10, 7, `Lv.${this.save.level}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#88ccff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
 
     // Music toggle (top right, small)
     if (this.save.musicOn !== false) {
