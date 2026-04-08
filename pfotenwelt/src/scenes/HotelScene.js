@@ -68,19 +68,19 @@ export class HotelScene extends Phaser.Scene {
     const save = this.save;
     const hotel = save.hotel;
 
-    this.cameras.main.setBackgroundColor('#2a2218');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '🏨 Tierhotel', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ddaa66', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `Kapazität: ${hotel.guests.length}/${hotel.capacity} | ❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#998866',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     this.add.text(cx, 72, 'Beherberge Gäste und verdiene Herzen!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#776644',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Status message
@@ -99,9 +99,9 @@ export class HotelScene extends Phaser.Scene {
       const remaining = Math.max(0, GUEST_STAY_MS - elapsed);
       const done = remaining <= 0;
 
-      const bgColor = done ? 0x3a3a20 : 0x2a2a1a;
+      const bgColor = done ? 0x352a40 : 0x2d2240;
       this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, bgColor, 0.8)
-        .setStrokeStyle(1, done ? 0x88aa44 : 0x554433);
+        .setStrokeStyle(1, done ? 0x88aa44 : 0x443355);
 
       // Guest info
       this.add.text(25, y + 8, guest.emoji, { fontSize: '28px' });
@@ -140,8 +140,8 @@ export class HotelScene extends Phaser.Scene {
     // Add guest button
     if (hotel.guests.length < hotel.capacity) {
       const btnY = y + 20;
-      this.add.rectangle(cx, btnY, 250, 36, 0x885522, 0.9)
-        .setStrokeStyle(1, 0xaa7733);
+      this.add.rectangle(cx, btnY, 250, 36, 0x2a1f35, 0.9)
+        .setStrokeStyle(2, 0x7744aa);
       this.add.text(cx, btnY, '🐾 Gast aufnehmen', {
         fontSize: '14px', fontFamily: 'monospace', color: '#ffcc88',
       }).setOrigin(0.5);
@@ -157,8 +157,8 @@ export class HotelScene extends Phaser.Scene {
       const canUpgrade = save.hearts >= upgradeCost;
       const upY = y + 20;
 
-      this.add.rectangle(cx, upY, 280, 36, canUpgrade ? 0x664400 : 0x332a1a, canUpgrade ? 0.9 : 0.5)
-        .setStrokeStyle(1, canUpgrade ? 0x886600 : 0x443322);
+      this.add.rectangle(cx, upY, 280, 36, canUpgrade ? 0x2a1f35 : 0x1a1525, canUpgrade ? 0.9 : 0.5)
+        .setStrokeStyle(1, canUpgrade ? 0x7744aa : 0x443355);
       this.add.text(cx, upY, `⬆️ Kapazität +1 (${upgradeCost}❤️)`, {
         fontSize: '13px', fontFamily: 'monospace', color: canUpgrade ? '#ffdd88' : '#665544',
       }).setOrigin(0.5);
@@ -174,10 +174,11 @@ export class HotelScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => {
+    this.addHitArea(cx, height - 40, 260, 40, () => {
       if (this.refreshTimer) this.refreshTimer.remove();
       this.scene.start('Town');
     });

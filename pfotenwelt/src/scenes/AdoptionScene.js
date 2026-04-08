@@ -39,7 +39,7 @@ export class AdoptionScene extends Phaser.Scene {
     const cx = width / 2;
     const pet = this.petData;
 
-    this.cameras.main.setBackgroundColor('#2a1a20');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     if (this.showingFeedback) {
       this.drawFeedback();
@@ -52,8 +52,8 @@ export class AdoptionScene extends Phaser.Scene {
     }
 
     // === HEADER ===
-    this.add.rectangle(cx, 0, width, 50, 0x3a2030, 0.95).setOrigin(0.5, 0);
-    this.add.rectangle(cx, 50, width, 2, 0x553344).setOrigin(0.5, 0);
+    this.add.rectangle(cx, 0, width, 50, 0x2a1f35, 0.95).setOrigin(0.5, 0);
+    this.add.rectangle(cx, 50, width, 2, 0x443355).setOrigin(0.5, 0);
     this.add.text(cx, 25, '🏠 Vermittlung', {
       fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -89,10 +89,11 @@ export class AdoptionScene extends Phaser.Scene {
     });
 
     // === BACK BUTTON ===
+    this.add.rectangle(cx, height - 30, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 30, '← Zurück zum Tierheim', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#887766',
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 30, 250, 35, () => {
+    this.addHitArea(cx, height - 30, 260, 40, () => {
       this.scene.start('Shelter');
     });
 
@@ -113,7 +114,7 @@ export class AdoptionScene extends Phaser.Scene {
     const scoreColor = Phaser.Display.Color.HexStringToColor(match.color).color;
 
     // Card background
-    this.add.rectangle(cx, cy, cardW, cardH, 0x352028, 0.9)
+    this.add.rectangle(cx, cy, cardW, cardH, 0x2d2240, 0.9)
       .setStrokeStyle(2, scoreColor);
 
     // Emoji + name + age
@@ -155,7 +156,7 @@ export class AdoptionScene extends Phaser.Scene {
 
     // Pet type preference
     this.add.text(25, cy + 15, `Sucht: ${adopter.preferences.petType} (${adopter.preferences.sizePreference})`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#998877',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     });
 
     // Story
@@ -195,11 +196,11 @@ export class AdoptionScene extends Phaser.Scene {
     const match = adopter.matchLabel;
 
     // Dimmed background
-    this.add.rectangle(cx, height / 2, width, height, 0x1a1018, 0.95);
+    this.add.rectangle(cx, height / 2, width, height, 0x1a1525, 0.95);
 
     // Confirmation card
     const cardY = height / 2 - 40;
-    this.add.rectangle(cx, cardY, width - 40, 320, 0x2a1a20)
+    this.add.rectangle(cx, cardY, width - 40, 320, 0x2d2240)
       .setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(match.color).color);
 
     this.add.text(cx, cardY - 130, 'Vermittlung bestätigen?', {
@@ -332,7 +333,7 @@ export class AdoptionScene extends Phaser.Scene {
     const score = this.feedbackScore;
 
     // Background
-    this.add.rectangle(cx, height / 2, width, height, 0x1a1018);
+    this.add.rectangle(cx, height / 2, width, height, 0x1a1525);
 
     // Title based on score
     const titleEmoji = score >= 70 ? '🎉' : score >= 50 ? '🤞' : '😔';
@@ -353,8 +354,8 @@ export class AdoptionScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Feedback story
-    this.add.rectangle(cx, 280, width - 50, 100, 0x352028, 0.8)
-      .setStrokeStyle(1, 0x554444);
+    this.add.rectangle(cx, 280, width - 50, 100, 0x2d2240, 0.8)
+      .setStrokeStyle(1, 0x443355);
     this.add.text(cx, 280, this.feedbackText, {
       fontSize: '12px', fontFamily: 'Georgia, serif', color: '#ddccbb',
       fontStyle: 'italic', wordWrap: { width: width - 80 }, align: 'center',
@@ -385,7 +386,7 @@ export class AdoptionScene extends Phaser.Scene {
 
     // Auto-return countdown
     this.add.text(cx, height - 60, 'Zurück zum Tierheim...', {
-      fontSize: '12px', fontFamily: 'monospace', color: '#776666',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Return after 3 seconds

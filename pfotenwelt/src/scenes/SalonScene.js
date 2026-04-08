@@ -20,24 +20,24 @@ export class SalonScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#2a1a30');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Header
     this.add.text(cx, 25, '✂️ Pflegesalon', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#dd88cc', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 52, `${save.pets.length} Tiere | ❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#aa7799',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     this.add.text(cx, 72, 'Gepflegte Tiere erhalten +25% Vermittlungsbonus!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#886688',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     if (save.pets.length === 0) {
       this.add.text(cx, height / 2, 'Keine Tiere im Tierheim.\n\nBringe zuerst Tiere\nüber das Merge Board!', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#776688', align: 'center',
+        fontSize: '14px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
       }).setOrigin(0.5);
     } else {
       let y = 95;
@@ -46,7 +46,7 @@ export class SalonScene extends Phaser.Scene {
         const rarityColor = RARITY_COLORS[pet.rarity];
 
         // Card background
-        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x3a2240, 0.8)
+        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x2d2240, 0.8)
           .setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(rarityColor).color);
 
         // Pet emoji + name
@@ -71,10 +71,10 @@ export class SalonScene extends Phaser.Scene {
           const btnX = width - 80;
           const btnY = y + cardH / 2;
 
-          this.add.rectangle(btnX, btnY, 120, 30, canAfford ? 0xcc44aa : 0x443344, canAfford ? 0.9 : 0.5)
-            .setStrokeStyle(1, canAfford ? 0xff66cc : 0x554455);
+          this.add.rectangle(btnX, btnY, 120, 30, canAfford ? 0x2a1f35 : 0x1a1525, canAfford ? 0.9 : 0.5)
+            .setStrokeStyle(2, canAfford ? 0x7744aa : 0x443355);
           this.add.text(btnX, btnY, 'Pflegen 15❤️', {
-            fontSize: '11px', fontFamily: 'monospace', color: canAfford ? '#ffffff' : '#665566',
+            fontSize: '11px', fontFamily: 'monospace', color: canAfford ? '#ffffff' : '#776688',
           }).setOrigin(0.5);
 
           if (canAfford) {
@@ -87,10 +87,11 @@ export class SalonScene extends Phaser.Scene {
     }
 
     // Back button
+    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
     this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#888888',
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 120, 30, () => this.scene.start('Town'));
+    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

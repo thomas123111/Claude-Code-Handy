@@ -49,24 +49,24 @@ export class ShelterScene extends Phaser.Scene {
       fontSize: '12px', fontFamily: 'monospace', color: '#ff6688',
     });
     this.add.text(width - 15, 15, `${save.pets.length} Tiere`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#aa88cc',
+      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(1, 0);
     this.add.text(width - 15, 32, `${save.adopted} vermittelt`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#776688',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(1, 0);
 
     // === EMPTY STATE ===
     if (save.pets.length === 0) {
       this.add.text(cx, 200, '🐾', { fontSize: '60px' }).setOrigin(0.5);
       this.add.text(cx, 270, 'Noch keine Tiere!', {
-        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#aa88cc', fontStyle: 'bold',
+        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
       }).setOrigin(0.5);
       this.add.text(cx, 300, 'Merge max-level Items im Merge Board\num dein erstes Tier zu bekommen!', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#776688', align: 'center',
+        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
       }).setOrigin(0.5);
 
       // Quick link to merge
-      this.add.rectangle(cx, 370, 220, 44, 0x553388, 0.4).setStrokeStyle(2, 0x7744aa);
+      this.add.rectangle(cx, 370, 220, 44, 0x2a1f35, 0.4).setStrokeStyle(2, 0x7744aa);
       this.add.text(cx, 370, '🧩 Zum Merge Board', {
         fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ccaaff', fontStyle: 'bold',
       }).setOrigin(0.5);
@@ -119,7 +119,7 @@ export class ShelterScene extends Phaser.Scene {
     const gapY = 10;
 
     this.add.text(width / 2, startY + 5, 'Tippe auf ein Tier für Details', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#665577',
+      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     save.pets.forEach((pet, idx) => {
@@ -214,7 +214,7 @@ export class ShelterScene extends Phaser.Scene {
     // Story
     if (pet.story) {
       this.add.text(cx, 275, `"${pet.story}"`, {
-        fontSize: '10px', fontFamily: 'Georgia, serif', color: '#998877',
+        fontSize: '10px', fontFamily: 'Georgia, serif', color: '#bbaacc',
         fontStyle: 'italic', wordWrap: { width: width - 60 }, align: 'center',
       }).setOrigin(0.5);
     }
@@ -265,7 +265,7 @@ export class ShelterScene extends Phaser.Scene {
       if (need.cost > 0 && val < 80) {
         const btnX = width - 40;
         const canAfford = save.hearts >= need.cost;
-        this.add.rectangle(btnX, ny + 6, 55, 20, canAfford ? 0x553388 : 0x332233, 0.6)
+        this.add.rectangle(btnX, ny + 6, 55, 20, canAfford ? 0x2a1f35 : 0x332233, 0.6)
           .setStrokeStyle(1, canAfford ? 0x7744aa : 0x444444);
         this.add.text(btnX, ny + 6, `${need.cost}❤️`, {
           fontSize: '10px', fontFamily: 'monospace', color: canAfford ? '#ccaaff' : '#555555',
@@ -328,7 +328,7 @@ export class ShelterScene extends Phaser.Scene {
       }).setOrigin(0.5);
     } else {
       this.add.text(cx, actY + 40, 'Mach das Tier glücklicher um es zu vermitteln!', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#776688',
+        fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     }
 
@@ -353,7 +353,7 @@ export class ShelterScene extends Phaser.Scene {
         });
       }
       this.add.text(cx, insY + 25, 'Halbiert Tierarztkosten!', {
-        fontSize: '9px', fontFamily: 'monospace', color: '#556677',
+        fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     }
   }

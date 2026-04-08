@@ -3,7 +3,7 @@ import { loadSave, regenerateEnergy, checkDailyLogin, writeSave } from '../data/
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { BREEDS } from '../data/PetData.js';
 
-export const GAME_VERSION = 'v1.3.0';
+export const GAME_VERSION = 'v1.3.1';
 
 export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
@@ -74,7 +74,7 @@ export class MenuScene extends Phaser.Scene {
 
     if (save.pets.length === 0) {
       this.add.text(cx, panelY + 70, 'Noch keine Tiere...\nStarte dein erstes Merge!', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#887799', align: 'center',
+        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
       }).setOrigin(0.5);
     } else {
       // Show pet sprites in a row
@@ -89,7 +89,7 @@ export class MenuScene extends Phaser.Scene {
         }
       });
       this.add.text(cx, panelY + 95, `${save.pets.length} Tiere | ${save.adopted} vermittelt`, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#998899',
+        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     }
 
@@ -122,7 +122,7 @@ export class MenuScene extends Phaser.Scene {
 
     // Bottom info
     this.add.text(cx, height - 60, `Vermittelte Tiere: ${save.adopted}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#665577',
+      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     this.add.text(cx, height - 35, GAME_VERSION, {

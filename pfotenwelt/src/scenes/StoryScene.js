@@ -14,7 +14,7 @@ export class StoryScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    this.cameras.main.setBackgroundColor('#1a1525');
+    this.cameras.main.setBackgroundColor('#231a2e');
 
     // Title
     this.add.text(cx, 50, this.chapter.title, {
@@ -38,7 +38,7 @@ export class StoryScene extends Phaser.Scene {
 
     // Tap to continue
     this.tapText = this.add.text(cx, height - 120, 'Tippen zum Fortfahren...', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#776688',
+      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
     this.tweens.add({
       targets: this.tapText,

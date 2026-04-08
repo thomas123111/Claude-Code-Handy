@@ -21,7 +21,7 @@ export class EventScene extends Phaser.Scene {
       community: '#1a2a15',
       special: '#1a1530',
     };
-    this.cameras.main.setBackgroundColor(bgColors[evt.category] || '#1e1828');
+    this.cameras.main.setBackgroundColor(bgColors[evt.category] || '#231a2e');
 
     // Urgency banner for emergencies
     if (evt.category === 'emergency') {
@@ -61,7 +61,7 @@ export class EventScene extends Phaser.Scene {
     let btnY = evt.duration > 0 ? 320 : 280;
     evt.choices.forEach((choice, idx) => {
       const canAfford = this.save.hearts >= (choice.cost || 0);
-      const btnColor = canAfford ? 0x553388 : 0x332233;
+      const btnColor = canAfford ? 0x2a1f35 : 0x332233;
       const borderColor = canAfford ? 0x7744aa : 0x444444;
 
       this.add.rectangle(cx, btnY, width - 40, 60, btnColor, 0.5)
@@ -83,7 +83,7 @@ export class EventScene extends Phaser.Scene {
       if (choice.puzzle) rewardParts.push('🧩 Rätsel');
 
       this.add.text(cx, btnY + 12, `${costStr}${rewardParts.join(' · ')}`, {
-        fontSize: '9px', fontFamily: 'monospace', color: '#998888',
+        fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
 
       if (canAfford) {
@@ -155,7 +155,7 @@ export class EventScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.add.text(cx, height / 2 + 80, 'Tippe zum Fortfahren...', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#776688',
+      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
     }).setOrigin(0.5);
 
     // Use update-loop tap detection (more reliable than once listener)
@@ -209,7 +209,7 @@ export class EventResultScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
       this.add.text(cx, height / 2 + 80, 'Tippe zum Fortfahren...', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#776688',
+        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
       }).setOrigin(0.5);
     }
 
