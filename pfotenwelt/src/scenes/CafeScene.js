@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { BREEDS } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard, drawBackButton } from '../ui/Theme.js';
 
 const VISIT_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -73,25 +74,20 @@ export class CafeScene extends Phaser.Scene {
     const save = this.save;
     const cafe = save.cafe;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Header
-    this.add.text(cx, 25, '☕ Tier-Café', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawHeader(this, '☕ Tier-Café', save);
 
-    this.add.text(cx, 52, `Besucher: ${cafe.guests.length}/${cafe.capacity} | ❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
-    }).setOrigin(0.5);
-
-    this.add.text(cx, 72, 'Besucher interagieren mit deinen Tieren!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+    // Subtitle
+    this.add.text(cx, 70, 'Besucher interagieren mit deinen Tieren!', {
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Status message
     if (this.message) {
       this.add.text(cx, 90, this.message, {
-        fontSize: '12px', fontFamily: 'monospace', color: '#ffcc44', fontStyle: 'bold',
+        fontSize: '15px', fontFamily: 'monospace', color: THEME.text.warning, fontStyle: 'bold',
       }).setOrigin(0.5);
     }
 
@@ -104,17 +100,16 @@ export class CafeScene extends Phaser.Scene {
       const remaining = Math.max(0, VISIT_DURATION_MS - elapsed);
       const done = remaining <= 0;
 
-      const bgColor = done ? 0x352a40 : 0x2d2240;
-      this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, bgColor, 0.8)
-        .setStrokeStyle(1, done ? 0xaa8844 : 0x443355);
+      const borderCol = done ? 0xaa8844 : THEME.bg.cardBorder;
+      drawCard(this, cx, y + cardH / 2, width - 20, cardH, { borderColor: borderCol });
 
       // Visitor info
       this.add.text(25, y + 8, '👤', { fontSize: '26px' });
       this.add.text(60, y + 8, guest.name, {
-        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+        fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
       });
       this.add.text(60, y + 26, `Liebt: ${guest.favPetType}`, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#aa8877',
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
       });
 
       // Show interacting pet
@@ -122,7 +117,7 @@ export class CafeScene extends Phaser.Scene {
         const pet = save.pets.find(p => p.id === guest.interactingPetId);
         if (pet) {
           this.add.text(60, y + 40, `Spielt mit ${pet.emoji} ${pet.name}`, {
-            fontSize: '9px', fontFamily: 'monospace', color: '#88aa66',
+            fontSize: '13px', fontFamily: 'monospace', color: THEME.text.success,
           });
         }
       }
@@ -132,11 +127,10 @@ export class CafeScene extends Phaser.Scene {
         const btnX = width - 80;
         const btnY = y + cardH / 2;
 
-        this.add.rectangle(btnX, btnY, 120, 30, 0xaa6633, 0.9)
-          .setStrokeStyle(1, 0xcc8844);
-        this.add.text(btnX, btnY, `Sammeln +${guest.reward}❤️`, {
-          fontSize: '11px', fontFamily: 'monospace', color: '#ffffff',
-        }).setOrigin(0.5);
+        drawButton(this, btnX, btnY, 120, 30, `Sammeln +${guest.reward}❤️`, {
+          type: 'primary',
+          fontSize: '14px',
+        });
         this.addHitArea(btnX, btnY, 120, 30, () => this.collectVisitor(idx));
       } else {
         // Countdown
@@ -144,7 +138,7 @@ export class CafeScene extends Phaser.Scene {
         const secs = Math.floor((remaining % 60000) / 1000);
         const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         this.add.text(width - 25, y + cardH / 2, `⏰ ${timeStr}`, {
-          fontSize: '13px', fontFamily: 'monospace', color: '#aa7744',
+          fontSize: '16px', fontFamily: 'monospace', color: THEME.text.warning,
         }).setOrigin(1, 0.5);
       }
 
@@ -155,11 +149,12 @@ export class CafeScene extends Phaser.Scene {
     if (cafe.guests.length < cafe.capacity) {
       const canAfford = save.hearts >= INVITE_COST;
       const btnY = y + 20;
-      this.add.rectangle(cx, btnY, 280, 36, canAfford ? 0x2a1f35 : 0x1a1525, canAfford ? 0.9 : 0.5)
-        .setStrokeStyle(2, canAfford ? 0x7744aa : 0x443355);
-      this.add.text(cx, btnY, `👤 Besucher einladen (${INVITE_COST}❤️)`, {
-        fontSize: '14px', fontFamily: 'monospace', color: canAfford ? '#ffcc88' : '#665544',
-      }).setOrigin(0.5);
+
+      drawButton(this, cx, btnY, 280, 36, `👤 Besucher einladen (${INVITE_COST}❤️)`, {
+        type: 'primary',
+        disabled: !canAfford,
+        fontSize: '16px',
+      });
 
       if (canAfford) {
         this.addHitArea(cx, btnY, 280, 36, () => this.inviteVisitor());
@@ -175,11 +170,11 @@ export class CafeScene extends Phaser.Scene {
       const canUpgrade = save.hearts >= upgradeCost;
       const upY = y + 20;
 
-      this.add.rectangle(cx, upY, 280, 36, canUpgrade ? 0x2a1f35 : 0x1a1525, canUpgrade ? 0.9 : 0.5)
-        .setStrokeStyle(1, canUpgrade ? 0x7744aa : 0x443355);
-      this.add.text(cx, upY, `⬆️ Kapazität +1 (${upgradeCost}❤️)`, {
-        fontSize: '13px', fontFamily: 'monospace', color: canUpgrade ? '#ffdd88' : '#665544',
-      }).setOrigin(0.5);
+      drawButton(this, cx, upY, 280, 36, `⬆️ Kapazität +1 (${upgradeCost}❤️)`, {
+        type: 'secondary',
+        disabled: !canUpgrade,
+        fontSize: '16px',
+      });
 
       if (canUpgrade) {
         this.addHitArea(cx, upY, 280, 36, () => this.upgradeCapacity());
@@ -187,16 +182,13 @@ export class CafeScene extends Phaser.Scene {
     } else {
       const upY = y + 20;
       this.add.text(cx, upY, 'Max. Kapazität erreicht! (8 Plätze)', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#aa7744',
+        fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
     }
 
     // Back button
-    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 260, 40, () => {
+    drawButton(this, cx, height - 40, 280, 50, '← Zurück', { type: 'secondary' });
+    this.addHitArea(cx, height - 40, 280, 50, () => {
       if (this.refreshTimer) this.refreshTimer.remove();
       this.scene.start('Town');
     });

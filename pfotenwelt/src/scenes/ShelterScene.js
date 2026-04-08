@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { calculateHappiness, decayNeeds, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard, drawBackButton, drawProgressBar } from '../ui/Theme.js';
 
 export class ShelterScene extends Phaser.Scene {
   constructor() { super('Shelter'); }
@@ -37,39 +38,30 @@ export class ShelterScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // === HEADER ===
-    this.add.rectangle(cx, 0, width, 50, 0x2a1f35, 0.95).setOrigin(0.5, 0);
-    this.add.rectangle(cx, 50, width, 2, 0x443355).setOrigin(0.5, 0);
-    this.add.text(cx, 25, '🏠 Mein Tierheim', {
-      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.add.text(15, 15, `❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#ff6688',
-    });
-    this.add.text(width - 15, 15, `${save.pets.length} Tiere`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
+    drawHeader(this, '🏠 Mein Tierheim', save);
+    // Pet count info after header
+    this.add.text(width - 14, 32, `${save.pets.length} Tiere`, {
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(1, 0);
-    this.add.text(width - 15, 32, `${save.adopted} vermittelt`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+    this.add.text(width - 14, 47, `${save.adopted} vermittelt`, {
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(1, 0);
 
     // === EMPTY STATE ===
     if (save.pets.length === 0) {
       this.add.text(cx, 200, '🐾', { fontSize: '60px' }).setOrigin(0.5);
       this.add.text(cx, 270, 'Noch keine Tiere!', {
-        fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+        fontSize: '22px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
       }).setOrigin(0.5);
       this.add.text(cx, 300, 'Merge max-level Items im Merge Board\num dein erstes Tier zu bekommen!', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
+        fontSize: '15px', fontFamily: 'monospace', color: THEME.text.muted, align: 'center',
       }).setOrigin(0.5);
 
       // Quick link to merge
-      this.add.rectangle(cx, 370, 220, 44, 0x2a1f35, 0.4).setStrokeStyle(2, 0x7744aa);
-      this.add.text(cx, 370, '🧩 Zum Merge Board', {
-        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ccaaff', fontStyle: 'bold',
-      }).setOrigin(0.5);
+      drawButton(this, cx, 370, 220, 44, '🧩 Zum Merge Board', { type: 'secondary' });
       this.addHitArea(cx, 370, 220, 44, () => this.scene.start('MergeBoard'));
 
     } else if (this.selectedPet !== null) {
@@ -82,11 +74,8 @@ export class ShelterScene extends Phaser.Scene {
 
     // === BACK BUTTON ===
     const backLabel = this.selectedPet !== null ? '← Zurück zur Übersicht' : '← Zurück zur Stadt';
-    this.add.rectangle(cx, height - 30, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 30, backLabel, {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 30, 260, 40, () => {
+    drawButton(this, cx, height - 30, 280, 50, backLabel, { type: 'secondary' });
+    this.addHitArea(cx, height - 30, 280, 50, () => {
       if (this.selectedPet !== null) {
         this.selectedPet = null;
         this.drawUI();
@@ -114,12 +103,12 @@ export class ShelterScene extends Phaser.Scene {
     const cols = 3;
     const cardW = 160;
     const cardH = 175;
-    const startY = 65;
+    const startY = 70;
     const gapX = 12;
     const gapY = 10;
 
     this.add.text(width / 2, startY + 5, 'Tippe auf ein Tier für Details', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     save.pets.forEach((pet, idx) => {
@@ -135,8 +124,7 @@ export class ShelterScene extends Phaser.Scene {
 
       // Card
       const rarityCol = Phaser.Display.Color.HexStringToColor(RARITY_COLORS[pet.rarity] || '#555555').color;
-      this.add.rectangle(cx, cy, cardW, cardH, 0x2a2040, 0.85)
-        .setStrokeStyle(2, rarityCol);
+      drawCard(this, cx, cy, cardW, cardH, { borderColor: rarityCol });
 
       // Breed portrait
       const breedTex = `breed_${pet.breedId}`;
@@ -148,32 +136,32 @@ export class ShelterScene extends Phaser.Scene {
 
       // Name
       this.add.text(cx, cy + 25, pet.name, {
-        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+        fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
       }).setOrigin(0.5);
 
       // Breed + rarity
       this.add.text(cx, cy + 42, pet.breed, {
-        fontSize: '9px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
+        fontSize: '13px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
       }).setOrigin(0.5);
 
       // Happiness indicator
       const happyEmoji = pet.happiness >= 75 ? '😊' : pet.happiness >= 50 ? '😐' : '😢';
       this.add.text(cx, cy + 60, `${happyEmoji} ${Math.round(pet.happiness)}%`, {
-        fontSize: '11px', fontFamily: 'monospace', color: pet.happiness >= 75 ? '#44ff88' : pet.happiness >= 50 ? '#ffcc44' : '#ff6644',
+        fontSize: '14px', fontFamily: 'monospace', color: pet.happiness >= 75 ? '#33aa55' : pet.happiness >= 50 ? '#dd8833' : '#dd4444',
       }).setOrigin(0.5);
 
       // Badges
       let badgeX = cx - 50;
       if (pet.insured) {
-        this.add.text(badgeX, cy + 75, '🛡️', { fontSize: '12px' });
+        this.add.text(badgeX, cy + 75, '🛡️', { fontSize: '15px' });
         badgeX += 20;
       }
       if (pet.groomed) {
-        this.add.text(badgeX, cy + 75, '✨', { fontSize: '12px' });
+        this.add.text(badgeX, cy + 75, '✨', { fontSize: '15px' });
         badgeX += 20;
       }
       if (pet.tricks && pet.tricks.length > 0) {
-        this.add.text(badgeX, cy + 75, '🎓', { fontSize: '12px' });
+        this.add.text(badgeX, cy + 75, '🎓', { fontSize: '15px' });
       }
 
       // Tap to select
@@ -205,16 +193,16 @@ export class ShelterScene extends Phaser.Scene {
 
     // Name + breed
     this.add.text(cx, 225, pet.name, {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+      fontSize: '26px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
     }).setOrigin(0.5);
     this.add.text(cx, 250, `${pet.breed} · ${RARITY_LABELS[pet.rarity]}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
+      fontSize: '15px', fontFamily: 'monospace', color: RARITY_COLORS[pet.rarity],
     }).setOrigin(0.5);
 
     // Story
     if (pet.story) {
       this.add.text(cx, 275, `"${pet.story}"`, {
-        fontSize: '10px', fontFamily: 'Georgia, serif', color: '#bbaacc',
+        fontSize: '13px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
         fontStyle: 'italic', wordWrap: { width: width - 60 }, align: 'center',
       }).setOrigin(0.5);
     }
@@ -222,15 +210,14 @@ export class ShelterScene extends Phaser.Scene {
     // Happiness big display
     const happyEmoji = pet.happiness >= 75 ? '😊' : pet.happiness >= 50 ? '😐' : '😢';
     this.add.text(cx, 310, `${happyEmoji} Glück: ${Math.round(pet.happiness)}%`, {
-      fontSize: '16px', fontFamily: 'monospace', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // === NEEDS SECTION ===
     const needsY = 345;
-    this.add.rectangle(cx, needsY + 50, width - 30, 120, 0x252035, 0.7)
-      .setStrokeStyle(1, 0x443355);
+    drawCard(this, cx, needsY + 50, width - 30, 120);
     this.add.text(cx, needsY, 'Bedürfnisse', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const needs = [
@@ -247,29 +234,26 @@ export class ShelterScene extends Phaser.Scene {
 
       // Label
       this.add.text(25, ny, `${need.emoji} ${need.label}`, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+        fontSize: '14px', fontFamily: 'monospace', color: THEME.text.body,
       });
 
-      // Bar background
-      this.add.rectangle(170 + barW / 2, ny + 7, barW, 12, 0x333344)
-        .setStrokeStyle(1, 0x444455);
-      // Bar fill
-      const fillW = Math.max(1, barW * (val / 100));
-      this.add.rectangle(170, ny + 7, fillW, 12, need.color).setOrigin(0, 0.5);
+      // Progress bar
+      drawProgressBar(this, 170, ny + 7, barW, 12, val / 100, need.color);
+
       // Value text
       this.add.text(170 + barW + 8, ny, `${Math.round(val)}%`, {
-        fontSize: '10px', fontFamily: 'monospace', color: val > 40 ? '#aaaaaa' : '#ff6644',
+        fontSize: '13px', fontFamily: 'monospace', color: val > 40 ? THEME.text.muted : THEME.text.error,
       });
 
       // Action button (if need is low and has action)
       if (need.cost > 0 && val < 80) {
         const btnX = width - 40;
         const canAfford = save.hearts >= need.cost;
-        this.add.rectangle(btnX, ny + 6, 55, 20, canAfford ? 0x2a1f35 : 0x332233, 0.6)
-          .setStrokeStyle(1, canAfford ? 0x7744aa : 0x444444);
-        this.add.text(btnX, ny + 6, `${need.cost}❤️`, {
-          fontSize: '10px', fontFamily: 'monospace', color: canAfford ? '#ccaaff' : '#555555',
-        }).setOrigin(0.5);
+        drawButton(this, btnX, ny + 6, 55, 22, `${need.cost}❤️`, {
+          disabled: !canAfford,
+          fontSize: '13px',
+          textColor: canAfford ? '#fff8e8' : '#999999',
+        });
         if (canAfford) {
           this.addHitArea(btnX, ny + 6, 55, 22, () => {
             this.feedPet(petIdx, need.key, need.cost);
@@ -283,19 +267,19 @@ export class ShelterScene extends Phaser.Scene {
     let bx = 25;
     if (pet.insured) {
       this.add.text(bx, badgeY, '🛡️ Versichert', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#4488aa',
+        fontSize: '14px', fontFamily: 'monospace', color: '#4488aa',
       });
       bx += 120;
     }
     if (pet.groomed) {
       this.add.text(bx, badgeY, '✨ Gepflegt (+25%)', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#cc88ff',
+        fontSize: '14px', fontFamily: 'monospace', color: '#9944ee',
       });
       bx += 140;
     }
     if (pet.tricks && pet.tricks.length > 0) {
       this.add.text(bx, badgeY, `🎓 ${pet.tricks.join(', ')}`, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#44aa44',
+        fontSize: '14px', fontFamily: 'monospace', color: '#44aa44',
       });
     }
 
@@ -305,30 +289,24 @@ export class ShelterScene extends Phaser.Scene {
     // Adoption progress
     pet.adoptionProgress = Math.min(100, pet.happiness * 1.2);
     const adoptBarW = width - 60;
-    this.add.rectangle(cx, actY, adoptBarW, 16, 0x333344).setStrokeStyle(1, 0x444455);
-    this.add.rectangle(30, actY, adoptBarW * (pet.adoptionProgress / 100), 16, 0x44aa66)
-      .setOrigin(0, 0.5);
+    drawProgressBar(this, 30, actY, adoptBarW, 16, pet.adoptionProgress / 100, 0x44aa66);
     this.add.text(cx, actY, `Vermittlung: ${Math.round(pet.adoptionProgress)}%`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#ffffff',
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.dark,
     }).setOrigin(0.5);
 
     if (pet.adoptionProgress >= 95) {
       // Adoption button
-      this.add.rectangle(cx, actY + 40, 280, 46, 0x337733, 0.5)
-        .setStrokeStyle(2, 0x44aa44);
-      this.add.text(cx, actY + 40, '🏠 Vermitteln & Spenden!', {
-        fontSize: '15px', fontFamily: 'Georgia, serif', color: '#88ff88', fontStyle: 'bold',
-      }).setOrigin(0.5);
+      drawButton(this, cx, actY + 40, 280, 46, '🏠 Vermitteln & Spenden!');
       this.addHitArea(cx, actY + 40, 280, 46, () => this.adoptPet(petIdx));
 
       const rarityBonus = { common: 20, rare: 50, epic: 120, legendary: 300 };
       const bonus = rarityBonus[pet.rarity] || 20;
       this.add.text(cx, actY + 72, `Belohnung: +${bonus}❤️ + 0.5kg Futterspende`, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#88aa88',
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.success,
       }).setOrigin(0.5);
     } else {
       this.add.text(cx, actY + 40, 'Mach das Tier glücklicher um es zu vermitteln!', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
     }
 
@@ -336,11 +314,10 @@ export class ShelterScene extends Phaser.Scene {
     if (!pet.insured) {
       const insY = actY + 100;
       const canAffordIns = save.hearts >= 30;
-      this.add.rectangle(cx, insY, 240, 36, canAffordIns ? 0x334466 : 0x222233, 0.5)
-        .setStrokeStyle(1, canAffordIns ? 0x4488aa : 0x333344);
-      this.add.text(cx, insY, '🛡️ Versichern (30❤️)', {
-        fontSize: '12px', fontFamily: 'monospace', color: canAffordIns ? '#88ccff' : '#555555',
-      }).setOrigin(0.5);
+      drawButton(this, cx, insY, 240, 36, '🛡️ Versichern (30❤️)', {
+        type: 'secondary',
+        disabled: !canAffordIns,
+      });
       if (canAffordIns) {
         this.addHitArea(cx, insY, 240, 36, () => {
           this.save.hearts -= 30;
@@ -353,7 +330,7 @@ export class ShelterScene extends Phaser.Scene {
         });
       }
       this.add.text(cx, insY + 25, 'Halbiert Tierarztkosten!', {
-        fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
     }
   }

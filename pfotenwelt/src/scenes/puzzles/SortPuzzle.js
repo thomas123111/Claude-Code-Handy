@@ -14,20 +14,20 @@ export class SortPuzzle extends Phaser.Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    this.cameras.main.setBackgroundColor('#1e1a14');
+    this.cameras.main.setBackgroundColor('#f8f2fc');
 
     this.add.text(cx, 30, `🍽️ Fütterung: ${this.petName}`, {
-      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#4a3560', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(cx, 60, 'Ziehe das richtige Futter zum Tier!', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#998877',
+      fontSize: '11px', fontFamily: 'monospace', color: '#7a6a8a',
     }).setOrigin(0.5);
 
     // Timer
     this.timeLeft = 25;
     this.timerText = this.add.text(width - 15, 30, `${this.timeLeft}s`, {
-      fontSize: '16px', fontFamily: 'monospace', color: '#ff8844', fontStyle: 'bold',
+      fontSize: '18px', fontFamily: 'monospace', color: '#e89030', fontStyle: 'bold',
     }).setOrigin(1, 0);
 
     // Score
@@ -35,7 +35,7 @@ export class SortPuzzle extends Phaser.Scene {
     this.rounds = 0;
     this.maxRounds = 5;
     this.scoreText = this.add.text(15, 30, `${this.score}/${this.maxRounds}`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#88ff88',
+      fontSize: '18px', fontFamily: 'monospace', color: '#33aa55',
     });
 
     // Pets at the top - 3 pets that need different food
@@ -48,10 +48,10 @@ export class SortPuzzle extends Phaser.Scene {
     // Drop zones for pets
     this.dropZones = [];
     this.petTypes.forEach((pet) => {
-      this.add.circle(pet.x, 160, 50, 0x332820, 0.6).setStrokeStyle(2, 0x554433);
+      this.add.circle(pet.x, 160, 50, 0xf0e8f0, 0.6).setStrokeStyle(2, 0xd0c0d8);
       this.add.text(pet.x, 140, pet.emoji, { fontSize: '40px' }).setOrigin(0.5);
       this.add.text(pet.x, 190, pet.label, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#aa9977',
+        fontSize: '12px', fontFamily: 'monospace', color: '#7a6a8a',
       }).setOrigin(0.5);
       this.dropZones.push({ x: pet.x, y: 160, needs: pet.needs, radius: 55 });
     });
@@ -119,7 +119,7 @@ export class SortPuzzle extends Phaser.Scene {
       callback: () => {
         this.timeLeft--;
         this.timerText.setText(`${this.timeLeft}s`);
-        if (this.timeLeft <= 5) this.timerText.setColor('#ff4444');
+        if (this.timeLeft <= 5) this.timerText.setColor('#dd4444');
         if (this.timeLeft <= 0) this.finishPuzzle(false);
       },
     });
@@ -220,17 +220,17 @@ export class SortPuzzle extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Result overlay
-    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7).setDepth(50);
+    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x2a1a3a, 0.75).setDepth(50);
     const resultEmoji = success ? '🎉' : '😢';
     const resultText = success ? 'Geschafft!' : 'Nicht geschafft...';
-    const resultColor = success ? '#44ff88' : '#ff6644';
+    const resultColor = success ? '#33aa55' : '#dd4444';
 
     this.add.text(width / 2, height / 2 - 40, resultEmoji, { fontSize: '48px' }).setOrigin(0.5).setDepth(51);
     this.add.text(width / 2, height / 2 + 20, resultText, {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: resultColor, fontStyle: 'bold',
+      fontSize: '24px', fontFamily: 'Georgia, serif', color: resultColor, fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(51);
     this.add.text(width / 2, height / 2 + 55, `${this.score}/${this.maxRounds} richtig`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#aaaaaa',
+      fontSize: '18px', fontFamily: 'monospace', color: '#7a6a8a',
     }).setOrigin(0.5).setDepth(51);
 
     this.registry.set('puzzleResult', { success, score: this.score });

@@ -26,7 +26,7 @@ export class Match3Puzzle extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor('#1a2028');
+    this.cameras.main.setBackgroundColor('#f8f2fc');
 
     // Board offset to center
     this.boardX = (width - this.COLS * this.CELL) / 2;
@@ -34,15 +34,15 @@ export class Match3Puzzle extends Phaser.Scene {
 
     // UI texts
     this.titleText = this.add.text(width / 2, 20, `🏥 Behandlung für ${this.petName}`, {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'Arial'
+      fontSize: '22px', color: '#4a3560', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.timerText = this.add.text(width / 2, 55, `⏱ ${this.timer}s`, {
-      fontSize: '22px', color: '#ffcc00', fontFamily: 'Arial'
+      fontSize: '24px', color: '#e89030', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.scoreText = this.add.text(width / 2, 85, `Punkte: 0 / ${this.GOAL}`, {
-      fontSize: '18px', color: '#aaddff', fontFamily: 'Arial'
+      fontSize: '20px', color: '#5588cc', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     // Progress bar background
@@ -51,7 +51,7 @@ export class Match3Puzzle extends Phaser.Scene {
     const barX = (width - barWidth) / 2;
     const barY = 120;
     this.add.graphics()
-      .fillStyle(0x333344, 1)
+      .fillStyle(0xe0d0e8, 1)
       .fillRoundedRect(barX, barY, barWidth, barHeight, 8);
 
     this.progressBar = this.add.graphics();
@@ -59,8 +59,8 @@ export class Match3Puzzle extends Phaser.Scene {
 
     // Give up button
     const giveUpBtn = this.add.text(width / 2, 150, '❌ Aufgeben', {
-      fontSize: '16px', color: '#ff6666', fontFamily: 'Arial',
-      backgroundColor: '#332222', padding: { x: 12, y: 4 }
+      fontSize: '18px', color: '#cc4444', fontFamily: 'Arial',
+      backgroundColor: '#f5e0e0', padding: { x: 12, y: 4 }
     }).setOrigin(0.5, 0);
 
     // Build the grid
@@ -394,7 +394,7 @@ export class Match3Puzzle extends Phaser.Scene {
     this.timerText.setText(`⏱ ${this.timer}s`);
 
     if (this.timer <= 5) {
-      this.timerText.setColor('#ff4444');
+      this.timerText.setColor('#dd4444');
     }
 
     if (this.timer <= 0) {
@@ -414,7 +414,7 @@ export class Match3Puzzle extends Phaser.Scene {
 
     // Overlay
     this.add.graphics()
-      .fillStyle(0x000000, 0.7)
+      .fillStyle(0x2a1a3a, 0.75)
       .fillRect(0, 0, width, height);
 
     const msg = success
@@ -422,13 +422,13 @@ export class Match3Puzzle extends Phaser.Scene {
       : `❌ Nicht geschafft.\nPunkte: ${this.score}`;
 
     this.add.text(width / 2, height / 2 - 40, msg, {
-      fontSize: '24px', color: '#ffffff', fontFamily: 'Arial',
+      fontSize: '26px', color: '#ffffff', fontFamily: 'Arial',
       align: 'center', lineSpacing: 10
     }).setOrigin(0.5);
 
     this.add.text(width / 2, height / 2 + 40, '▶ Weiter', {
-      fontSize: '22px', color: '#44ff88', fontFamily: 'Arial',
-      backgroundColor: '#224433', padding: { x: 20, y: 8 }
+      fontSize: '24px', color: '#33aa55', fontFamily: 'Arial',
+      backgroundColor: '#e0f5e8', padding: { x: 20, y: 8 }
     }).setOrigin(0.5);
 
     // Wait for tap to continue

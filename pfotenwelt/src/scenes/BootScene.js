@@ -96,6 +96,10 @@ export class BootScene extends Phaser.Scene {
     this.load.image('ui_coin', 'assets/ui_coin.png');
     this.load.image('ui_paw', 'assets/ui_paw.png');
 
+    // UI buttons (NineSlice)
+    this.load.image('btn_brown', 'assets/btn_brown.png');
+    this.load.image('btn_blue', 'assets/btn_blue.png');
+
     // App icon + splash
     this.load.image('icon_app', 'assets/icon_app.png');
     this.load.image('splash_screen', 'assets/splash_screen.jpg');

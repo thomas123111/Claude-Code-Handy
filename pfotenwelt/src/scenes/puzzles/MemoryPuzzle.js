@@ -31,7 +31,7 @@ export class MemoryPuzzle extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor('#1a1a28');
+    this.cameras.main.setBackgroundColor('#f8f2fc');
 
     // Board dimensions
     const boardW = this.COLS * (this.CARD_SIZE + this.CARD_GAP) - this.CARD_GAP;
@@ -41,25 +41,25 @@ export class MemoryPuzzle extends Phaser.Scene {
 
     // UI
     this.titleText = this.add.text(width / 2, 20, `🧠 Memory für ${this.petName}`, {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'Arial'
+      fontSize: '22px', color: '#4a3560', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.timerText = this.add.text(width / 2, 55, `⏱ ${this.timer}s`, {
-      fontSize: '22px', color: '#ffcc00', fontFamily: 'Arial'
+      fontSize: '24px', color: '#e89030', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.matchText = this.add.text(width / 2, 85, `Paare: 0 / ${this.totalPairs}`, {
-      fontSize: '18px', color: '#aaddff', fontFamily: 'Arial'
+      fontSize: '20px', color: '#5588cc', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.scoreText = this.add.text(width / 2, 115, `Punkte: 0`, {
-      fontSize: '16px', color: '#88ff88', fontFamily: 'Arial'
+      fontSize: '18px', color: '#33aa55', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     // Give up button
     const giveUpBtn = this.add.text(width / 2, 155, '❌ Aufgeben', {
-      fontSize: '16px', color: '#ff6666', fontFamily: 'Arial',
-      backgroundColor: '#332222', padding: { x: 12, y: 4 }
+      fontSize: '18px', color: '#cc4444', fontFamily: 'Arial',
+      backgroundColor: '#f5e0e0', padding: { x: 12, y: 4 }
     }).setOrigin(0.5, 0);
 
     // Build card deck (pairs)
@@ -129,9 +129,9 @@ export class MemoryPuzzle extends Phaser.Scene {
 
       // Card background
       const bg = this.add.graphics();
-      bg.fillStyle(0x334466, 1);
+      bg.fillStyle(0xddd0e8, 1);
       bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
-      bg.lineStyle(2, 0x5577aa, 1);
+      bg.lineStyle(2, 0xc0a8d4, 1);
       bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
       this.cardBgs.push(bg);
 
@@ -180,9 +180,9 @@ export class MemoryPuzzle extends Phaser.Scene {
           // Recolor background
           const bg = this.cardBgs[index];
           bg.clear();
-          bg.fillStyle(0x445588, 1);
+          bg.fillStyle(0xe8e0f2, 1);
           bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
-          bg.lineStyle(2, 0x88aadd, 1);
+          bg.lineStyle(2, 0xc8b0e0, 1);
           bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
 
           this.tweens.add({
@@ -202,9 +202,9 @@ export class MemoryPuzzle extends Phaser.Scene {
           text.setText('❓');
           const bg = this.cardBgs[index];
           bg.clear();
-          bg.fillStyle(0x334466, 1);
+          bg.fillStyle(0xddd0e8, 1);
           bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
-          bg.lineStyle(2, 0x5577aa, 1);
+          bg.lineStyle(2, 0xc0a8d4, 1);
           bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
 
           this.tweens.add({
@@ -247,9 +247,9 @@ export class MemoryPuzzle extends Phaser.Scene {
           const y = this.boardY + row * (this.CARD_SIZE + this.CARD_GAP);
           const bg = this.cardBgs[idx];
           bg.clear();
-          bg.fillStyle(0x225533, 1);
+          bg.fillStyle(0xd4f0d8, 1);
           bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
-          bg.lineStyle(2, 0x44aa66, 1);
+          bg.lineStyle(2, 0x88cc88, 1);
           bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
         });
 
@@ -282,7 +282,7 @@ export class MemoryPuzzle extends Phaser.Scene {
     this.timerText.setText(`⏱ ${this.timer}s`);
 
     if (this.timer <= 10) {
-      this.timerText.setColor('#ff4444');
+      this.timerText.setColor('#dd4444');
     }
 
     if (this.timer <= 0) {
@@ -302,7 +302,7 @@ export class MemoryPuzzle extends Phaser.Scene {
 
     // Overlay
     this.add.graphics()
-      .fillStyle(0x000000, 0.7)
+      .fillStyle(0x2a1a3a, 0.75)
       .fillRect(0, 0, width, height);
 
     const msg = success
@@ -310,13 +310,13 @@ export class MemoryPuzzle extends Phaser.Scene {
       : `❌ Zeit abgelaufen!\nPaare: ${this.matchesFound} / ${this.totalPairs}`;
 
     this.add.text(width / 2, height / 2 - 40, msg, {
-      fontSize: '24px', color: '#ffffff', fontFamily: 'Arial',
+      fontSize: '26px', color: '#ffffff', fontFamily: 'Arial',
       align: 'center', lineSpacing: 10
     }).setOrigin(0.5);
 
     this.add.text(width / 2, height / 2 + 40, '▶ Weiter', {
-      fontSize: '22px', color: '#44ff88', fontFamily: 'Arial',
-      backgroundColor: '#224433', padding: { x: 20, y: 8 }
+      fontSize: '24px', color: '#33aa55', fontFamily: 'Arial',
+      backgroundColor: '#e0f5e8', padding: { x: 20, y: 8 }
     }).setOrigin(0.5);
 
     // Wait for tap to continue

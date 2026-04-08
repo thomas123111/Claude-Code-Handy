@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave } from '../data/SaveManager.js';
+import { THEME, drawButton, drawCard } from '../ui/Theme.js';
 
 const STATIONS = [
   { id: 'shelter', emoji: '🏠', name: 'Tierheim', desc: 'Pflege & vermittle Tiere', unlockCost: 0, scene: 'Shelter' },
@@ -27,15 +28,16 @@ export class StationsScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Header
-    this.add.text(cx, 25, '🏗️ Stationen', {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+    this.add.rectangle(cx, 0, width, 58, THEME.bg.header, 0.98).setOrigin(0.5, 0);
+    this.add.rectangle(cx, 58, width, 2, THEME.bg.headerBorder).setOrigin(0.5, 0);
+    this.add.text(cx, 20, '🏗️ Stationen', {
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
-
-    this.add.text(cx, 52, `❤️ ${save.hearts} Herzen`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
+    this.add.text(cx, 42, `❤️ ${save.hearts} Herzen`, {
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Station cards
@@ -50,10 +52,9 @@ export class StationsScene extends Phaser.Scene {
       const canAfford = save.hearts >= station.unlockCost;
 
       // Card background
-      const bgColor = unlocked ? 0x2d2240 : 0x1a1525;
-      const borderColor = unlocked ? 0x7744aa : 0x443355;
-      this.add.rectangle(cx, y + cardH / 2, cardW, cardH, bgColor, unlocked ? 0.9 : 0.5)
-        .setStrokeStyle(1, borderColor);
+      const borderColor = unlocked ? 0xc8a8e8 : 0xe0d0e8;
+      drawCard(this, cx, y + cardH / 2, cardW, cardH, { borderColor });
+      if (!unlocked) this.add.rectangle(cx, y + cardH / 2, cardW, cardH, 0xf0e8f4, 0.4);
 
       // Emoji
       this.add.text(30, y + 15, station.emoji, {
@@ -62,25 +63,25 @@ export class StationsScene extends Phaser.Scene {
 
       // Name
       this.add.text(80, y + 12, station.name, {
-        fontSize: '16px', fontFamily: 'Georgia, serif',
-        color: unlocked ? '#ffffff' : '#666666', fontStyle: 'bold',
+        fontSize: '18px', fontFamily: 'Georgia, serif',
+        color: unlocked ? THEME.text.dark : THEME.text.muted, fontStyle: 'bold',
       });
 
       // Description
       this.add.text(80, y + 34, station.desc, {
-        fontSize: '11px', fontFamily: 'monospace',
-        color: unlocked ? '#aaaacc' : '#555555',
+        fontSize: '14px', fontFamily: 'monospace',
+        color: unlocked ? THEME.text.body : THEME.text.muted,
       });
 
       // Level indicator
       if (unlocked) {
         this.add.text(80, y + 54, `Level ${level}`, {
-          fontSize: '10px', fontFamily: 'monospace', color: '#88aa66',
+          fontSize: '13px', fontFamily: 'monospace', color: THEME.text.success,
         });
 
         // "Betreten" button
         this.add.text(width - 25, y + cardH / 2, 'Betreten ▶', {
-          fontSize: '12px', fontFamily: 'monospace', color: '#ddaa77',
+          fontSize: '15px', fontFamily: 'monospace', color: THEME.accent.purple,
         }).setOrigin(1, 0.5);
         this.addHitArea(cx, y + cardH / 2, cardW, cardH, () => {
           this.scene.start(station.scene);
@@ -88,18 +89,18 @@ export class StationsScene extends Phaser.Scene {
       } else {
         // Lock icon and cost
         this.add.text(80, y + 54, '🔒 Gesperrt', {
-          fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+          fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
         });
 
-        const costColor = canAfford ? '#ffaa44' : '#554444';
+        const costColor = canAfford ? THEME.text.warning : THEME.text.muted;
         const costLabel = station.unlockCost === 0 ? 'Kostenlos' : `${station.unlockCost} ❤️`;
         this.add.text(width - 25, y + 30, costLabel, {
-          fontSize: '12px', fontFamily: 'monospace', color: costColor,
+          fontSize: '15px', fontFamily: 'monospace', color: costColor,
         }).setOrigin(1, 0.5);
 
         if (canAfford) {
           this.add.text(width - 25, y + 50, 'Freischalten', {
-            fontSize: '11px', fontFamily: 'monospace', color: '#44dd88',
+            fontSize: '14px', fontFamily: 'monospace', color: THEME.text.success,
           }).setOrigin(1, 0.5);
 
           this.addHitArea(cx, y + cardH / 2, cardW, cardH, () => {
@@ -107,7 +108,7 @@ export class StationsScene extends Phaser.Scene {
           });
         } else {
           this.add.text(width - 25, y + 50, 'Zu wenig ❤️', {
-            fontSize: '10px', fontFamily: 'monospace', color: '#554444',
+            fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
           }).setOrigin(1, 0.5);
         }
       }
@@ -116,10 +117,7 @@ export class StationsScene extends Phaser.Scene {
     });
 
     // Back button
-    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawButton(this, cx, height - 40, 280, 50, '← Zurück', { type: 'secondary' });
     this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
 
     // Touch handler

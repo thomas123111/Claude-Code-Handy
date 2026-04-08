@@ -19,13 +19,13 @@ export class SwipePuzzle extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Background
-    this.cameras.main.setBackgroundColor('#2a1a2e');
+    this.cameras.main.setBackgroundColor('#f8f2fc');
 
     // Title
     this.add.text(width / 2, 40, `${this.petName} pflegen`, {
-      fontSize: '28px',
+      fontSize: '30px',
       fontFamily: 'Arial',
-      color: '#e8b4f8',
+      color: '#8a60aa',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
@@ -55,21 +55,21 @@ export class SwipePuzzle extends Phaser.Scene {
 
     // Progress bar background
     const barY = height - 120;
-    this.add.rectangle(width / 2, barY, 400, 28, 0x1a0a1e).setOrigin(0.5);
-    this.progressFill = this.add.rectangle(width / 2 - 198, barY, 0, 24, 0xda70d6).setOrigin(0, 0.5);
+    this.add.rectangle(width / 2, barY, 400, 28, 0xe0d0e8).setOrigin(0.5);
+    this.progressFill = this.add.rectangle(width / 2 - 198, barY, 0, 24, 0xcc66cc).setOrigin(0, 0.5);
 
     // Progress text
     this.progressText = this.add.text(width / 2, barY - 24, `0/${this.totalSpots} sauber`, {
-      fontSize: '18px',
+      fontSize: '20px',
       fontFamily: 'Arial',
-      color: '#e8b4f8'
+      color: '#8a60aa'
     }).setOrigin(0.5);
 
     // Timer text
     this.timerText = this.add.text(width / 2, 80, `⏱ ${this.timeLeft}s`, {
-      fontSize: '22px',
+      fontSize: '24px',
       fontFamily: 'Arial',
-      color: '#ffccff'
+      color: '#e89030'
     }).setOrigin(0.5);
 
     // Timer event
@@ -158,7 +158,7 @@ export class SwipePuzzle extends Phaser.Scene {
     this.timerText.setText(`⏱ ${this.timeLeft}s`);
 
     if (this.timeLeft <= 5) {
-      this.timerText.setColor('#ff6666');
+      this.timerText.setColor('#dd4444');
     }
 
     if (this.timeLeft <= 0) {
@@ -201,7 +201,7 @@ export class SwipePuzzle extends Phaser.Scene {
       const msg = this.add.text(width / 2, height * 0.25, 'Zeit um! ⏰', {
         fontSize: '40px',
         fontFamily: 'Arial',
-        color: '#ff8888',
+        color: '#dd4444',
         fontStyle: 'bold'
       }).setOrigin(0.5).setAlpha(0);
 
