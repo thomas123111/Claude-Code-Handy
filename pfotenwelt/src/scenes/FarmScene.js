@@ -135,8 +135,8 @@ export class FarmScene extends Phaser.Scene {
       this.add.rectangle(b.x, b.y + b.h / 4, 20, b.h / 2, 0x4a3520).setDepth(bDepth);
       // Label
       this.add.text(b.x, b.y + b.h / 2 + 18, `${b.emoji} ${b.name}`, {
-        fontSize: '12px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
-        backgroundColor: '#00000088', padding: { x: 6, y: 2 },
+        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+        backgroundColor: '#00000088', padding: { x: 8, y: 3 },
       }).setOrigin(0.5).setDepth(200);
 
       // Task status indicator
@@ -197,24 +197,34 @@ export class FarmScene extends Phaser.Scene {
       }
     });
 
-    // === HUD ===
-    this.add.rectangle(width / 2, 0, width, 55, 0x2a3520, 0.95).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
+    // === HUD (same style as TownScene) ===
+    this.add.rectangle(width / 2, 0, width, 50, 0x2a1f35, 0.92).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
     this.add.text(width / 2, 15, '🌾 Nachbars Bauernhof', {
-      fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ccdd88', fontStyle: 'bold',
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    const farm = this.save.farm;
-    this.add.text(width / 2, 38, `Lv.${farm.level} · ${farm.totalDelivered} Lieferungen`, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#88aa66',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
-    this.add.text(12, 20, `❤️ ${this.save.hearts}`, {
+    this.add.text(12, 8, `❤️ ${this.save.hearts}`, {
       fontSize: '11px', fontFamily: 'monospace', color: '#ff6688',
     }).setScrollFactor(0).setDepth(501);
+    this.add.text(12, 28, `⚡ ${this.save.energy}`, {
+      fontSize: '10px', fontFamily: 'monospace', color: '#ffcc00',
+    }).setScrollFactor(0).setDepth(501);
+    const farm = this.save.farm;
+    this.add.text(width - 12, 8, `Lv.${farm.level}`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
+    this.add.text(width - 12, 25, `🚜 ${farm.totalDelivered} Lieferungen`, {
+      fontSize: '9px', fontFamily: 'monospace', color: '#88aa66',
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
 
-    // Back button (bottom)
-    this.add.rectangle(width / 2, height - 30, 200, 36, 0x2a3520, 0.9).setScrollFactor(0).setDepth(500);
-    this.add.text(width / 2, height - 30, '← Zurück zur Stadt', {
-      fontSize: '12px', fontFamily: 'Georgia, serif', color: '#aabb88',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(501);
+    // Bottom bar with back button (interactive!)
+    this.add.rectangle(width / 2, height - 38, width, 42, 0x2a1f35, 0.9).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
+    const backBtn = this.add.text(width / 2, height - 20, '← Zurück zur Stadt', {
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(501).setInteractive({ useHandCursor: true });
+    backBtn.on('pointerdown', () => {
+      this.cameras.main.fadeOut(300, 26, 21, 35);
+      this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Town'));
+    });
 
     // === INPUT ===
     this.isDragging = false;
@@ -241,13 +251,6 @@ export class FarmScene extends Phaser.Scene {
       this.isDragging = false;
       if (this.dragMoved) return;
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-      // Back button
-      if (pointer.y >= height - 50) {
-        this.cameras.main.fadeOut(300, 26, 21, 35);
-        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Town'));
-        return;
-      }
 
       // Check building taps
       for (const b of FARM_BUILDINGS) {

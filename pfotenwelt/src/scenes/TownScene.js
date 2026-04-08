@@ -28,9 +28,9 @@ const BUILDINGS = [
   // Café weit rechts unten
   { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
     x: 1650, y: 1150, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Gilde unten mitte
+  // Gilde unten mitte (genug Abstand zum Farm-Portal)
   { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
-    x: 900, y: 1350, scale: 1.0, unlockCost: 0, unlocked: true },
+    x: 900, y: 1250, scale: 1.0, unlockCost: 0, unlocked: true },
 ];
 
 // Trees scattered around the wider map
@@ -94,9 +94,9 @@ export class TownScene extends Phaser.Scene {
     this.add.circle(900, 700, 130, 0x8a7a5a, 0.1).setDepth(-1);
 
     // === FARM PORTAL at bottom (sign pointing to separate farm world) ===
-    this.add.rectangle(900, 1450, 200, 50, 0x5a7a32, 0.8).setDepth(-1);
-    this.drawPath(900, 1350, 900, 1450, pc);
-    const farmSign = this.add.text(900, 1440, '🌾 Zum Bauernhof →', {
+    this.drawPath(900, 1280, 900, 1450, pc);
+    this.add.rectangle(900, 1430, 220, 55, 0x3a5a22, 0.8).setDepth(-1);
+    const farmSign = this.add.text(900, 1430, '🌾 Zum Bauernhof →', {
       fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddeeaa', fontStyle: 'bold',
       backgroundColor: '#33441188', padding: { x: 12, y: 6 },
     }).setOrigin(0.5).setDepth(200);
@@ -268,7 +268,7 @@ export class TownScene extends Phaser.Scene {
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
       // Check farm portal tap
-      if (wp.x >= 750 && wp.x <= 1050 && wp.y >= 1410 && wp.y <= 1480) {
+      if (wp.x >= 750 && wp.x <= 1050 && wp.y >= 1400 && wp.y <= 1470) {
         this.cameras.main.fadeOut(300, 26, 40, 24);
         this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Farm'));
         return;
