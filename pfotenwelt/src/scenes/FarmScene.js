@@ -45,6 +45,10 @@ export class FarmScene extends Phaser.Scene {
     this.cameras.main.centerOn(FARM_W / 2, FARM_H / 2);
     this.cameras.main.setZoom(Math.min(width / FARM_W * 2.0, 1.0));
 
+    // Block input briefly to prevent click-through from previous scene
+    this.inputBlocked = true;
+    this.time.delayedCall(400, () => { this.inputBlocked = false; });
+
     // === GROUND ===
     // Main farm ground (earthy green)
     this.add.rectangle(FARM_W / 2, FARM_H / 2, FARM_W, FARM_H, 0x4a7a32).setDepth(-2);
@@ -253,7 +257,7 @@ export class FarmScene extends Phaser.Scene {
 
     this.input.on('pointerup', (pointer) => {
       this.isDragging = false;
-      if (this.dragMoved) return;
+      if (this.dragMoved || this.inputBlocked) return;
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
       // Check building taps

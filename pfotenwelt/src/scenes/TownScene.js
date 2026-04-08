@@ -70,6 +70,10 @@ export class TownScene extends Phaser.Scene {
     this.cameras.main.centerOn(MAP_W / 2, 500);
     this.cameras.main.setZoom(Math.min(width / MAP_W * 2.2, 1.0));
 
+    // Block input briefly to prevent click-through from previous scene
+    this.inputBlocked = true;
+    this.time.delayedCall(400, () => { this.inputBlocked = false; });
+
     // === GRASS BACKGROUND ===
     this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x5a9a42).setDepth(-2);
     for (let i = 0; i < 40; i++) {
@@ -264,7 +268,7 @@ export class TownScene extends Phaser.Scene {
 
     this.input.on('pointerup', (pointer) => {
       this.isDragging = false; this.lastPinchDist = 0;
-      if (this.dragMoved) return;
+      if (this.dragMoved || this.inputBlocked) return;
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
       // Check farm portal tap
