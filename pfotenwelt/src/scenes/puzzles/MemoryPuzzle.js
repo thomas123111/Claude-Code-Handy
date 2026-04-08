@@ -8,20 +8,20 @@ export class MemoryPuzzle extends Phaser.Scene {
     this.onCompleteScene = data.onComplete || 'Shelter';
     this.need = data.need || 'hygiene';
 
-    // --- Variable grid sizes based on difficulty ---
-    const diff = data.difficulty || 1;
+    // --- Grid sizes for adult audience (40+) — no baby difficulty ---
+    const diff = data.difficulty || 2; // default to medium, not easy
     const GRID_CONFIGS = [
-      { cols: 3, rows: 2, pairs: 3, time: 30 },
-      { cols: 4, rows: 3, pairs: 6, time: 45 },
-      { cols: 4, rows: 4, pairs: 8, time: 60 },
+      { cols: 4, rows: 3, pairs: 6, time: 45 },   // easy = still 12 cards
+      { cols: 4, rows: 4, pairs: 8, time: 50 },   // medium
+      { cols: 5, rows: 4, pairs: 10, time: 60 },  // hard
     ];
     const config = GRID_CONFIGS[Math.min(diff - 1, 2)];
     this.COLS = config.cols;
     this.ROWS = config.rows;
     this.totalPairs = config.pairs;
     this.TIME_LIMIT = config.time;
-    this.CARD_SIZE = diff >= 3 ? 70 : 80;
-    this.CARD_GAP = diff >= 3 ? 8 : 10;
+    this.CARD_SIZE = 65;
+    this.CARD_GAP = 6;
 
     // --- Themed card sets ---
     const CARD_THEMES = [
@@ -103,17 +103,13 @@ export class MemoryPuzzle extends Phaser.Scene {
     this.buildDeck();
     this.renderCards();
 
-    // --- Preview flash: show all cards for 1.5s, then hide ---
-    this.locked = true;
-    this.showPreview(() => {
-      this.locked = false;
-      // Start timer AFTER preview ends
-      this.timerEvent = this.time.addEvent({
-        delay: 1000,
-        callback: this.tickTimer,
-        callbackScope: this,
-        loop: true
-      });
+    // No preview — cards start face-down, player must find pairs from scratch
+    this.locked = false;
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.tickTimer,
+      callbackScope: this,
+      loop: true
     });
 
     // Pointer input
@@ -165,7 +161,7 @@ export class MemoryPuzzle extends Phaser.Scene {
     }
 
     // After 1.5 seconds, flip all back
-    this.time.delayedCall(1500, () => {
+    this.time.delayedCall(800, () => { // 0.8s preview (was 1.5s — too easy)
       for (let i = 0; i < this.cards.length; i++) {
         this.cardTexts[i].setText('❓');
         this.revealed[i] = false;
