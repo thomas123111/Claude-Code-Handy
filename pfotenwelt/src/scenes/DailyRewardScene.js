@@ -56,7 +56,8 @@ export class DailyRewardScene extends Phaser.Scene {
     drawButton(this, cx, btnY, 260, 50, '✨ ABHOLEN!', { type: 'primary', fontSize: '20px' });
 
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.y >= btnY - 25 && pointer.y <= btnY + 25) {
+      if (pointer.x >= cx - 130 && pointer.x <= cx + 130 &&
+          pointer.y >= btnY - 25 && pointer.y <= btnY + 25) {
         this.claimReward();
       }
     });

@@ -1,19 +1,31 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave } from '../data/SaveManager.js';
+import { STORY_CHAPTERS } from '../data/StoryData.js';
 import { THEME, drawCard } from '../ui/Theme.js';
 
 export class StoryScene extends Phaser.Scene {
   constructor() { super('Story'); }
 
   init(data) {
-    this.chapter = data.chapter;
+    // Accept either a full chapter object or a chapterId string
+    if (data.chapter) {
+      this.chapter = data.chapter;
+    } else if (data.chapterId) {
+      this.chapter = STORY_CHAPTERS.find(ch => ch.id === data.chapterId);
+    }
     this.dialogueIdx = 0;
-    this.returnTo = data.returnTo || 'Menu';
+    this.returnTo = data.returnTo || 'Town';
   }
 
   create() {
     const { width, height } = this.scale;
     const cx = width / 2;
+
+    // Fallback: if chapter not found, go back to town
+    if (!this.chapter || !this.chapter.dialogues) {
+      this.scene.start(this.returnTo || 'Town');
+      return;
+    }
 
     this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
