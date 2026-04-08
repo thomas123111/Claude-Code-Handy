@@ -84,7 +84,7 @@ export class TownScene extends Phaser.Scene {
     if (story) {
       this.save.seenStories.push(story.id);
       writeSave(this.save);
-      this.scene.start('Story', { chapterId: story.id });
+      this.scene.start('Story', { chapter: story });
       return;
     }
 
