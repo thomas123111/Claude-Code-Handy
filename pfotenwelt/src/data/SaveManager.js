@@ -37,7 +37,7 @@ const DEFAULT_SAVE = {
   companions: [], // [{ name, breedId, type: 'dog'|'cat' }]
 
   // Currencies
-  hearts: 100,
+  hearts: 20,
   energy: 100,
   maxEnergy: 100,
   lastEnergyTime: Date.now(),
@@ -144,7 +144,8 @@ export function addXp(save, amount) {
 }
 
 export function xpForLevel(level) {
-  return Math.floor(80 * Math.pow(level, 1.4));
+  // Steeper curve: Lv2=200, Lv5=1250, Lv10=5000, Lv20=20000
+  return Math.floor(200 * Math.pow(level, 1.7));
 }
 
 // Daily login
@@ -217,11 +218,11 @@ export function canUnlockBuilding(save, buildingId) {
 }
 
 export const DAILY_REWARDS = [
+  { hearts: 10, label: '10 Herzen' },
+  { hearts: 15, label: '15 Herzen' },
+  { hearts: 20, energy: 20, label: '20 Herzen + Energie' },
+  { hearts: 25, label: '25 Herzen' },
+  { hearts: 35, label: '35 Herzen' },
   { hearts: 50, label: '50 Herzen' },
-  { hearts: 100, label: '100 Herzen' },
-  { hearts: 150, energy: 50, label: '150 Herzen + Energie' },
-  { hearts: 200, label: '200 Herzen' },
-  { hearts: 300, label: '300 Herzen' },
-  { hearts: 500, label: '500 Herzen' },
-  { hearts: 1000, energy: 100, label: '1000 Herzen + volle Energie!' },
+  { hearts: 75, energy: 50, label: '75 Herzen + Energie!' },
 ];

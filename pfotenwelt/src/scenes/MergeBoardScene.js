@@ -282,11 +282,15 @@ export class MergeBoardScene extends Phaser.Scene {
       duration: 250, onComplete: () => flash.destroy(),
     });
 
-    // Rewards
-    const comboMult = Math.min(this.comboCount, 5);
-    const hearts = result.value * comboMult;
+    // Rewards (nerfed — economy was way too fast)
+    const comboMult = Math.min(this.comboCount, 3); // max 3x combo (was 5x)
+    // Hearts: only high-level merges give meaningful rewards
+    const heartsTable = [0, 0, 1, 3, 8]; // level 1→0, 2→0, 3→1, 4→3, 5→8 base hearts
+    const baseHearts = heartsTable[result.level - 1] || 0;
+    const hearts = baseHearts * comboMult;
     this.save.hearts += hearts;
-    addXp(this.save, result.value * 2 * comboMult);
+    // XP: modest (was value * 2 * combo, now flat small amounts)
+    addXp(this.save, Math.ceil(result.level * comboMult));
 
     const comboLabel = comboMult > 1 ? ` ${comboMult}x!` : '';
     const reward = this.add.text(x, y - 25, `+${hearts}❤️${comboLabel}`, {

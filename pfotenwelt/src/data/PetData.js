@@ -30,7 +30,7 @@ export const BREEDS = {
 
 const ALL_BREEDS = [...BREEDS.dogs, ...BREEDS.cats, ...BREEDS.small];
 
-const RARITY_WEIGHTS = { common: 60, rare: 25, epic: 12, legendary: 3 };
+const RARITY_WEIGHTS = { common: 70, rare: 20, epic: 8, legendary: 1 };
 const RARITY_COLORS = {
   common: '#aaaaaa',
   rare: '#4488ff',
