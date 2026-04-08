@@ -191,9 +191,14 @@ export class TownScene extends Phaser.Scene {
       const initDir = this.getWalkDirection(next[0] - start[0], next[1] - start[1]);
       sprite.play(`${key}_walk_${initDir}`);
       sprite.setDepth(10 + Math.round(start[1] / 10));
+      // DEBUG: direction label (remove after verification)
+      const dbgLabel = this.add.text(start[0], start[1] - 30, initDir, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#ff3333', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(999);
       this.walkers.push({
         sprite, key, path, targetIdx: 1, speed: Phaser.Math.Between(30, 45),
-        currentDir: initDir,
+        currentDir: initDir, dbgLabel,
         idleTimer: 0, isIdle: false, idleDuration: 0,
       });
     });
@@ -393,6 +398,11 @@ export class TownScene extends Phaser.Scene {
         w.sprite.x += (dx / dist) * spd; w.sprite.y += (dy / dist) * spd;
       }
       w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
+      // DEBUG: update label position & text
+      if (w.dbgLabel) {
+        w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
+        w.dbgLabel.setText(w.isIdle ? 'idle' : w.currentDir);
+      }
     });
     // Update roaming pets
     if (this.roamingPets) {
