@@ -17,13 +17,13 @@ export const STORY_CHAPTERS = [
   },
   {
     id: 'ch2_workshop',
-    title: 'Omas Werkstatt',
+    title: 'Die alte Werkstatt',
     trigger: { type: 'level', value: 1 },
     dialogues: [
-      { speaker: '🧩', text: 'Du findest Omas Werkstatt im Keller des Tierheims!' },
-      { speaker: '🧩', text: 'Hier kannst du Items zusammenfügen — merge gleiche Teile zu besseren.' },
+      { speaker: '🧩', text: 'Neben dem Tierheim steht Omas alte Werkstatt!' },
+      { speaker: '🧩', text: 'Hier hat sie Spielzeug und Futter für die Tiere hergestellt.' },
+      { speaker: '🧩', text: 'Du kannst Items zusammenfügen — merge gleiche Teile zu besseren!' },
       { speaker: '🐾', text: 'Aus dem besten Futter und Spielzeug entstehen sogar neue Tiere!' },
-      { speaker: '💝', text: 'Jedes gerettete Tier ist eine echte Futterspende!' },
     ],
   },
   {
