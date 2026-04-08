@@ -79,10 +79,10 @@ export function generatePet(preferredRarity) {
     color: breed.color,
     // Needs (0-100, decay over time)
     needs: {
-      hunger: 80 + Math.random() * 20,
-      hygiene: 60 + Math.random() * 40,
-      play: 50 + Math.random() * 50,
-      health: 90 + Math.random() * 10,
+      hunger: 5 + Math.random() * 15,
+      hygiene: 5 + Math.random() * 10,
+      play: 5 + Math.random() * 10,
+      health: 15 + Math.random() * 20,
     },
     happiness: 75,
     adoptionProgress: 0, // 0-100, when full can be adopted
