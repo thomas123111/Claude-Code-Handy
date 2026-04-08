@@ -397,7 +397,7 @@ export class TownScene extends Phaser.Scene {
         const p1 = this.input.pointer1, p2 = this.input.pointer2;
         const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
         if (this.lastPinchDist > 0) {
-          this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.004, 0.35, 2.5));
+          this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.004, 0.55, 2.5));
         }
         this.lastPinchDist = dist; this.dragMoved = true; return;
       }
@@ -468,7 +468,7 @@ export class TownScene extends Phaser.Scene {
       // Double-tap zoom
       const now = Date.now();
       if (this.lastTapTime && now - this.lastTapTime < 300) {
-        const tz = this.cameras.main.zoom < 0.8 ? 1.2 : 0.5;
+        const tz = this.cameras.main.zoom < 0.8 ? 1.2 : 0.6;
         this.tweens.add({ targets: this.cameras.main, zoom: tz, duration: 300, ease: 'Cubic.Out' });
         this.lastTapTime = 0;
       } else { this.lastTapTime = now; }
