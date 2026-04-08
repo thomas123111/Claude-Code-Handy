@@ -126,9 +126,8 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32, 7 rows): walk = row 2, order = DRLU
-    // Verified: frames 6-11 = right-facing, frames 12-17 = left-facing (L/R swapped from RPG Maker)
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'right', 'left', 'up']));
+    // Characters (16x32, 7 rows): walk = row 2, order = DLRU
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'left', 'right', 'up']));
 
     // Dogs (48x32, 13 rows): walk = row 4, order = RDLU
     ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'down', 'left', 'up']));
