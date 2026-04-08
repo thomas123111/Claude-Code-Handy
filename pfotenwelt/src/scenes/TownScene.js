@@ -191,14 +191,9 @@ export class TownScene extends Phaser.Scene {
       const initDir = this.getWalkDirection(next[0] - start[0], next[1] - start[1]);
       sprite.play(`${key}_walk_${initDir}`);
       sprite.setDepth(10 + Math.round(start[1] / 10));
-      // Debug label (TEMPORARY — remove once directions are verified)
-      const dbg = this.add.text(start[0], start[1] - 30, initDir, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#ff0000', fontStyle: 'bold',
-        stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(999);
       this.walkers.push({
         sprite, key, path, targetIdx: 1, speed: Phaser.Math.Between(30, 45),
-        currentDir: initDir, dbgLabel: dbg,
+        currentDir: initDir,
         idleTimer: 0, isIdle: false, idleDuration: 0,
       });
     });
@@ -372,8 +367,6 @@ export class TownScene extends Phaser.Scene {
           w.isIdle = false;
           w.sprite.play(`${w.key}_walk_${w.currentDir}`, true);
         }
-        // Update debug label position
-        if (w.dbgLabel) w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
         w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
         return;
       }
@@ -392,16 +385,13 @@ export class TownScene extends Phaser.Scene {
           w.isIdle = true;
           w.idleTimer = 1000 + Math.random() * 2000;
           w.sprite.play(`${w.key}_idle`, true);
-          if (w.dbgLabel) w.dbgLabel.setText('idle');
         } else {
           w.sprite.play(`${w.key}_walk_${nd}`, true);
-          if (w.dbgLabel) w.dbgLabel.setText(nd);
         }
       } else {
         const spd = w.speed * (delta / 1000);
         w.sprite.x += (dx / dist) * spd; w.sprite.y += (dy / dist) * spd;
       }
-      if (w.dbgLabel) w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
       w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
     });
     // Update roaming pets
