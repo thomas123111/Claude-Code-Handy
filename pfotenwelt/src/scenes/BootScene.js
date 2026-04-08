@@ -93,17 +93,16 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     // === UNIFIED ANIMATION SETUP ===
-    // All LimeZu spritesheets use the same direction layout per row:
-    // 6 frames per direction, 4 directions per row = 24 frames per row
-    // Direction order: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
+    // LimeZu spritesheets: 6 frames per direction, 4 directions per row = 24 frames
+    // RPG Maker standard direction order: Down(0-5), Left(6-11), Right(12-17), Up(18-23)
     const COLS = 24;
 
     // Helper: create walk animations for a sprite key at a given row
     const createWalkAnims = (key, walkRow) => {
       if (!this.textures.exists(key)) return;
       const base = walkRow * COLS;
-      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
+      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: 0 }], frameRate: 1 });
