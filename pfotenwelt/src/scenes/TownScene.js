@@ -113,9 +113,8 @@ export class TownScene extends Phaser.Scene {
     this.add.circle(900, 700, 120, pc, 0.35).setDepth(-1);
     this.add.circle(900, 700, 130, 0x8a7a5a, 0.1).setDepth(-1);
 
-    // === FARM PORTAL at bottom (sign pointing to separate farm world) ===
+    // === FARM PORTAL at bottom ===
     this.drawPath(900, 1280, 900, 1450, pc);
-    this.add.rectangle(900, 1430, 220, 55, 0x3a5a22, 0.8).setDepth(-1);
     const farmSign = this.add.text(900, 1430, '🌾 Zum Bauernhof →', {
       fontSize: '16px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
       stroke: '#2a3518', strokeThickness: 4,
@@ -146,8 +145,8 @@ export class TownScene extends Phaser.Scene {
         if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(0.6); }
         b._sprite = img;
       }
-      // Building name label — large, readable
-      this.add.text(b.x, b.y + 80, b.name, {
+      // Building name label — ABOVE the building, large, readable
+      this.add.text(b.x, b.y - 80, b.name, {
         fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
         stroke: '#2a1520', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
@@ -192,7 +191,16 @@ export class TownScene extends Phaser.Scene {
       const initDir = this.getWalkDirection(next[0] - start[0], next[1] - start[1]);
       sprite.play(`${key}_walk_${initDir}`);
       sprite.setDepth(10 + Math.round(start[1] / 10));
-      this.walkers.push({ sprite, key, path, targetIdx: 1, speed: Phaser.Math.Between(30, 45), currentDir: initDir });
+      // Debug label (TEMPORARY — remove once directions are verified)
+      const dbg = this.add.text(start[0], start[1] - 30, initDir, {
+        fontSize: '10px', fontFamily: 'monospace', color: '#ff0000', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(999);
+      this.walkers.push({
+        sprite, key, path, targetIdx: 1, speed: Phaser.Math.Between(30, 45),
+        currentDir: initDir, dbgLabel: dbg,
+        idleTimer: 0, isIdle: false, idleDuration: 0,
+      });
     });
 
     // === ROAMING PETS ===
@@ -223,7 +231,7 @@ export class TownScene extends Phaser.Scene {
       { x: 450, y: 1150, tex: 'lz_lamp', scale: 2 }, { x: 1350, y: 1150, tex: 'lz_lamp', scale: 2 },
       { x: 780, y: 700, tex: 'lz_bench', scale: 2 }, { x: 1020, y: 700, tex: 'lz_bench', scale: 2 },
       { x: 900, y: 700, tex: 'lz_fountain', scale: 2.5 },
-      { x: 600, y: 550, tex: 'lz_hydrant', scale: 2 }, { x: 1200, y: 950, tex: 'lz_trash', scale: 2 },
+      { x: 600, y: 550, tex: 'lz_hydrant', scale: 2 },
     ];
     lzProps.forEach((p) => {
       if (this.textures.exists(p.tex)) {
@@ -231,16 +239,11 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === MINIMAL HUD (no dark bars, just floating text with strokes) ===
-    const hud = (x, y, text, size, color, originX = 0) => {
-      return this.add.text(x, y, text, {
-        fontSize: size, fontFamily: 'Georgia, serif', color, fontStyle: 'bold',
-        stroke: '#1a1520', strokeThickness: 3,
-      }).setOrigin(originX, 0).setScrollFactor(0).setDepth(500);
-    };
-    hud(8, 6, `❤️ ${this.save.hearts}`, '13px', '#ff6688');
-    hud(8, 24, `⚡ ${this.save.energy}`, '11px', '#ffcc00');
-    hud(width - 8, 6, `Lv.${this.save.level}`, '13px', '#88ccff', 1);
+    // === THIN TOP BAR (sticky, readable) ===
+    this.add.rectangle(width / 2, 0, width, 28, 0x000000, 0.45).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
+    this.add.text(10, 5, `❤️ ${this.save.hearts}`, { fontSize: '14px', fontFamily: 'monospace', color: '#ff8899', fontStyle: 'bold' }).setScrollFactor(0).setDepth(501);
+    this.add.text(width / 2, 5, `⚡ ${this.save.energy}`, { fontSize: '14px', fontFamily: 'monospace', color: '#ffdd44', fontStyle: 'bold' }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
+    this.add.text(width - 10, 5, `Lv.${this.save.level}`, { fontSize: '14px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold' }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
 
     // Music toggle (top right, small)
     if (this.save.musicOn !== false) {
@@ -360,8 +363,21 @@ export class TownScene extends Phaser.Scene {
 
   update(time, delta) {
     if (!this.walkers) return;
-    // Update human walkers
+    // Update human walkers (with idle pauses)
     this.walkers.forEach((w) => {
+      // Idle pause at waypoints
+      if (w.isIdle) {
+        w.idleTimer -= delta;
+        if (w.idleTimer <= 0) {
+          w.isIdle = false;
+          w.sprite.play(`${w.key}_walk_${w.currentDir}`, true);
+        }
+        // Update debug label position
+        if (w.dbgLabel) w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
+        w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
+        return;
+      }
+
       const t = w.path[w.targetIdx];
       const dx = t[0] - w.sprite.x, dy = t[1] - w.sprite.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -369,11 +385,23 @@ export class TownScene extends Phaser.Scene {
         w.targetIdx = (w.targetIdx + 1) % w.path.length;
         const n = w.path[w.targetIdx];
         const nd = this.getWalkDirection(n[0] - w.sprite.x, n[1] - w.sprite.y);
-        if (nd !== w.currentDir) { w.currentDir = nd; w.sprite.play(`${w.key}_walk_${nd}`, true); }
+        w.currentDir = nd;
+
+        // 30% chance to idle for 1-3 seconds at waypoint
+        if (Math.random() < 0.3) {
+          w.isIdle = true;
+          w.idleTimer = 1000 + Math.random() * 2000;
+          w.sprite.play(`${w.key}_idle`, true);
+          if (w.dbgLabel) w.dbgLabel.setText('idle');
+        } else {
+          w.sprite.play(`${w.key}_walk_${nd}`, true);
+          if (w.dbgLabel) w.dbgLabel.setText(nd);
+        }
       } else {
         const spd = w.speed * (delta / 1000);
         w.sprite.x += (dx / dist) * spd; w.sprite.y += (dy / dist) * spd;
       }
+      if (w.dbgLabel) w.dbgLabel.setPosition(w.sprite.x, w.sprite.y - 30);
       w.sprite.setDepth(10 + Math.round(w.sprite.y / 10));
     });
     // Update roaming pets

@@ -123,8 +123,8 @@ export class FarmScene extends Phaser.Scene {
       if (this.textures.exists(b.tex)) {
         this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bDepth);
       }
-      // Label — large, readable
-      this.add.text(b.x, b.y + b.hitH / 2 + 15, b.name, {
+      // Label — ABOVE the building, large, readable
+      this.add.text(b.x, b.y - b.hitH / 2 - 20, b.name, {
         fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
         stroke: '#1a2a14', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
