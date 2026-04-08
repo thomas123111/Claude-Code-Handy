@@ -91,9 +91,10 @@ export class SortPuzzle extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Pets at the top from chosen theme
+    const petSpacing = Math.min(140, Math.floor((width - 100) / 2));
     this.petTypes = this.theme.pets.map((pet, i) => ({
       ...pet,
-      x: cx - 140 + i * 140,
+      x: cx - petSpacing + i * petSpacing,
     }));
 
     // Drop zones for pets

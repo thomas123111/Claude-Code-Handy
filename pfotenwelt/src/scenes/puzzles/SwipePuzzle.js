@@ -115,8 +115,10 @@ export class SwipePuzzle extends Phaser.Scene {
 
     // Progress bar background
     const barY = height - 120;
-    this.add.rectangle(width / 2, barY, 400, 28, 0xe0d0e8).setOrigin(0.5);
-    this.progressFill = this.add.rectangle(width / 2 - 198, barY, 0, 24, 0xcc66cc).setOrigin(0, 0.5);
+    const pBarW = width - 30;
+    this.add.rectangle(width / 2, barY, pBarW, 28, 0xe0d0e8).setOrigin(0.5);
+    this._pBarFillW = pBarW - 4;
+    this.progressFill = this.add.rectangle(width / 2 - this._pBarFillW / 2, barY, 0, 24, 0xcc66cc).setOrigin(0, 0.5);
 
     // Progress text
     this.progressText = this.add.text(width / 2, barY - 24, `0/${this.totalSpots} sauber`, {
@@ -338,7 +340,7 @@ export class SwipePuzzle extends Phaser.Scene {
 
     // Update progress
     const { width } = this.scale;
-    const fillWidth = (this.cleanedCount / this.totalSpots) * 396;
+    const fillWidth = (this.cleanedCount / this.totalSpots) * this._pBarFillW;
     this.tweens.add({
       targets: this.progressFill,
       width: fillWidth,
