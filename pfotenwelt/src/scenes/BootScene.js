@@ -126,8 +126,9 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32, 7 rows): walk = row 2, order = LDRU
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['left', 'down', 'right', 'up']));
+    // Characters (16x32, 7 rows): walk = row 2, order = RLUD
+    // Every direction was exactly opposite with LDRU, so flip all: L↔R, D↔U
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['right', 'up', 'left', 'down']));
 
     // Dogs (48x32, 13 rows): walk = row 4, order = RULD (sideways was correct, up/down swapped)
     ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'up', 'left', 'down']));
