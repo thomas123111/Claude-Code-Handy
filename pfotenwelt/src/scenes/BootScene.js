@@ -109,30 +109,31 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    // === UNIFIED ANIMATION SETUP ===
+    // === ANIMATION SETUP ===
     // LimeZu spritesheets: 6 frames per direction, 4 directions per row = 24 frames
-    // LimeZu direction order per row: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
+    // IMPORTANT: Characters and animals have DIFFERENT direction orders!
+    //   Characters (humans): Down(0-5), Left(6-11), Right(12-17), Up(18-23) — DLRU (RPG Maker standard)
+    //   Animals (dogs, rabbits, etc.): Left(0-5), Down(6-11), Right(12-17), Up(18-23) — LDRU
     const COLS = 24;
 
-    // Helper: create walk animations for a sprite key at a given row
-    const createWalkAnims = (key, walkRow) => {
+    // Helper: create walk anims with explicit direction order
+    const createAnims = (key, walkRow, order) => {
       if (!this.textures.exists(key)) return;
       const base = walkRow * COLS;
-      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: 0 }], frameRate: 1 });
+      order.forEach((dir, i) => {
+        this.anims.create({ key: `${key}_walk_${dir}`, frames: this.anims.generateFrameNumbers(key, { start: base + i * 6, end: base + i * 6 + 5 }), frameRate: 8, repeat: -1 });
+      });
+      this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32 frames, 7 rows): walk = row 2 (row0=preview, row1=IDLE, row2=WALK)
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createWalkAnims(k, 2));
+    // Characters (16x32, 7 rows): walk = row 2, order = DLRU
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'left', 'right', 'up']));
 
-    // Dogs (48x32 frames, 13 rows): walk = row 4 (labeled spritesheet)
-    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createWalkAnims(k, 4));
+    // Dogs (48x32, 13 rows): walk = row 4, order = LDRU
+    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['left', 'down', 'right', 'up']));
 
-    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2
-    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createWalkAnims(k, 2));
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = LDRU
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['left', 'down', 'right', 'up']));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
