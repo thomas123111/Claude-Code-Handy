@@ -1,6 +1,6 @@
 {
   "name": "pfotenwelt",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "description": "Pet charity merge game",
   "scripts": {
     "dev": "vite",
