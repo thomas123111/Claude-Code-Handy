@@ -203,19 +203,8 @@ export class BootScene extends Phaser.Scene {
 
     pg.destroy();
 
-    // One-time save reset for v3.0 (new onboarding + progression system)
-    try {
-      const raw = localStorage.getItem('pfotenwelt_save');
-      const save = raw ? JSON.parse(raw) : null;
-      if (save && !save.onboardingDone && save.level > 1) {
-        // Old save without onboarding — reset to experience new flow
-        localStorage.removeItem('pfotenwelt_save');
-      }
-      // Also force reset if save has old structure (no profile field at all)
-      if (save && typeof save.profile === 'undefined') {
-        localStorage.removeItem('pfotenwelt_save');
-      }
-    } catch (e) { /* ignore */ }
+    // Force reset — remove after testing!
+    localStorage.removeItem('pfotenwelt_save');
 
     // Route: onboarding if new player, otherwise straight to town
     try {
