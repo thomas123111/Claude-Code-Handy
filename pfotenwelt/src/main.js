@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene.js';
+import { OnboardingScene } from './scenes/OnboardingScene.js';
+import { CompanionSelectScene } from './scenes/CompanionSelectScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { TownScene } from './scenes/TownScene.js';
 import { MergeBoardScene } from './scenes/MergeBoardScene.js';
@@ -11,6 +13,8 @@ import { SalonScene } from './scenes/SalonScene.js';
 import { SchoolScene } from './scenes/SchoolScene.js';
 import { HotelScene } from './scenes/HotelScene.js';
 import { CafeScene } from './scenes/CafeScene.js';
+import { FutterladenScene } from './scenes/FutterladenScene.js';
+import { HundespielplatzScene } from './scenes/HundespielplatzScene.js';
 import { StoryScene } from './scenes/StoryScene.js';
 import { CollectionScene } from './scenes/CollectionScene.js';
 import { AdoptionScene } from './scenes/AdoptionScene.js';
@@ -42,9 +46,11 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: [
-    BootScene, MenuScene, TownScene,
+    BootScene, OnboardingScene, CompanionSelectScene,
+    MenuScene, TownScene,
     MergeBoardScene, ShelterScene, DailyRewardScene,
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
+    FutterladenScene, HundespielplatzScene,
     StoryScene, CollectionScene, AdoptionScene,
     EventScene, EventResultScene, GuildScene, FarmScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle,

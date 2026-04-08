@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { loadSave, writeSave, regenerateEnergy, checkDailyLogin } from '../data/SaveManager.js';
+import { loadSave, writeSave, regenerateEnergy, checkDailyLogin, updateDayCycle, getDayProgress, getTimeOfDay, shouldTriggerEvent, BUILDING_UNLOCK_ORDER } from '../data/SaveManager.js';
 import { startMusic, stopMusic, unlockAudio } from '../audio/MusicManager.js';
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 
@@ -7,31 +7,28 @@ import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 const MAP_W = 1800;
 const MAP_H = 1500;
 
+// Town buildings — positions on the map, unlock from SaveManager
 const BUILDINGS = [
-  // Tierheim oben mittig
   { id: 'shelter', key: 'Shelter', name: 'Tierheim', tex: 'bld_shelter',
-    x: 900, y: 180, scale: 1.2, unlockCost: 0, unlocked: true },
-  // Werkstatt weit links oben
+    x: 900, y: 180, scale: 1.2 },
   { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', tex: 'bld_workshop',
-    x: 150, y: 400, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Tierarzt weit rechts oben
+    x: 150, y: 400, scale: 1.0 },
   { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
-    x: 1650, y: 400, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Salon weit links mitte
+    x: 1650, y: 400, scale: 1.0 },
   { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
-    x: 150, y: 800, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Hundeschule weit rechts mitte
+    x: 150, y: 800, scale: 1.0 },
+  { id: 'futterladen', key: 'Futterladen', name: 'Futterladen', tex: 'bld_cafe',
+    x: 900, y: 600, scale: 1.0 },
   { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
-    x: 1650, y: 800, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Hotel weit links unten
+    x: 1650, y: 800, scale: 1.0 },
   { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
-    x: 150, y: 1150, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Café weit rechts unten
+    x: 150, y: 1150, scale: 1.0 },
+  { id: 'spielplatz', key: 'Spielplatz', name: 'Spielplatz', tex: 'bld_school',
+    x: 900, y: 950, scale: 1.0 },
   { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
-    x: 1650, y: 1150, scale: 1.0, unlockCost: 0, unlocked: true },
-  // Gilde unten mitte (genug Abstand zum Farm-Portal)
+    x: 1650, y: 1150, scale: 1.0 },
   { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
-    x: 900, y: 1250, scale: 1.0, unlockCost: 0, unlocked: true },
+    x: 900, y: 1250, scale: 1.0 },
 ];
 
 // Trees scattered around the wider map
@@ -64,9 +61,17 @@ export class TownScene extends Phaser.Scene {
   create() {
     this.save = loadSave();
     regenerateEnergy(this.save);
+    updateDayCycle(this.save);
+    writeSave(this.save);
     const { width, height } = this.scale;
 
-    // Daily login check (moved from MenuScene)
+    // Redirect to onboarding if not done
+    if (!this.save.onboardingDone) {
+      this.scene.start('Onboarding');
+      return;
+    }
+
+    // Daily login check
     const login = checkDailyLogin(this.save);
     if (login.isNew) {
       writeSave(this.save);
@@ -74,8 +79,19 @@ export class TownScene extends Phaser.Scene {
       return;
     }
 
-    // Random event (10% chance)
-    if (Math.random() < 0.1 && this.save.pets.length > 0) {
+    // Story trigger check
+    const story = checkStoryTrigger(this.save);
+    if (story) {
+      this.save.seenStories.push(story.id);
+      writeSave(this.save);
+      this.scene.start('Story', { chapterId: story.id });
+      return;
+    }
+
+    // Day-based events (every 2 in-game days)
+    if (shouldTriggerEvent(this.save) && this.save.pets.length > 0) {
+      this.save.lastEventDay = this.save.gameDay;
+      writeSave(this.save);
       const evt = getRandomEvent();
       if (evt.effect.hearts) this.save.hearts += evt.effect.hearts;
       if (evt.effect.need) {
@@ -86,7 +102,16 @@ export class TownScene extends Phaser.Scene {
       writeSave(this.save);
     }
 
-    this.cameras.main.fadeIn(400, 26, 21, 35);
+    // === DAY/NIGHT VISUAL ===
+    const timeOfDay = getTimeOfDay(this.save);
+    const dayFadeColors = {
+      morning: { r: 26, g: 21, b: 35 },   // warm fade-in
+      afternoon: { r: 26, g: 21, b: 35 },
+      evening: { r: 40, g: 25, b: 15 },    // orange tint
+      night: { r: 10, g: 10, b: 30 },      // dark blue
+    };
+    const fc = dayFadeColors[timeOfDay];
+    this.cameras.main.fadeIn(400, fc.r, fc.g, fc.b);
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.centerOn(MAP_W / 2, 500);
     this.cameras.main.setZoom(Math.min(width / MAP_W * 2.87, 1.0));
@@ -95,8 +120,16 @@ export class TownScene extends Phaser.Scene {
     this.inputBlocked = true;
     this.time.delayedCall(400, () => { this.inputBlocked = false; });
 
-    // === GRASS BACKGROUND (clean, no ugly circles) ===
-    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x5a9a42).setDepth(-2);
+    // === GRASS BACKGROUND — tinted by time of day ===
+    const grassColors = { morning: 0x5a9a42, afternoon: 0x5a9a42, evening: 0x4a7a32, night: 0x2a4a22 };
+    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, grassColors[timeOfDay]).setDepth(-2);
+
+    // Night overlay (dark tint over entire world)
+    if (timeOfDay === 'night') {
+      this.nightOverlay = this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x0a0a1e, 0.35).setDepth(400);
+    } else if (timeOfDay === 'evening') {
+      this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x331a00, 0.12).setDepth(400);
+    }
 
     // === PATHS (depth -1, always below everything else) ===
     const pc = 0xc4a76c;
@@ -113,13 +146,15 @@ export class TownScene extends Phaser.Scene {
     this.add.circle(900, 700, 120, pc, 0.35).setDepth(-1);
     this.add.circle(900, 700, 130, 0x8a7a5a, 0.1).setDepth(-1);
 
-    // === FARM PORTAL at bottom ===
-    this.drawPath(900, 1280, 900, 1450, pc);
-    const farmSign = this.add.text(900, 1430, '🌾 Zum Bauernhof →', {
-      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
-      stroke: '#2a3518', strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(200);
-    // Farm portal is tappable (handled in pointerup)
+    // === FARM PORTAL at bottom (only if farm is unlocked) ===
+    const farmUnlocked = this.save.stations.farm && this.save.stations.farm.unlocked;
+    if (farmUnlocked) {
+      this.drawPath(900, 1280, 900, 1450, pc);
+      this.add.text(900, 1430, '🌾 Zum Bauernhof →', {
+        fontSize: '16px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+        stroke: '#2a3518', strokeThickness: 4,
+      }).setOrigin(0.5).setDepth(200);
+    }
 
     // === DECORATIONS ===
     TREES.forEach((t) => {
@@ -136,22 +171,35 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === BUILDINGS ===
+    // === BUILDINGS (sequential unlock from SaveManager) ===
+    // Find the next building that can be unlocked
+    const nextUnlock = BUILDING_UNLOCK_ORDER.find(bo =>
+      !(this.save.stations[bo.id] && this.save.stations[bo.id].unlocked));
+
     BUILDINGS.forEach((b) => {
-      const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
+      const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
+      const isNext = nextUnlock && nextUnlock.id === b.id;
+
       if (this.textures.exists(b.tex)) {
         const bldDepth = 10 + Math.round((b.y + 50) / 10);
         const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bldDepth);
-        if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(0.6); }
+        if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(isNext ? 0.75 : 0.4); }
         b._sprite = img;
       }
-      // Building name label — ABOVE the building, large, readable
+      // Building name label
       this.add.text(b.x, b.y - 80, b.name, {
         fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
         stroke: '#2a1520', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
       if (!isUnlocked) {
         this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
+        // Show unlock info for next building
+        if (isNext) {
+          this.add.text(b.x, b.y + 50, `${nextUnlock.cost}❤️ | Lv.${nextUnlock.minLevel}`, {
+            fontSize: '14px', fontFamily: 'monospace', color: '#ffcc66', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 3,
+          }).setOrigin(0.5).setDepth(201);
+        }
       } else if (b.id === 'shelter' && this.save.pets.length > 0) {
         this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(202);
         this.add.text(b.x + 55, b.y - 55, `${this.save.pets.length}`, {
@@ -239,11 +287,13 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === THIN TOP BAR (sticky, readable) ===
+    // === TOP BAR (sticky, with day/night info) ===
     this.add.rectangle(width / 2, 0, width, 28, 0x000000, 0.45).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.text(10, 5, `❤️ ${this.save.hearts}`, { fontSize: '14px', fontFamily: 'monospace', color: '#ff8899', fontStyle: 'bold' }).setScrollFactor(0).setDepth(501);
-    this.add.text(width / 2, 5, `⚡ ${this.save.energy}`, { fontSize: '14px', fontFamily: 'monospace', color: '#ffdd44', fontStyle: 'bold' }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
-    this.add.text(width - 10, 5, `Lv.${this.save.level}`, { fontSize: '14px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold' }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
+    this.add.text(8, 5, `❤️ ${this.save.hearts}`, { fontSize: '13px', fontFamily: 'monospace', color: '#ff8899', fontStyle: 'bold' }).setScrollFactor(0).setDepth(501);
+    // Day/time indicator
+    const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
+    this.add.text(width / 2, 5, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '13px', fontFamily: 'monospace', color: '#ffdd88', fontStyle: 'bold' }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
+    this.add.text(width - 8, 5, `Lv.${this.save.level}`, { fontSize: '13px', fontFamily: 'monospace', color: '#88ccff', fontStyle: 'bold' }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
 
     // Music toggle (top right, small)
     if (this.save.musicOn !== false) {
@@ -295,8 +345,8 @@ export class TownScene extends Phaser.Scene {
       if (this.dragMoved || this.inputBlocked) return;
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
-      // Check farm portal tap
-      if (wp.x >= 750 && wp.x <= 1050 && wp.y >= 1400 && wp.y <= 1470) {
+      // Check farm portal tap (only if farm unlocked)
+      if (farmUnlocked && wp.x >= 750 && wp.x <= 1050 && wp.y >= 1400 && wp.y <= 1470) {
         this.cameras.main.fadeOut(300, 26, 40, 24);
         this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Farm'));
         return;
@@ -307,13 +357,38 @@ export class TownScene extends Phaser.Scene {
         if (!b._sprite) continue;
         const halfW = 70, halfH = 80;
         if (wp.x >= b.x - halfW && wp.x <= b.x + halfW && wp.y >= b.y - halfH && wp.y <= b.y + halfH) {
-          const isUnlocked = b.unlocked || (this.save.stations[b.id] && this.save.stations[b.id].unlocked);
+          const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
           if (isUnlocked) {
             this.tweens.add({ targets: b._sprite, scale: { from: b.scale, to: b.scale * 1.1 }, duration: 100, yoyo: true, onComplete: () => {
               this.cameras.main.fadeOut(300, 26, 21, 35);
               this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(b.key));
             }});
-          } else if (this.save.hearts >= b.unlockCost) { this.unlockBuilding(b); }
+          } else {
+            // Try to unlock if this is the next building in sequence
+            const unlockInfo = BUILDING_UNLOCK_ORDER.find(bo => bo.id === b.id);
+            if (unlockInfo && nextUnlock && nextUnlock.id === b.id) {
+              if (this.save.level >= unlockInfo.minLevel && this.save.hearts >= unlockInfo.cost) {
+                this.unlockBuilding(b, unlockInfo);
+              } else {
+                // Show "can't unlock yet" popup
+                const msg = this.save.level < unlockInfo.minLevel
+                  ? `Brauchst Level ${unlockInfo.minLevel}!`
+                  : `Brauchst ${unlockInfo.cost}❤️!`;
+                const popup = this.add.text(b.x, b.y - 30, msg, {
+                  fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ff6644', fontStyle: 'bold',
+                  stroke: '#000000', strokeThickness: 3,
+                }).setOrigin(0.5).setDepth(500);
+                this.tweens.add({ targets: popup, y: popup.y - 30, alpha: 0, duration: 1500, onComplete: () => popup.destroy() });
+              }
+            } else {
+              // Not the next building — show "unlock order" hint
+              const popup = this.add.text(b.x, b.y - 30, 'Schalte zuerst andere Gebäude frei!', {
+                fontSize: '12px', fontFamily: 'Georgia, serif', color: '#ffcc44',
+                stroke: '#000000', strokeThickness: 3,
+              }).setOrigin(0.5).setDepth(500);
+              this.tweens.add({ targets: popup, y: popup.y - 25, alpha: 0, duration: 1500, onComplete: () => popup.destroy() });
+            }
+          }
           return;
         }
       }
@@ -340,11 +415,15 @@ export class TownScene extends Phaser.Scene {
     this.add.rectangle(cx, cy, cw, ch, 0xddccaa, 0.15).setDepth(-1);
   }
 
-  unlockBuilding(b) {
-    this.save.hearts -= b.unlockCost;
+  unlockBuilding(b, unlockInfo) {
+    this.save.hearts -= unlockInfo.cost;
     if (!this.save.stations[b.id]) this.save.stations[b.id] = {};
     this.save.stations[b.id].unlocked = true;
     this.save.stations[b.id].level = 1;
+    // Initialize farm data when farm is unlocked
+    if (b.id === 'farm' && !this.save.farm) {
+      this.save.farm = { level: 1, totalDelivered: 0, taskCooldowns: {}, buildings: { barn: true } };
+    }
     writeSave(this.save);
     if (b._sprite) { b._sprite.clearTint(); b._sprite.setAlpha(1);
       this.tweens.add({ targets: b._sprite, scale: { from: 0.5, to: 1.0 }, duration: 500, ease: 'Back.Out' }); }
