@@ -1,8 +1,13 @@
 name: Deploy Pfotenwelt to GitHub Pages
 
 on:
+  # Deploy when auto-merge workflow completes (workaround: bot commits don't trigger push events)
+  workflow_run:
+    workflows: ["Auto-merge claude/* branches"]
+    types: [completed]
+  # Also deploy on direct pushes to main or manual trigger
   push:
-    branches: ['claude/mobile-arena-game-DZAAt', 'main', 'claude/pfotenwelt-game-status-HxC4K']
+    branches: ['main']
     paths:
       - 'pfotenwelt/**'
       - '.github/workflows/deploy-game.yml'
@@ -19,9 +24,13 @@ concurrency:
 
 jobs:
   build:
+    # Skip if triggered by workflow_run that failed
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
