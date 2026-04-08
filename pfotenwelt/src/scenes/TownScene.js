@@ -474,34 +474,20 @@ export class TownScene extends Phaser.Scene {
       } else { this.lastTapTime = now; }
     });
 
-    // === TOP HUD — separate camera, always at screen top ===
+    // === HTML HUD (fixed CSS bar above canvas, immune to everything) ===
     const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
-    const hudBg = this.add.rectangle(width / 2, 0, width, 32, 0x1a1020, 0.6).setOrigin(0.5, 0);
-    const hudLine = this.add.rectangle(width / 2, 32, width, 1, 0xffffff, 0.15).setOrigin(0.5, 0);
-    const hudHearts = this.add.text(10, 7, `❤️ ${this.save.hearts}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffaabb', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 });
-    const hudDay = this.add.text(width / 2, 7, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffe088', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0);
-    const hudLevel = this.add.text(width - 10, 7, `Lv.${this.save.level}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#88ccff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(1, 0);
-    const musicBtn = this.add.text(width - 8, 24, this.save.musicOn !== false ? '🎵' : '🔇', {
-      fontSize: '14px',
-    }).setOrigin(1, 0).setInteractive();
-    musicBtn.on('pointerdown', () => {
-      this.save.musicOn = !(this.save.musicOn !== false);
-      writeSave(this.save);
-      if (this.save.musicOn) { unlockAudio(); startMusic('town'); musicBtn.setText('🎵'); }
-      else { stopMusic(); musicBtn.setText('🔇'); }
-    });
+    const hud = document.getElementById('hud');
+    if (hud) {
+      document.getElementById('hud-hearts').textContent = `❤️ ${this.save.hearts}`;
+      document.getElementById('hud-day').textContent = `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`;
+      document.getElementById('hud-level').textContent = `Lv.${this.save.level}`;
+      hud.classList.add('visible');
+    }
+
+    // Music (no visual button — just auto-start)
     if (this.save.musicOn !== false) {
       this.input.once('pointerdown', () => { unlockAudio(); startMusic('town'); });
     }
-    const hudElements = [hudBg, hudLine, hudHearts, hudDay, hudLevel, musicBtn];
-    // UI camera: zoom=1, no scroll — only renders HUD
-    const uiCam = this.cameras.add(0, 0, width, height);
-    uiCam.setScroll(0, 0);
-    // Main camera must not render HUD
-    this.cameras.main.ignore(hudElements);
-    // UI camera must not render anything except HUD
-    const worldObjects = this.children.list.filter(c => !hudElements.includes(c));
-    uiCam.ignore(worldObjects);
   }
 
   drawPath(x1, y1, x2, y2, color) {
