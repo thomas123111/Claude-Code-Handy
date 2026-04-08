@@ -1,64 +1,66 @@
-// Centralized UI theme and helpers for consistent look across all scenes
+// Centralized UI theme — Pastel Kawaii style matching splash_screen.jpg
+import Phaser from 'phaser';
 
+// === COLOR PALETTE ===
 export const THEME = {
-  // Colors
   bg: {
-    primary: '#1e1828',
-    secondary: '#2a2040',
-    card: '#2d2240',
-    cardHover: '#3a2d55',
-    header: '#2a1f35',
-    dark: '#15101e',
+    scene: '#f8f2fc',        // soft lavender — main scene background
+    header: 0xf0e4f6,        // light lavender header
+    headerBorder: 0xe0c8e8,
+    card: 0xffffff,
+    cardAlpha: 0.95,
+    cardBorder: 0xe0c8e8,
+    cardDark: 0xf5eefa,      // slightly tinted card variant
+    overlay: 0x2a1a3a,
+    barBg: 0xe0d0e8,
+    barBorder: 0xd0b8d8,
   },
   text: {
-    title: '#ffcc88',
-    subtitle: '#aa8866',
-    body: '#ddccee',
-    muted: '#887799',
+    title: '#6b4c8a',
+    subtitle: '#8a7399',
+    body: '#4a3560',
+    muted: '#9888a8',
     white: '#ffffff',
-    hearts: '#ff6688',
-    energy: '#ffcc00',
-    xp: '#88ccff',
-    success: '#44ff88',
-    error: '#ff6644',
+    dark: '#2a1a3a',
+    hearts: '#e85577',
+    energy: '#e89030',
+    xp: '#5588cc',
+    success: '#33aa55',
+    warning: '#dd8833',
+    error: '#dd4444',
   },
   rarity: {
-    common: '#aaaaaa',
-    rare: '#4499ff',
-    epic: '#bb55ff',
-    legendary: '#ffaa00',
+    common: '#888888',
+    rare: '#4488ff',
+    epic: '#9944ee',
+    legendary: '#ff9900',
   },
   accent: {
-    purple: '#8855cc',
-    pink: '#cc5588',
-    blue: '#4488aa',
-    green: '#44aa55',
-    orange: '#cc7744',
+    pink: '#e87898',
+    purple: '#9966cc',
+    blue: '#5599cc',
+    green: '#55aa66',
+    orange: '#e89050',
     gold: '#ddaa33',
   },
-  border: {
-    light: '#554466',
-    medium: '#443355',
-    dark: '#332244',
-  },
 };
 
-// Font presets
+export const RARITY_COLORS = THEME.rarity;
+
+// === FONT PRESETS (bigger for mobile readability) ===
 export const FONTS = {
-  title: { fontSize: '24px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold' },
-  subtitle: { fontSize: '14px', fontFamily: 'Georgia, serif', color: THEME.text.subtitle },
-  heading: { fontSize: '18px', fontFamily: 'Georgia, serif', color: THEME.text.body, fontStyle: 'bold' },
-  body: { fontSize: '13px', fontFamily: 'monospace', color: THEME.text.body },
-  small: { fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted },
-  button: { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold' },
-  stat: { fontSize: '14px', fontFamily: 'monospace', fontStyle: 'bold' },
+  title:    { fontSize: '26px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold' },
+  subtitle: { fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.subtitle },
+  heading:  { fontSize: '20px', fontFamily: 'Georgia, serif', color: THEME.text.body, fontStyle: 'bold' },
+  body:     { fontSize: '15px', fontFamily: 'Georgia, serif', color: THEME.text.body },
+  bodyMono: { fontSize: '14px', fontFamily: 'monospace', color: THEME.text.body },
+  small:    { fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted },
+  button:   { fontSize: '17px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold' },
+  stat:     { fontSize: '15px', fontFamily: 'monospace', fontStyle: 'bold' },
 };
 
-// Map pet breed IDs to animal sprites
-// Dogs use monkey (brown, playful face), cats use panda (round face),
-// small animals use rabbit, exotic = parrot/snake etc.
+// === PET BREED SPRITE MAP ===
 const BREED_SPRITE_MAP = {
-  // Dogs → monkey with tinting
   labrador: { sprite: 'animal_monkey', tint: 0xd4a854 },
   dackel: { sprite: 'animal_monkey', tint: 0x8b5e3c },
   schaeferhund: { sprite: 'animal_monkey', tint: 0x6b4226 },
@@ -66,107 +68,119 @@ const BREED_SPRITE_MAP = {
   husky: { sprite: 'animal_hippo', tint: 0x8899bb },
   pudel: { sprite: 'animal_monkey', tint: 0xeeeeee },
   corgi: { sprite: 'animal_monkey', tint: 0xf0a830 },
-  dalmatiner: { sprite: 'animal_panda', tint: null }, // panda already looks dalmatiner-ish
+  dalmatiner: { sprite: 'animal_panda', tint: null },
   samojede: { sprite: 'animal_monkey', tint: 0xfff8f0 },
-
-  // Cats → panda with tinting
   hauskatze: { sprite: 'animal_panda', tint: 0x888888 },
   tiger_katze: { sprite: 'animal_panda', tint: 0xbb8844 },
   schwarze: { sprite: 'animal_panda', tint: 0x333333 },
   perser: { sprite: 'animal_panda', tint: 0xddc8a0 },
   maine_coon: { sprite: 'animal_panda', tint: 0xaa7744 },
   siam: { sprite: 'animal_panda', tint: 0xf5e6d0 },
-  bengal: { sprite: 'animal_giraffe', tint: 0xd4a020 }, // giraffe spots = bengal pattern
-
-  // Small animals
+  bengal: { sprite: 'animal_giraffe', tint: 0xd4a020 },
   kaninchen: { sprite: 'animal_rabbit', tint: null },
   hamster: { sprite: 'animal_pig', tint: 0xe8c080 },
   meerschwein: { sprite: 'animal_pig', tint: 0xbb8855 },
 };
 
-// Get sprite config for a breed
 export function getPetSprite(breedId) {
   return BREED_SPRITE_MAP[breedId] || { sprite: 'animal_rabbit', tint: null };
 }
 
-// Draw a pet avatar at position (returns the image object)
 export function drawPetAvatar(scene, x, y, breedId, scale) {
   const config = getPetSprite(breedId);
-  const s = scale || 0.15; // animal pack images are ~250px, scale down
+  const s = scale || 0.15;
   if (scene.textures.exists(config.sprite)) {
     const img = scene.add.image(x, y, config.sprite).setScale(s);
     if (config.tint) img.setTint(config.tint);
     return img;
   }
-  // Fallback: use pet emoji from PetData
   return null;
 }
 
-// Draw a styled button
-export function drawStyledButton(scene, x, y, width, height, text, colorHex) {
-  const color = Phaser.Display.Color.HexStringToColor(colorHex || '#8855cc').color;
-  const bg = scene.add.rectangle(x, y, width, height, color, 0.25)
-    .setStrokeStyle(2, color);
-  // Rounded corner effect (inner lighter rect)
-  scene.add.rectangle(x, y, width - 6, height - 6, color, 0.08);
-  scene.add.text(x, y, text, FONTS.button).setOrigin(0.5);
-  return bg;
-}
+// === UI HELPERS ===
 
-// Draw a card/panel
-export function drawCard(scene, x, y, width, height, borderColor) {
-  const border = borderColor || 0x554466;
-  scene.add.rectangle(x, y, width, height, 0x2d2240, 0.85)
-    .setStrokeStyle(2, border);
-  // Inner shadow
-  scene.add.rectangle(x, y, width - 4, height - 4, 0x252035, 0.3);
-}
-
-// Draw header bar at top of scene
+// Draw header bar with optional stats (hearts, level)
 export function drawHeader(scene, title, save) {
   const { width } = scene.scale;
-  // Header background
-  scene.add.rectangle(width / 2, 0, width, 45, 0x2a1f35, 0.95).setOrigin(0.5, 0);
-  scene.add.rectangle(width / 2, 45, width, 2, 0x443355).setOrigin(0.5, 0);
-
-  // Title
-  scene.add.text(width / 2, 22, title, {
-    fontSize: '18px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
+  scene.add.rectangle(width / 2, 0, width, 58, THEME.bg.header, 0.98).setOrigin(0.5, 0);
+  scene.add.rectangle(width / 2, 58, width, 2, THEME.bg.headerBorder).setOrigin(0.5, 0);
+  scene.add.text(width / 2, 29, title, {
+    fontSize: '22px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
   }).setOrigin(0.5);
-
-  // Stats if save provided
   if (save) {
-    scene.add.text(10, 6, `❤️ ${save.hearts}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: THEME.text.hearts,
-    });
-    scene.add.text(10, 22, `⚡ ${save.energy}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: THEME.text.energy,
-    });
-    scene.add.text(width - 10, 14, `Lv.${save.level}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: THEME.text.xp, fontStyle: 'bold',
+    // Hearts with real icon
+    if (scene.textures.exists('ui_heart')) {
+      scene.add.image(28, 14, 'ui_heart').setScale(0.065);
+      scene.add.text(48, 8, `${save.hearts}`, {
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.hearts, fontStyle: 'bold',
+      });
+    } else {
+      scene.add.text(12, 8, `❤️ ${save.hearts}`, {
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.hearts,
+      });
+    }
+    scene.add.text(width - 14, 10, `Lv.${save.level}`, {
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.xp, fontStyle: 'bold',
     }).setOrigin(1, 0);
   }
 }
 
-// Draw back button (returns hitArea)
-export function drawBackButton(scene, toScene) {
-  const { width, height } = scene.scale;
-  scene.add.text(width / 2, height - 35, '← Zurück', {
-    fontSize: '14px', fontFamily: 'Georgia, serif', color: '#887799',
+// Draw NineSlice button (brown primary, blue secondary)
+export function drawButton(scene, x, y, w, h, text, opts = {}) {
+  const type = opts.type || 'primary';
+  const tex = type === 'secondary' ? 'btn_blue' : 'btn_brown';
+  const disabled = opts.disabled || false;
+
+  if (scene.textures.exists(tex)) {
+    const ns = scene.add.nineslice(x, y, tex, null, w, h, 18, 18, 18, 18);
+    if (disabled) ns.setAlpha(0.4);
+  } else {
+    // Fallback: colored rectangle
+    const color = type === 'secondary' ? 0x8899aa : 0xa08050;
+    scene.add.rectangle(x, y, w, h, color, disabled ? 0.3 : 0.9)
+      .setStrokeStyle(2, color);
+  }
+
+  const textColor = disabled ? '#999999' : (opts.textColor || '#fff8e8');
+  scene.add.text(x, y, text, {
+    fontSize: opts.fontSize || '17px',
+    fontFamily: 'Georgia, serif',
+    color: textColor,
+    fontStyle: 'bold',
   }).setOrigin(0.5);
-  return { x: width / 2, y: height - 35, w: 140, h: 35, cb: () => scene.scene.start(toScene || 'Menu') };
 }
 
-// Animated number counter (for hearts/score)
+// Draw a card panel (white, soft border)
+export function drawCard(scene, x, y, w, h, opts = {}) {
+  const borderColor = opts.borderColor || THEME.bg.cardBorder;
+  const bg = scene.add.rectangle(x, y, w, h, THEME.bg.card, THEME.bg.cardAlpha)
+    .setStrokeStyle(2, borderColor);
+  // Soft inner shadow
+  scene.add.rectangle(x, y + 1, w - 4, h - 4, 0xf8f0fc, 0.3);
+  return bg;
+}
+
+// Draw back button at bottom of scene
+export function drawBackButton(scene, toScene, label) {
+  const { width, height } = scene.scale;
+  const text = label || '← Zurück';
+  drawButton(scene, width / 2, height - 40, 280, 50, text, { type: 'secondary' });
+  if (scene.addHitArea) {
+    scene.addHitArea(width / 2, height - 40, 280, 50, () => scene.scene.start(toScene || 'Town'));
+  }
+}
+
+// Draw a progress bar
+export function drawProgressBar(scene, x, y, w, h, pct, color) {
+  scene.add.rectangle(x + w / 2, y, w, h, THEME.bg.barBg).setStrokeStyle(1, THEME.bg.barBorder);
+  const fillW = Math.max(1, w * Math.min(pct, 1));
+  scene.add.rectangle(x + fillW / 2, y, fillW, h - 2, color || 0x55aa66);
+}
+
+// Animated number counter
 export function animateNumber(scene, textObj, from, to, duration) {
-  const d = duration || 500;
   scene.tweens.addCounter({
-    from, to, duration: d,
-    onUpdate: (tween) => {
-      textObj.setText(Math.floor(tween.getValue()));
-    },
+    from, to, duration: duration || 500,
+    onUpdate: (tween) => { textObj.setText(Math.floor(tween.getValue())); },
   });
 }
-
-// Import Phaser for Color utility
-import Phaser from 'phaser';

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave } from '../data/SaveManager.js';
 import { BREEDS, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
 const ALL_BREEDS = [...BREEDS.dogs, ...BREEDS.cats, ...BREEDS.small];
 
@@ -55,17 +56,19 @@ export class CollectionScene extends Phaser.Scene {
     const save = this.save;
     const collection = save.collection || [];
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Header
-    this.add.text(cx, 25, '📖 Sammelbuch', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+    this.add.rectangle(cx, 0, width, 58, THEME.bg.header, 0.98).setOrigin(0.5, 0);
+    this.add.rectangle(cx, 58, width, 2, THEME.bg.headerBorder).setOrigin(0.5, 0);
+    this.add.text(cx, 22, '📖 Sammelbuch', {
+      fontSize: '26px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const discoveredCount = collection.length;
     const totalCount = ALL_BREEDS.length;
-    this.add.text(cx, 52, `${discoveredCount}/${totalCount} entdeckt`, {
-      fontSize: '13px', fontFamily: 'monospace', color: '#bbaacc',
+    this.add.text(cx, 46, `${discoveredCount}/${totalCount} entdeckt`, {
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Filter tabs
@@ -74,23 +77,23 @@ export class CollectionScene extends Phaser.Scene {
     RARITY_FILTERS.forEach((filter) => {
       const label = RARITY_FILTER_LABELS[filter];
       const isActive = this.activeFilter === filter;
-      const color = filter === 'all' ? '#cccccc' : (RARITY_COLORS[filter] || '#cccccc');
+      const color = filter === 'all' ? THEME.text.body : (RARITY_COLORS[filter] || THEME.text.body);
 
       const textObj = this.add.text(tabX, tabY, label, {
-        fontSize: '10px', fontFamily: 'monospace',
-        color: isActive ? color : '#555566',
+        fontSize: '13px', fontFamily: 'monospace',
+        color: isActive ? color : THEME.text.muted,
         fontStyle: isActive ? 'bold' : 'normal',
       });
 
       if (isActive) {
         // Underline active tab
         const tw = textObj.width;
-        this.add.rectangle(tabX + tw / 2, tabY + 16, tw, 2,
+        this.add.rectangle(tabX + tw / 2, tabY + 18, tw, 2,
           Phaser.Display.Color.HexStringToColor(color).color);
       }
 
       const tw = textObj.width;
-      this.addHitArea(tabX + tw / 2, tabY + 6, tw + 10, 20, () => {
+      this.addHitArea(tabX + tw / 2, tabY + 8, tw + 10, 24, () => {
         this.activeFilter = filter;
         this.scrollY = 0;
         this.drawUI();
@@ -125,11 +128,11 @@ export class CollectionScene extends Phaser.Scene {
       const rarityColor = RARITY_COLORS[breed.rarity];
 
       // Card background
-      const bgColor = discovered ? 0x2a2a3a : 0x1a1a22;
+      const bgColor = discovered ? THEME.bg.card : 0xe8e0ee;
       const borderColor = discovered
         ? Phaser.Display.Color.HexStringToColor(rarityColor).color
-        : 0x333344;
-      this.add.rectangle(x, y, cardW - 6, cardH, bgColor, discovered ? 0.9 : 0.5)
+        : 0xd0c0d8;
+      this.add.rectangle(x, y, cardW - 6, cardH, bgColor, discovered ? 0.95 : 0.6)
         .setStrokeStyle(1, borderColor);
 
       if (discovered) {
@@ -140,48 +143,44 @@ export class CollectionScene extends Phaser.Scene {
 
         // Name
         this.add.text(x, y + 12, breed.name, {
-          fontSize: '9px', fontFamily: 'Georgia, serif', color: '#ffffff',
+          fontSize: '11px', fontFamily: 'Georgia, serif', color: THEME.text.dark,
           fontStyle: 'bold',
         }).setOrigin(0.5);
 
         // Rarity label
         this.add.text(x, y + 26, RARITY_LABELS[breed.rarity], {
-          fontSize: '8px', fontFamily: 'monospace', color: rarityColor,
+          fontSize: '10px', fontFamily: 'monospace', color: rarityColor,
         }).setOrigin(0.5);
 
         // Category
         this.add.text(x, y + 38, CATEGORY_MAP[breed.id] || '', {
-          fontSize: '7px', fontFamily: 'monospace', color: '#666688',
+          fontSize: '9px', fontFamily: 'monospace', color: THEME.text.muted,
         }).setOrigin(0.5);
       } else {
         // Undiscovered - silhouette
         this.add.text(x, y - 18, '?', {
-          fontSize: '32px', fontFamily: 'Georgia, serif', color: '#333344',
+          fontSize: '32px', fontFamily: 'Georgia, serif', color: '#c0b0cc',
         }).setOrigin(0.5);
 
         this.add.text(x, y + 18, '???', {
-          fontSize: '9px', fontFamily: 'monospace', color: '#333344',
+          fontSize: '11px', fontFamily: 'monospace', color: '#c0b0cc',
         }).setOrigin(0.5);
       }
     });
 
     // Reward tracker section
     const rewardY = height - 110;
-    this.add.rectangle(cx, rewardY, width - 20, 50, 0x222236, 0.8)
-      .setStrokeStyle(1, 0x444466);
+    drawCard(this, cx, rewardY, width - 20, 50);
 
     // Find next unclaimed bonus
     const bonusText = this.getNextBonusText(collection);
     this.add.text(cx, rewardY, bonusText, {
-      fontSize: '10px', fontFamily: 'monospace', color: '#bbbb88', align: 'center',
+      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.body, align: 'center',
     }).setOrigin(0.5);
 
     // Back button
-    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
+    drawButton(this, cx, height - 40, 260, 44, '← Zurück', { type: 'secondary', fontSize: '16px' });
+    this.addHitArea(cx, height - 40, 260, 44, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

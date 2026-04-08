@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy, addXp } from '../data/SaveManager.js';
 import { BOARD_COLS, BOARD_ROWS, getItem, getMergeResult, createInitialBoard, randomItem, findEmptyCell } from '../data/MergeData.js';
 import { generatePet } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
 const CELL_SIZE = 68;
 const BOARD_OFFSET_X = 32;
@@ -15,30 +16,31 @@ export class MergeBoardScene extends Phaser.Scene {
     regenerateEnergy(this.save);
     const { width, height } = this.scale;
 
-    // Pretty gradient background
-    this.cameras.main.setBackgroundColor('#231a2e');
-    // Decorative top bar
-    this.add.rectangle(width / 2, 0, width, 105, 0x2a2040, 0.9).setOrigin(0.5, 0);
+    // Pastel background
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
+    // Header bar
+    this.add.rectangle(width / 2, 0, width, 105, THEME.bg.header, 0.98).setOrigin(0.5, 0);
+    this.add.rectangle(width / 2, 105, width, 2, THEME.bg.headerBorder).setOrigin(0.5, 0);
 
     // Header with icon
     this.add.text(width / 2, 22, '🧩 Merge Board', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '26px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Stats bar
     this.heartsText = this.add.text(15, 52, '', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ff6688',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.hearts,
     });
     this.energyText = this.add.text(160, 52, '', {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ffcc00',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.energy,
     });
     this.add.text(width - 15, 52, `Lv.${this.save.level}`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#88ccff',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.xp,
     }).setOrigin(1, 0);
 
     // Pet needs info
     this.infoText = this.add.text(width / 2, 82, '', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
     this.updateTasksInfo();
 
@@ -46,7 +48,7 @@ export class MergeBoardScene extends Phaser.Scene {
     this.comboCount = 0;
     this.comboTimer = 0;
     this.comboText = this.add.text(width / 2, 100, '', {
-      fontSize: '16px', fontFamily: 'monospace', color: '#ffaa00', fontStyle: 'bold',
+      fontSize: '18px', fontFamily: 'monospace', color: THEME.text.warning, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Initialize board
@@ -59,16 +61,16 @@ export class MergeBoardScene extends Phaser.Scene {
     const boardW = BOARD_COLS * CELL_SIZE + 8;
     const boardH = BOARD_ROWS * CELL_SIZE + 8;
     this.add.rectangle(BOARD_OFFSET_X + boardW / 2 - 4, BOARD_OFFSET_Y + boardH / 2 - 4,
-      boardW, boardH, 0x1a1424, 0.9).setStrokeStyle(2, 0x3a2a4a);
+      boardW, boardH, 0xf5eefa, 0.9).setStrokeStyle(2, 0xe0c8e8);
 
     // Cell backgrounds
     this.cellBgs = [];
     for (let r = 0; r < BOARD_ROWS; r++) {
       for (let c = 0; c < BOARD_COLS; c++) {
         const { x, y } = this.cellToScreen(r, c);
-        const shade = (r + c) % 2 === 0 ? 0x2a2235 : 0x252030;
+        const shade = (r + c) % 2 === 0 ? 0xf0e8f5 : 0xebe2f0;
         const cell = this.add.rectangle(x, y, CELL_SIZE - 3, CELL_SIZE - 3, shade, 0.9)
-          .setStrokeStyle(1, 0x3a2a4a);
+          .setStrokeStyle(1, 0xe0c8e8);
         this.cellBgs.push(cell);
       }
     }
@@ -81,24 +83,17 @@ export class MergeBoardScene extends Phaser.Scene {
     this.dragSprite = null;
     this.dragSourceCell = null;
     this.selectedHighlight = this.add.rectangle(0, 0, CELL_SIZE - 2, CELL_SIZE - 2)
-      .setStrokeStyle(3, 0xffcc00).setFillStyle(0xffcc00, 0.1).setVisible(false).setDepth(10);
+      .setStrokeStyle(3, 0xddaa33).setFillStyle(0xddaa33, 0.1).setVisible(false).setDepth(10);
     this.dropHighlight = this.add.rectangle(0, 0, CELL_SIZE - 2, CELL_SIZE - 2)
-      .setStrokeStyle(2, 0x88ff88).setFillStyle(0x88ff88, 0.1).setVisible(false).setDepth(10);
+      .setStrokeStyle(2, 0x55aa66).setFillStyle(0x55aa66, 0.1).setVisible(false).setDepth(10);
 
     this.drawItems();
 
     // Bottom buttons
     const btnY = height - 110;
-    this.add.rectangle(width / 2, btnY, 220, 46, 0x2a1f35, 0.5)
-      .setStrokeStyle(2, 0x7744aa);
-    this.add.text(width / 2, btnY, '✨ Neues Item (1⚡)', {
-      fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ddbbff', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawButton(this, width / 2, btnY, 220, 46, '✨ Neues Item (1⚡)', { type: 'primary', fontSize: '16px' });
 
-    this.add.rectangle(width / 2, height - 55, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(width / 2, height - 55, '← Zurück zum Menü', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawButton(this, width / 2, height - 55, 260, 40, '← Zurück zum Menü', { type: 'secondary', fontSize: '15px' });
 
     // === DRAG & DROP INPUT ===
     this.input.on('pointerdown', (pointer) => {
@@ -144,8 +139,8 @@ export class MergeBoardScene extends Phaser.Scene {
         const { x, y } = this.cellToScreen(r, c);
         const canMerge = this.board[r][c] && getMergeResult(this.dragItem, this.board[r][c]);
         this.dropHighlight.setPosition(x, y).setVisible(true);
-        this.dropHighlight.setStrokeStyle(2, canMerge ? 0xffcc00 : 0x88ff88);
-        this.dropHighlight.setFillStyle(canMerge ? 0xffcc00 : 0x88ff88, 0.15);
+        this.dropHighlight.setStrokeStyle(2, canMerge ? 0xddaa33 : 0x55aa66);
+        this.dropHighlight.setFillStyle(canMerge ? 0xddaa33 : 0x55aa66, 0.15);
       } else {
         this.dropHighlight.setVisible(false);
       }
@@ -233,16 +228,16 @@ export class MergeBoardScene extends Phaser.Scene {
         }
 
         // Level badge
-        const lvlColors = ['#888888', '#88ccff', '#88ff88', '#ffcc44', '#ff88cc'];
+        const lvlColors = [THEME.text.muted, THEME.text.xp, THEME.text.success, THEME.text.energy, THEME.text.hearts];
         const badge = this.add.text(x + 22, y + 20, `${item.level}`, {
-          fontSize: '10px', fontFamily: 'monospace', color: lvlColors[item.level - 1] || '#ffffff',
+          fontSize: '13px', fontFamily: 'monospace', color: lvlColors[item.level - 1] || THEME.text.dark,
           fontStyle: 'bold',
         }).setOrigin(0.5).setDepth(6);
         this.itemSprites.push(badge);
 
         // Glow for high-level items
         if (item.level >= 4) {
-          const glow = this.add.circle(x, y, 24, 0xffcc00, 0.08).setDepth(4);
+          const glow = this.add.circle(x, y, 24, 0xddaa33, 0.12).setDepth(4);
           this.itemSprites.push(glow);
         }
       }
@@ -252,7 +247,7 @@ export class MergeBoardScene extends Phaser.Scene {
   animateMove(from, to) {
     const { x: fx, y: fy } = this.cellToScreen(from.r, from.c);
     const { x: tx, y: ty } = this.cellToScreen(to.r, to.c);
-    const ghost = this.add.circle(fx, fy, 8, 0xffffff, 0.3).setDepth(15);
+    const ghost = this.add.circle(fx, fy, 8, 0x9966cc, 0.3).setDepth(15);
     this.tweens.add({
       targets: ghost, x: tx, y: ty, alpha: 0, scale: 0.5,
       duration: 200, onComplete: () => ghost.destroy(),
@@ -275,7 +270,7 @@ export class MergeBoardScene extends Phaser.Scene {
     // Merge animation: sparkle burst
     for (let i = 0; i < 6; i++) {
       const angle = (Math.PI * 2 / 6) * i;
-      const spark = this.add.circle(x, y, 4, 0xffcc00, 0.9).setDepth(20);
+      const spark = this.add.circle(x, y, 4, 0xddaa33, 0.9).setDepth(20);
       this.tweens.add({
         targets: spark,
         x: x + Math.cos(angle) * 35, y: y + Math.sin(angle) * 35,
@@ -285,7 +280,7 @@ export class MergeBoardScene extends Phaser.Scene {
     }
 
     // Central flash
-    const flash = this.add.circle(x, y, 8, 0xffffff, 0.7).setDepth(21);
+    const flash = this.add.circle(x, y, 8, 0xf0e4f6, 0.7).setDepth(21);
     this.tweens.add({
       targets: flash, scale: { from: 1, to: 3 }, alpha: 0,
       duration: 300, onComplete: () => flash.destroy(),
@@ -308,7 +303,7 @@ export class MergeBoardScene extends Phaser.Scene {
 
     const comboLabel = comboMult > 1 ? ` ${comboMult}x!` : '';
     const reward = this.add.text(x, y - 25, `+${hearts}❤️${comboLabel}`, {
-      fontSize: '15px', fontFamily: 'monospace', color: '#ff88aa', fontStyle: 'bold',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.hearts, fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(25);
     this.tweens.add({
       targets: reward, y: y - 60, alpha: 0, duration: 1000,
@@ -328,16 +323,16 @@ export class MergeBoardScene extends Phaser.Scene {
     const { width } = this.scale;
 
     // Celebration overlay
-    const overlay = this.add.rectangle(width / 2, 480, width, 120, 0x2a1040, 0.95)
-      .setDepth(40).setStrokeStyle(2, 0xffcc00);
+    const overlay = this.add.rectangle(width / 2, 480, width, 120, THEME.bg.card, 0.98)
+      .setDepth(40).setStrokeStyle(2, 0xddaa33);
     const title = this.add.text(width / 2, 445, '🎉 Neues Tier!', {
-      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc44', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(41);
     const info = this.add.text(width / 2, 475, `${pet.emoji} ${pet.name} - ${pet.breed}`, {
-      fontSize: '15px', fontFamily: 'monospace', color: '#ffffff',
+      fontSize: '16px', fontFamily: 'monospace', color: THEME.text.dark,
     }).setOrigin(0.5).setDepth(41);
     const rarity = this.add.text(width / 2, 500, pet.rarity.toUpperCase(), {
-      fontSize: '12px', fontFamily: 'monospace', color: pet.rarity === 'legendary' ? '#ffaa00' : '#aa88ff',
+      fontSize: '14px', fontFamily: 'monospace', color: pet.rarity === 'legendary' ? THEME.text.energy : THEME.text.xp,
     }).setOrigin(0.5).setDepth(41);
 
     // Auto dismiss
@@ -380,8 +375,8 @@ export class MergeBoardScene extends Phaser.Scene {
   showMessage(text) {
     const { width } = this.scale;
     const msg = this.add.text(width / 2, BOARD_OFFSET_Y - 15, text, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#ff8888',
-      stroke: '#2a1f35', strokeThickness: 3,
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.error,
+      stroke: THEME.bg.scene, strokeThickness: 3,
     }).setOrigin(0.5).setDepth(30);
     this.tweens.add({ targets: msg, alpha: 0, duration: 2500, onComplete: () => msg.destroy() });
   }

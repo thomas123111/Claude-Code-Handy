@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { BREEDS, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
 const DOG_BREED_IDS = BREEDS.dogs.map((b) => b.id);
 
@@ -35,19 +36,14 @@ export class SchoolScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Header
-    this.add.text(cx, 25, '🎓 Hundeschule', {
-      fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawHeader(this, '🎓 Hundeschule', save);
 
-    this.add.text(cx, 52, `❤️ ${save.hearts}`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#ff6688',
-    }).setOrigin(0.5);
-
-    this.add.text(cx, 72, 'Nur Hunde. Jeder Trick: +10 Vermittlungsbonus!', {
-      fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+    // Subtitle info
+    this.add.text(cx, 70, 'Nur Hunde. Jeder Trick: +10 Vermittlungsbonus!', {
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Filter dogs
@@ -56,13 +52,13 @@ export class SchoolScene extends Phaser.Scene {
     // Status message
     if (this.message) {
       this.add.text(cx, 90, this.message, {
-        fontSize: '12px', fontFamily: 'monospace', color: '#ffcc44', fontStyle: 'bold',
+        fontSize: '15px', fontFamily: 'monospace', color: THEME.text.warning, fontStyle: 'bold',
       }).setOrigin(0.5);
     }
 
     if (dogs.length === 0) {
       this.add.text(cx, height / 2, 'Keine Hunde im Tierheim.\n\nHunde über das Merge Board\nfreischalten!', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
+        fontSize: '16px', fontFamily: 'monospace', color: THEME.text.muted, align: 'center',
       }).setOrigin(0.5);
     } else {
       let y = 108;
@@ -75,26 +71,26 @@ export class SchoolScene extends Phaser.Scene {
         const rarityColor = RARITY_COLORS[pet.rarity];
 
         // Card background
-        this.add.rectangle(cx, y + cardH / 2, width - 20, cardH, 0x2d2240, 0.8)
-          .setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(rarityColor).color);
+        const rarityHex = Phaser.Display.Color.HexStringToColor(rarityColor).color;
+        drawCard(this, cx, y + cardH / 2, width - 20, cardH, { borderColor: rarityHex });
 
         // Pet emoji + name
         this.add.text(25, y + 8, pet.emoji, { fontSize: '28px' });
         this.add.text(60, y + 8, pet.name, {
-          fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+          fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
         });
         this.add.text(60, y + 26, `${pet.breed} · ${RARITY_LABELS[pet.rarity]}`, {
-          fontSize: '10px', fontFamily: 'monospace', color: rarityColor,
+          fontSize: '13px', fontFamily: 'monospace', color: rarityColor,
         });
 
         // Show learned tricks
         if (learnedCount > 0) {
           this.add.text(25, y + 44, `Tricks: ${pet.tricks.join(', ')}`, {
-            fontSize: '10px', fontFamily: 'monospace', color: '#88cc88',
+            fontSize: '13px', fontFamily: 'monospace', color: THEME.text.success,
           });
         } else {
           this.add.text(25, y + 44, 'Noch keine Tricks gelernt', {
-            fontSize: '10px', fontFamily: 'monospace', color: '#bbaacc',
+            fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
           });
         }
 
@@ -108,15 +104,14 @@ export class SchoolScene extends Phaser.Scene {
 
           if (learned) {
             this.add.text(bx + btnW / 2, btnY, `✅ ${trick.name}`, {
-              fontSize: '9px', fontFamily: 'monospace', color: '#66aa66',
+              fontSize: '13px', fontFamily: 'monospace', color: THEME.text.success,
             }).setOrigin(0.5);
           } else {
             const active = canAfford;
-            this.add.rectangle(bx + btnW / 2, btnY, btnW - 4, 22, active ? 0x2a1f35 : 0x1a1525, active ? 0.9 : 0.5)
-              .setStrokeStyle(1, active ? 0x7744aa : 0x443355);
-            this.add.text(bx + btnW / 2, btnY, `${trick.name} ${trick.cost}❤️`, {
-              fontSize: '9px', fontFamily: 'monospace', color: active ? '#ffffff' : '#776688',
-            }).setOrigin(0.5);
+            drawButton(this, bx + btnW / 2, btnY, btnW - 4, 22, `${trick.name} ${trick.cost}❤️`, {
+              fontSize: '13px',
+              disabled: !active,
+            });
 
             if (active) {
               this.addHitArea(bx + btnW / 2, btnY, btnW - 4, 22, () => this.learnTrick(petIdx, trick));
@@ -131,11 +126,10 @@ export class SchoolScene extends Phaser.Scene {
           const compY = y + 98;
           const canComp = save.hearts >= COMPETITION_COST;
 
-          this.add.rectangle(compX, compY, 220, 22, canComp ? 0xaa8800 : 0x3a3a2a, canComp ? 0.9 : 0.5)
-            .setStrokeStyle(1, canComp ? 0xddaa00 : 0x444433);
-          this.add.text(compX, compY, `🏆 Wettbewerb ${COMPETITION_COST}❤️`, {
-            fontSize: '10px', fontFamily: 'monospace', color: canComp ? '#ffdd44' : '#665544',
-          }).setOrigin(0.5);
+          drawButton(this, compX, compY, 220, 22, `🏆 Wettbewerb ${COMPETITION_COST}❤️`, {
+            fontSize: '13px',
+            disabled: !canComp,
+          });
 
           if (canComp) {
             this.addHitArea(compX, compY, 220, 22, () => this.enterCompetition(petIdx));
@@ -147,11 +141,8 @@ export class SchoolScene extends Phaser.Scene {
     }
 
     // Back button
-    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
+    drawButton(this, cx, height - 40, 280, 50, '← Zurück', { type: 'secondary' });
+    this.addHitArea(cx, height - 40, 280, 50, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave } from '../data/SaveManager.js';
+import { THEME, drawCard } from '../ui/Theme.js';
 
 export class StoryScene extends Phaser.Scene {
   constructor() { super('Story'); }
@@ -14,16 +15,15 @@ export class StoryScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Title
     this.add.text(cx, 50, this.chapter.title, {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '26px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Dialogue box
-    this.add.rectangle(cx, height - 200, width - 40, 180, 0x2a2040, 0.9)
-      .setStrokeStyle(2, 0x554466);
+    drawCard(this, cx, height - 200, width - 40, 180);
 
     // Speaker emoji
     this.speakerText = this.add.text(50, height - 280, '', {
@@ -32,13 +32,13 @@ export class StoryScene extends Phaser.Scene {
 
     // Dialogue text
     this.dialogueText = this.add.text(cx, height - 200, '', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ddccee',
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.body,
       wordWrap: { width: width - 80 }, align: 'center', lineSpacing: 6,
     }).setOrigin(0.5).setDepth(10);
 
     // Tap to continue
     this.tapText = this.add.text(cx, height - 120, 'Tippen zum Fortfahren...', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
     this.tweens.add({
       targets: this.tapText,

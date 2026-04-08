@@ -22,13 +22,13 @@ export class TimingPuzzle extends Phaser.Scene {
     const { width, height } = this.scale;
 
     // Background
-    this.cameras.main.setBackgroundColor('#1a2a1a');
+    this.cameras.main.setBackgroundColor('#f0f8f0');
 
     // Title
     this.add.text(width / 2, 40, `${this.petName}: ${this.trickName}`, {
-      fontSize: '26px',
+      fontSize: '28px',
       fontFamily: 'Arial',
-      color: '#a8e6a8',
+      color: '#4a7a5a',
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
@@ -44,8 +44,8 @@ export class TimingPuzzle extends Phaser.Scene {
     this.barHeight = 40;
 
     // Bar background
-    this.add.rectangle(this.barX + this.barWidth / 2, this.barY, this.barWidth, this.barHeight, 0x2a3a2a)
-      .setOrigin(0.5).setStrokeStyle(2, 0x4a6a4a);
+    this.add.rectangle(this.barX + this.barWidth / 2, this.barY, this.barWidth, this.barHeight, 0xd8e8d8)
+      .setOrigin(0.5).setStrokeStyle(2, 0xa8c8a8);
 
     // Sweet spot (starts at 20% width, shrinks each round)
     this.sweetSpotRatio = 0.20;
@@ -59,9 +59,9 @@ export class TimingPuzzle extends Phaser.Scene {
 
     // Round counter
     this.roundText = this.add.text(width / 2, this.barY + 50, '', {
-      fontSize: '22px',
+      fontSize: '24px',
       fontFamily: 'Arial',
-      color: '#cceecc'
+      color: '#4a7a5a'
     }).setOrigin(0.5);
 
     // Success dots
@@ -79,9 +79,9 @@ export class TimingPuzzle extends Phaser.Scene {
 
     // Instruction
     this.instructionText = this.add.text(width / 2, height - 80, 'Tippe im grünen Bereich!', {
-      fontSize: '20px',
+      fontSize: '22px',
       fontFamily: 'Arial',
-      color: '#88bb88'
+      color: '#558866'
     }).setOrigin(0.5);
 
     // Global tap input
@@ -256,7 +256,7 @@ export class TimingPuzzle extends Phaser.Scene {
       const msg = this.add.text(width / 2, height * 0.7, `Bestanden! ${this.successes}/${this.totalRounds} ⭐`, {
         fontSize: '36px',
         fontFamily: 'Arial',
-        color: '#44ff44',
+        color: '#33aa55',
         fontStyle: 'bold'
       }).setOrigin(0.5).setAlpha(0).setScale(0.5);
 
@@ -290,7 +290,7 @@ export class TimingPuzzle extends Phaser.Scene {
       const msg = this.add.text(width / 2, height * 0.7, `${this.successes}/${this.totalRounds} - Nächstes Mal!`, {
         fontSize: '32px',
         fontFamily: 'Arial',
-        color: '#ff8866',
+        color: '#dd4444',
         fontStyle: 'bold'
       }).setOrigin(0.5).setAlpha(0);
 

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave } from '../data/SaveManager.js';
 import { applyEventReward } from '../data/EventData.js';
+import { THEME, drawButton } from '../ui/Theme.js';
 
 export class EventScene extends Phaser.Scene {
   constructor() { super('Event'); }
@@ -15,31 +16,31 @@ export class EventScene extends Phaser.Scene {
     const cx = width / 2;
     const evt = this.event;
 
-    // Dramatic background based on category
+    // Soft pastel background based on category
     const bgColors = {
-      emergency: '#3a1015',
-      community: '#1a2a15',
-      special: '#1a1530',
+      emergency: '#fcf0f0',
+      community: '#f0fcf2',
+      special: '#f0eefa',
     };
-    this.cameras.main.setBackgroundColor(bgColors[evt.category] || '#231a2e');
+    this.cameras.main.setBackgroundColor(bgColors[evt.category] || THEME.bg.scene);
 
     // Urgency banner for emergencies
     if (evt.category === 'emergency') {
-      this.add.rectangle(cx, 25, width, 50, 0xff2222, 0.15);
+      this.add.rectangle(cx, 25, width, 50, 0xff4444, 0.12);
       this.add.text(cx, 25, '⚠️ NOTFALL ⚠️', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#ff6644', fontStyle: 'bold',
+        fontSize: '15px', fontFamily: 'monospace', color: '#cc3333', fontStyle: 'bold',
       }).setOrigin(0.5);
     }
 
     // Event title + emoji
     this.add.text(cx, 70, evt.emoji, { fontSize: '50px' }).setOrigin(0.5);
     this.add.text(cx, 115, evt.title, {
-      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '22px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Story text
     this.add.text(cx, 170, evt.story, {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ddccee',
+      fontSize: '15px', fontFamily: 'Georgia, serif', color: THEME.text.body,
       wordWrap: { width: width - 50 }, align: 'center', lineSpacing: 5,
     }).setOrigin(0.5);
 
@@ -47,7 +48,7 @@ export class EventScene extends Phaser.Scene {
     if (evt.duration > 0) {
       this.timeLeft = evt.duration;
       this.timerText = this.add.text(cx, 220, '', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#ff8844', fontStyle: 'bold',
+        fontSize: '16px', fontFamily: 'monospace', color: THEME.text.warning, fontStyle: 'bold',
       }).setOrigin(0.5);
       this.updateTimer();
       this.timerInterval = this.time.addEvent({
@@ -61,16 +62,13 @@ export class EventScene extends Phaser.Scene {
     let btnY = evt.duration > 0 ? 320 : 280;
     evt.choices.forEach((choice, idx) => {
       const canAfford = this.save.hearts >= (choice.cost || 0);
-      const btnColor = canAfford ? 0x2a1f35 : 0x332233;
-      const borderColor = canAfford ? 0x7744aa : 0x444444;
 
-      this.add.rectangle(cx, btnY, width - 40, 60, btnColor, 0.5)
-        .setStrokeStyle(2, borderColor);
+      drawButton(this, cx, btnY, width - 40, 60, '', { disabled: !canAfford });
 
       // Choice label
       this.add.text(cx, btnY - 10, choice.label, {
-        fontSize: '14px', fontFamily: 'Georgia, serif',
-        color: canAfford ? '#ffffff' : '#666666', fontStyle: 'bold',
+        fontSize: '16px', fontFamily: 'Georgia, serif',
+        color: canAfford ? '#fff8e8' : '#999999', fontStyle: 'bold',
       }).setOrigin(0.5);
 
       // Cost + reward preview
@@ -82,8 +80,8 @@ export class EventScene extends Phaser.Scene {
       if (choice.reward.donationKg) rewardParts.push(`+${choice.reward.donationKg}kg Spende`);
       if (choice.puzzle) rewardParts.push('🧩 Rätsel');
 
-      this.add.text(cx, btnY + 12, `${costStr}${rewardParts.join(' · ')}`, {
-        fontSize: '9px', fontFamily: 'monospace', color: '#bbaacc',
+      this.add.text(cx, btnY + 14, `${costStr}${rewardParts.join(' · ')}`, {
+        fontSize: '11px', fontFamily: 'monospace', color: canAfford ? '#e8ddf0' : '#aaaaaa',
       }).setOrigin(0.5);
 
       if (canAfford) {
@@ -110,7 +108,7 @@ export class EventScene extends Phaser.Scene {
       const m = Math.floor(this.timeLeft / 60);
       const s = this.timeLeft % 60;
       this.timerText.setText(`⏱️ ${m}:${s.toString().padStart(2, '0')}`);
-      if (this.timeLeft <= 10) this.timerText.setColor('#ff4444');
+      if (this.timeLeft <= 10) this.timerText.setColor(THEME.text.error);
     }
   }
 
@@ -146,16 +144,16 @@ export class EventScene extends Phaser.Scene {
 
     // Clear and show result
     this.children.removeAll();
-    this.cameras.main.setBackgroundColor(isGood ? '#1a2a1a' : '#2a1a1a');
+    this.cameras.main.setBackgroundColor(isGood ? '#f0fcf2' : '#fcf0f0');
 
     this.add.text(cx, height / 2 - 40, isGood ? '🎉' : '😔', { fontSize: '50px' }).setOrigin(0.5);
     this.add.text(cx, height / 2 + 20, feedback, {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: isGood ? '#88ff88' : '#ff8888',
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: isGood ? THEME.text.success : THEME.text.error,
       wordWrap: { width: width - 50 }, align: 'center', lineSpacing: 5,
     }).setOrigin(0.5);
 
     this.add.text(cx, height / 2 + 80, 'Tippe zum Fortfahren...', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Use update-loop tap detection (more reliable than once listener)
@@ -197,19 +195,19 @@ export class EventResultScene extends Phaser.Scene {
 
       const { width, height } = this.scale;
       const cx = width / 2;
-      this.cameras.main.setBackgroundColor(result.success ? '#1a2a1a' : '#2a1a1a');
+      this.cameras.main.setBackgroundColor(result.success ? '#f0fcf2' : '#fcf0f0');
 
       this.add.text(cx, height / 2 - 40, result.success ? '🎉' : '😔', { fontSize: '50px' }).setOrigin(0.5);
       this.add.text(cx, height / 2 + 20,
         result.success ? pending.event.feedbackGood : 'Rätsel nicht geschafft...',
         {
-          fontSize: '14px', fontFamily: 'Georgia, serif',
-          color: result.success ? '#88ff88' : '#ff8888',
+          fontSize: '16px', fontFamily: 'Georgia, serif',
+          color: result.success ? THEME.text.success : THEME.text.error,
           wordWrap: { width: width - 50 }, align: 'center',
         }).setOrigin(0.5);
 
       this.add.text(cx, height / 2 + 80, 'Tippe zum Fortfahren...', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+        fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
     }
 

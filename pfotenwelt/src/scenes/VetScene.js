@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { calculateHappiness, decayNeeds, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
+import { THEME, drawHeader, drawButton, drawCard, drawBackButton } from '../ui/Theme.js';
 
 const DIAGNOSES = [
   { name: 'Erkältung', cost: 20 },
@@ -49,15 +50,14 @@ export class VetScene extends Phaser.Scene {
     const cx = width / 2;
     const save = this.save;
 
-    this.cameras.main.setBackgroundColor('#231a2e');
+    this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
     // Header
-    this.add.text(cx, 25, '🏥 Tierarzt', {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
+    drawHeader(this, '🏥 Tierarzt', save);
 
-    this.add.text(cx, 52, `❤️ ${save.hearts} Herzen`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc',
+    // Subtitle
+    this.add.text(cx, 70, 'Kranke Tiere diagnostizieren und behandeln', {
+      fontSize: '14px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
     // Find sick pets (health < 50)
@@ -71,13 +71,13 @@ export class VetScene extends Phaser.Scene {
     if (sickPets.length === 0) {
       this.add.text(cx, height / 2 - 40, '🎉', { fontSize: '48px' }).setOrigin(0.5);
       this.add.text(cx, height / 2 + 20, 'Alle Tiere sind gesund!', {
-        fontSize: '16px', fontFamily: 'Georgia, serif', color: '#44dd88',
+        fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.success,
       }).setOrigin(0.5);
       this.add.text(cx, height / 2 + 50, 'Komm wieder, wenn ein Tier\nkrank wird.', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
+        fontSize: '15px', fontFamily: 'monospace', color: THEME.text.muted, align: 'center',
       }).setOrigin(0.5);
     } else {
-      let y = 80;
+      let y = 90;
       const cardH = 140;
       const cardW = width - 30;
 
@@ -88,18 +88,18 @@ export class VetScene extends Phaser.Scene {
         const canAfford = save.hearts >= treatCost;
         const canAffordInsurance = save.hearts >= INSURANCE_COST;
         const rarityColor = RARITY_COLORS[pet.rarity];
+        const rarityCol = Phaser.Display.Color.HexStringToColor(rarityColor).color;
 
         // Card background
-        this.add.rectangle(cx, y + cardH / 2, cardW, cardH, 0x2d2240, 0.8)
-          .setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(rarityColor).color);
+        drawCard(this, cx, y + cardH / 2, cardW, cardH, { borderColor: rarityCol });
 
         // Pet emoji + name
         this.add.text(25, y + 10, pet.emoji, { fontSize: '32px' });
         this.add.text(70, y + 10, pet.name, {
-          fontSize: '15px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+          fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
         });
         this.add.text(70, y + 30, `${pet.breed} · ${RARITY_LABELS[pet.rarity]}`, {
-          fontSize: '10px', fontFamily: 'monospace', color: rarityColor,
+          fontSize: '13px', fontFamily: 'monospace', color: rarityColor,
         });
 
         // Insurance badge
@@ -111,19 +111,19 @@ export class VetScene extends Phaser.Scene {
         const barY = y + 55;
         const healthPct = pet.needs.health / 100;
         this.add.text(25, barY, '💊 Gesundheit', {
-          fontSize: '10px', fontFamily: 'monospace', color: '#ff6688',
+          fontSize: '13px', fontFamily: 'monospace', color: '#ff6688',
         });
         this.add.rectangle(25 + 130, barY + 5, 160, 10, 0x333333)
           .setStrokeStyle(1, 0x444444);
         this.add.rectangle(25 + 130 - 80 + (80 * healthPct), barY + 5, 160 * healthPct, 10, 0xff4466)
           .setOrigin(0.5, 0.5);
         this.add.text(25 + 130 + 90, barY + 1, `${Math.round(pet.needs.health)}%`, {
-          fontSize: '10px', fontFamily: 'monospace', color: '#ff6688',
+          fontSize: '13px', fontFamily: 'monospace', color: '#ff6688',
         });
 
         // Diagnosis
         this.add.text(25, y + 76, `Diagnose: ${diagnosis.name}`, {
-          fontSize: '11px', fontFamily: 'monospace', color: '#cc8844',
+          fontSize: '14px', fontFamily: 'monospace', color: THEME.text.warning,
         });
 
         // Treatment button
@@ -132,8 +132,8 @@ export class VetScene extends Phaser.Scene {
           ? `Behandeln (${treatCost}❤️ · 🛡️ -50%)`
           : `Behandeln (${treatCost}❤️)`;
         this.add.text(25, btnY, costLabel, {
-          fontSize: '11px', fontFamily: 'monospace',
-          color: canAfford ? '#44dd88' : '#554444',
+          fontSize: '14px', fontFamily: 'monospace',
+          color: canAfford ? THEME.text.success : '#554444',
         });
         if (canAfford) {
           this.addHitArea(140, btnY + 7, 260, 20, () => this.treatPet(idx, treatCost));
@@ -142,7 +142,7 @@ export class VetScene extends Phaser.Scene {
         // Insurance upsell for uninsured pets
         if (!isInsured) {
           this.add.text(width - 20, btnY, `🛡️ Versichern (${INSURANCE_COST}❤️/Tier)`, {
-            fontSize: '10px', fontFamily: 'monospace',
+            fontSize: '13px', fontFamily: 'monospace',
             color: canAffordInsurance ? '#88aaff' : '#554444',
           }).setOrigin(1, 0);
           if (canAffordInsurance) {
@@ -155,11 +155,8 @@ export class VetScene extends Phaser.Scene {
     }
 
     // Back button
-    this.add.rectangle(cx, height - 40, 260, 40, 0x2a1f35, 0.9).setStrokeStyle(1, 0x443355);
-    this.add.text(cx, height - 40, '← Zurück', {
-      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.addHitArea(cx, height - 40, 260, 40, () => this.scene.start('Town'));
+    drawButton(this, cx, height - 40, 280, 50, '← Zurück', { type: 'secondary' });
+    this.addHitArea(cx, height - 40, 280, 50, () => this.scene.start('Town'));
 
     // Touch handler
     this.input.on('pointerdown', (pointer) => {

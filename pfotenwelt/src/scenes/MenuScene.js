@@ -41,40 +41,40 @@ export class MenuScene extends Phaser.Scene {
       this.eventText = evt;
     }
 
-    // Background gradient feel
-    this.cameras.main.setBackgroundColor('#2a1f35');
+    // Background
+    this.cameras.main.setBackgroundColor('#f8f2fc');
 
     // Title
     this.add.text(cx, 50, '🐾 Pfotenwelt', {
-      fontSize: '32px', fontFamily: 'Georgia, serif', color: '#ffcc88', fontStyle: 'bold',
+      fontSize: '34px', fontFamily: 'Georgia, serif', color: '#6b4c8a', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(cx, 85, 'Hilf Tieren. Spiel mit Herz.', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#aa8866',
+    this.add.text(cx, 88, 'Hilf Tieren. Spiel mit Herz.', {
+      fontSize: '15px', fontFamily: 'Georgia, serif', color: '#8a7399',
     }).setOrigin(0.5);
 
     // Stats bar
     this.add.text(20, 115, `❤️ ${save.hearts}`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ff6688',
+      fontSize: '15px', fontFamily: 'monospace', color: '#e85577',
     });
     this.add.text(140, 115, `⚡ ${save.energy}/${save.maxEnergy}`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ffcc00',
+      fontSize: '15px', fontFamily: 'monospace', color: '#e89030',
     });
     this.add.text(300, 115, `Lv.${save.level}`, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#88ccff',
+      fontSize: '15px', fontFamily: 'monospace', color: '#5588cc',
     });
 
     // Shelter preview - show pets
     const panelY = 160;
-    this.add.rectangle(cx, panelY + 80, width - 30, 180, 0x352a40, 0.8)
-      .setStrokeStyle(2, 0x554466);
+    this.add.rectangle(cx, panelY + 80, width - 30, 180, 0xffffff, 0.95)
+      .setStrokeStyle(2, 0xe0c8e8);
     this.add.text(cx, panelY + 10, '🏠 Dein Tierheim', {
-      fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ddccee', fontStyle: 'bold',
+      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#6b4c8a', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     if (save.pets.length === 0) {
       this.add.text(cx, panelY + 70, 'Noch keine Tiere...\nStarte dein erstes Merge!', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#bbaacc', align: 'center',
+        fontSize: '14px', fontFamily: 'monospace', color: '#9888a8', align: 'center',
       }).setOrigin(0.5);
     } else {
       // Show pet sprites in a row
@@ -89,26 +89,26 @@ export class MenuScene extends Phaser.Scene {
         }
       });
       this.add.text(cx, panelY + 95, `${save.pets.length} Tiere | ${save.adopted} vermittelt`, {
-        fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+        fontSize: '14px', fontFamily: 'monospace', color: '#9888a8',
       }).setOrigin(0.5);
     }
 
     // Charity counter
     this.add.text(cx, panelY + 135, `🎁 ${save.totalDonatedKg.toFixed(1)}kg Futter gespendet!`, {
-      fontSize: '12px', fontFamily: 'monospace', color: '#88cc88',
+      fontSize: '14px', fontFamily: 'monospace', color: '#33aa55',
     }).setOrigin(0.5);
 
     // Random event message
     if (this.eventText) {
       this.add.text(cx, panelY + 155, `${this.eventText.emoji} ${this.eventText.text}`, {
-        fontSize: '10px', fontFamily: 'monospace', color: '#ccaa88',
+        fontSize: '13px', fontFamily: 'monospace', color: '#8a7399',
         wordWrap: { width: width - 60 }, align: 'center',
       }).setOrigin(0.5);
     }
 
     // Login streak
     this.add.text(cx, panelY + 180, `📅 Tag ${save.loginStreak} Streak`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#aa9977',
+      fontSize: '14px', fontFamily: 'monospace', color: '#8a7399',
     }).setOrigin(0.5);
 
     // Main buttons - positioned to be always visible
@@ -122,11 +122,11 @@ export class MenuScene extends Phaser.Scene {
 
     // Bottom info
     this.add.text(cx, height - 60, `Vermittelte Tiere: ${save.adopted}`, {
-      fontSize: '11px', fontFamily: 'monospace', color: '#bbaacc',
+      fontSize: '14px', fontFamily: 'monospace', color: '#9888a8',
     }).setOrigin(0.5);
 
     this.add.text(cx, height - 35, GAME_VERSION, {
-      fontSize: '14px', fontFamily: 'monospace', color: '#ffffff',
+      fontSize: '14px', fontFamily: 'monospace', color: '#6b4c8a',
     }).setOrigin(0.5);
 
     // Touch handler
@@ -149,12 +149,16 @@ export class MenuScene extends Phaser.Scene {
   }
 
   drawButton(x, y, text, color, action) {
-    const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
-    this.add.rectangle(x, y, 340, 52, colorVal, 0.3)
-      .setStrokeStyle(2, colorVal);
+    // Use NineSlice brown button if available
+    if (this.textures.exists('btn_brown')) {
+      this.add.nineslice(x, y, 'btn_brown', null, 340, 54, 18, 18, 18, 18);
+    } else {
+      const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
+      this.add.rectangle(x, y, 340, 54, colorVal, 0.5).setStrokeStyle(2, colorVal);
+    }
     this.add.text(x, y, text, {
-      fontSize: '17px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+      fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.buttons.push({ x, y, w: 340, h: 52, action });
+    this.buttons.push({ x, y, w: 340, h: 54, action });
   }
 }
