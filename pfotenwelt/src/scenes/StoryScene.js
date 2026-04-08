@@ -63,13 +63,24 @@ export class StoryScene extends Phaser.Scene {
     // Show first dialogue
     this.showDialogue();
 
-    // Tap handler
+    // Tap handler: first tap completes text, second tap advances
+    this.isTyping = false;
+    this.currentFullText = '';
     this.input.on('pointerdown', () => {
-      this.dialogueIdx++;
-      if (this.dialogueIdx >= this.chapter.dialogues.length) {
-        this.finishStory();
+      if (this.isTyping) {
+        // Complete the current text instantly
+        if (this.typeTimer) this.typeTimer.remove();
+        this.typeTimer = null;
+        this.dialogueText.setText(this.currentFullText);
+        this.isTyping = false;
       } else {
-        this.showDialogue();
+        // Advance to next dialogue
+        this.dialogueIdx++;
+        if (this.dialogueIdx >= this.chapter.dialogues.length) {
+          this.finishStory();
+        } else {
+          this.showDialogue();
+        }
       }
     });
   }
@@ -80,15 +91,17 @@ export class StoryScene extends Phaser.Scene {
 
     // Typewriter effect
     this.dialogueText.setText('');
-    const fullText = d.text;
+    this.currentFullText = d.text;
+    this.isTyping = true;
     let charIdx = 0;
     if (this.typeTimer) this.typeTimer.remove();
     this.typeTimer = this.time.addEvent({
       delay: 30,
-      repeat: fullText.length - 1,
+      repeat: d.text.length - 1,
       callback: () => {
         charIdx++;
-        this.dialogueText.setText(fullText.substring(0, charIdx));
+        this.dialogueText.setText(d.text.substring(0, charIdx));
+        if (charIdx >= d.text.length) this.isTyping = false;
       },
     });
   }

@@ -126,15 +126,15 @@ export class BootScene extends Phaser.Scene {
       this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: base }], frameRate: 1 });
     };
 
-    // Characters (16x32, 7 rows): walk = row 2, order = DRLU
-    // Verified: frames 6-11 = right-facing, frames 12-17 = left-facing (L/R swapped from RPG Maker)
-    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['down', 'right', 'left', 'up']));
+    // Characters (16x32, 7 rows): walk = row 2, order = RLUD
+    // Every direction was exactly opposite with LDRU, so flip all: L↔R, D↔U
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createAnims(k, 2, ['right', 'up', 'left', 'down']));
 
-    // Dogs (48x32, 13 rows): walk = row 4, order = RDLU
-    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'down', 'left', 'up']));
+    // Dogs (48x32, 13 rows): walk = row 4, order = RULD (sideways was correct, up/down swapped)
+    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createAnims(k, 4, ['right', 'up', 'left', 'down']));
 
-    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = RDLU
-    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['right', 'down', 'left', 'up']));
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 2, order = RULD
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createAnims(k, 2, ['right', 'up', 'left', 'down']));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
@@ -203,19 +203,8 @@ export class BootScene extends Phaser.Scene {
 
     pg.destroy();
 
-    // One-time save reset for v3.0 (new onboarding + progression system)
-    try {
-      const raw = localStorage.getItem('pfotenwelt_save');
-      const save = raw ? JSON.parse(raw) : null;
-      if (save && !save.onboardingDone && save.level > 1) {
-        // Old save without onboarding — reset to experience new flow
-        localStorage.removeItem('pfotenwelt_save');
-      }
-      // Also force reset if save has old structure (no profile field at all)
-      if (save && typeof save.profile === 'undefined') {
-        localStorage.removeItem('pfotenwelt_save');
-      }
-    } catch (e) { /* ignore */ }
+    // Force reset — remove after testing!
+    localStorage.removeItem('pfotenwelt_save');
 
     // Route: onboarding if new player, otherwise straight to town
     try {

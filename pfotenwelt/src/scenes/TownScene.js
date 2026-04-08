@@ -199,8 +199,6 @@ export class TownScene extends Phaser.Scene {
     });
 
     // === BUILDINGS (sequential unlock — hidden until unlocked or next) ===
-    const nextUnlock = BUILDING_UNLOCK_ORDER.find(bo =>
-      !(this.save.stations[bo.id] && this.save.stations[bo.id].unlocked));
 
     BUILDINGS.forEach((b) => {
       const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
@@ -383,32 +381,6 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === TOP HUD (fixed at very top edge, large & readable) ===
-    const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
-    // Background strip
-    this.add.rectangle(width / 2, 0, width, 32, 0x1a1020, 0.55).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    this.add.rectangle(width / 2, 32, width, 1, 0xffffff, 0.15).setOrigin(0.5, 0).setScrollFactor(0).setDepth(500);
-    // Hearts (left)
-    this.add.text(10, 7, `❤️ ${this.save.hearts}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffaabb', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setScrollFactor(0).setDepth(501);
-    // Day (center)
-    this.add.text(width / 2, 7, `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ffe088', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(501);
-    // Level (right)
-    this.add.text(width - 10, 7, `Lv.${this.save.level}`, { fontSize: '16px', fontFamily: 'Georgia, serif', color: '#88ccff', fontStyle: 'bold', stroke: '#000000', strokeThickness: 3 }).setOrigin(1, 0).setScrollFactor(0).setDepth(501);
-
-    // Music toggle (top right, small)
-    if (this.save.musicOn !== false) {
-      this.input.once('pointerdown', () => { unlockAudio(); startMusic('town'); });
-    }
-    const musicBtn = this.add.text(width - 8, 24, this.save.musicOn !== false ? '🎵' : '🔇', {
-      fontSize: '14px',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(502).setInteractive();
-    musicBtn.on('pointerdown', () => {
-      this.save.musicOn = !(this.save.musicOn !== false);
-      writeSave(this.save);
-      if (this.save.musicOn) { unlockAudio(); startMusic('town'); musicBtn.setText('🎵'); }
-      else { stopMusic(); musicBtn.setText('🔇'); }
-    });
-
     // === INPUT ===
     this.isDragging = false;
     this.dragMoved = false;
@@ -425,7 +397,7 @@ export class TownScene extends Phaser.Scene {
         const p1 = this.input.pointer1, p2 = this.input.pointer2;
         const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
         if (this.lastPinchDist > 0) {
-          this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.004, 0.35, 2.5));
+          this.cameras.main.setZoom(Phaser.Math.Clamp(this.cameras.main.zoom + (dist - this.lastPinchDist) * 0.004, 0.55, 2.5));
         }
         this.lastPinchDist = dist; this.dragMoved = true; return;
       }
@@ -496,11 +468,26 @@ export class TownScene extends Phaser.Scene {
       // Double-tap zoom
       const now = Date.now();
       if (this.lastTapTime && now - this.lastTapTime < 300) {
-        const tz = this.cameras.main.zoom < 0.8 ? 1.2 : 0.5;
+        const tz = this.cameras.main.zoom < 0.8 ? 1.2 : 0.6;
         this.tweens.add({ targets: this.cameras.main, zoom: tz, duration: 300, ease: 'Cubic.Out' });
         this.lastTapTime = 0;
       } else { this.lastTapTime = now; }
     });
+
+    // === HTML HUD (fixed CSS bar above canvas, immune to everything) ===
+    const timeEmojis = { morning: '🌅', afternoon: '☀️', evening: '🌆', night: '🌙' };
+    const hud = document.getElementById('hud');
+    if (hud) {
+      document.getElementById('hud-hearts').textContent = `❤️ ${this.save.hearts}`;
+      document.getElementById('hud-day').textContent = `${timeEmojis[timeOfDay]} Tag ${this.save.gameDay}`;
+      document.getElementById('hud-level').textContent = `Lv.${this.save.level}`;
+      hud.classList.add('visible');
+    }
+
+    // Music (no visual button — just auto-start)
+    if (this.save.musicOn !== false) {
+      this.input.once('pointerdown', () => { unlockAudio(); startMusic('town'); });
+    }
   }
 
   drawPath(x1, y1, x2, y2, color) {
