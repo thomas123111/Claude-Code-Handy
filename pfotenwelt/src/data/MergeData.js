@@ -83,7 +83,8 @@ export function getMergeResult(itemId1, itemId2) {
   if (item1.level >= item1.maxLevel) return null; // already max level
 
   const chain = ITEM_CHAINS[item1.chain];
-  return chain.levels[item1.level]; // next level item
+  const nextItem = chain.levels[item1.level]; // next level item (raw)
+  return ALL_ITEMS[nextItem.id]; // return enriched version with level property
 }
 
 // Generate a random level-1 item
