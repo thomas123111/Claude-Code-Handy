@@ -60,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(140, 115, `⚡ ${save.energy}/${save.maxEnergy}`, {
       fontSize: '15px', fontFamily: 'monospace', color: '#e89030',
     });
-    this.add.text(300, 115, `Lv.${save.level}`, {
+    this.add.text(width - 115, 115, `Lv.${save.level}`, {
       fontSize: '15px', fontFamily: 'monospace', color: '#5588cc',
     });
 
@@ -150,15 +150,17 @@ export class MenuScene extends Phaser.Scene {
 
   drawButton(x, y, text, color, action) {
     // Use NineSlice brown button if available
+    const { width: sw } = this.scale;
+    const btnW = Math.min(340, sw - 60);
     if (this.textures.exists('btn_brown')) {
-      this.add.nineslice(x, y, 'btn_brown', null, 340, 54, 18, 18, 18, 18);
+      this.add.nineslice(x, y, 'btn_brown', null, btnW, 54, 18, 18, 18, 18);
     } else {
       const colorVal = Phaser.Display.Color.HexStringToColor(color).color;
-      this.add.rectangle(x, y, 340, 54, colorVal, 0.5).setStrokeStyle(2, colorVal);
+      this.add.rectangle(x, y, btnW, 54, colorVal, 0.5).setStrokeStyle(2, colorVal);
     }
     this.add.text(x, y, text, {
       fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.buttons.push({ x, y, w: 340, h: 54, action });
+    this.buttons.push({ x, y, w: btnW, h: 54, action });
   }
 }
