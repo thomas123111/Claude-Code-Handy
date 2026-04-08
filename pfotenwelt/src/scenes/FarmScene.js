@@ -6,18 +6,13 @@ import { startMusic, unlockAudio } from '../audio/MusicManager.js';
 const FARM_W = 1400;
 const FARM_H = 1200;
 
-// Farm buildings — tappable to start tasks
+// Farm buildings — tappable to start tasks (using LimeZu sprites)
 const FARM_BUILDINGS = [
-  { id: 'barn', name: 'Scheune', emoji: '🏚️', x: 700, y: 200, w: 140, h: 100,
-    color: 0x8B4513, roofColor: 0xCC3333, task: 'harvest' },
-  { id: 'stable', name: 'Kuhstall', emoji: '🐄', x: 200, y: 450, w: 120, h: 80,
-    color: 0x7a6040, roofColor: 0x886644, task: 'milk' },
-  { id: 'coop', name: 'Hühnerstall', emoji: '🐔', x: 1200, y: 450, w: 100, h: 70,
-    color: 0x9a7a50, roofColor: 0xaa8855, task: 'eggs' },
-  { id: 'trough', name: 'Futtertrog', emoji: '🍽️', x: 200, y: 800, w: 100, h: 60,
-    color: 0x6a5a40, roofColor: 0x7a6a50, task: 'feed_animals' },
-  { id: 'delivery', name: 'Lieferrampe', emoji: '🚜', x: 1200, y: 800, w: 120, h: 70,
-    color: 0x5a6a40, roofColor: 0x6a7a50, task: 'deliver' },
+  { id: 'barn', name: 'Scheune', tex: 'farm_barn', x: 700, y: 200, scale: 3.0, hitW: 150, hitH: 120, task: 'harvest' },
+  { id: 'stable', name: 'Kuhstall', tex: 'farm_stable', x: 200, y: 450, scale: 2.5, hitW: 130, hitH: 100, task: 'milk' },
+  { id: 'coop', name: 'Hühnerstall', tex: 'farm_coop', x: 1200, y: 450, scale: 3.0, hitW: 100, hitH: 90, task: 'eggs' },
+  { id: 'henhouse', name: 'Futterstation', tex: 'farm_henhouse', x: 200, y: 800, scale: 3.0, hitW: 100, hitH: 80, task: 'feed_animals' },
+  { id: 'silo', name: 'Silo & Lieferung', tex: 'farm_silo', x: 1200, y: 800, scale: 2.5, hitW: 130, hitH: 120, task: 'deliver' },
 ];
 
 const FARM_TASKS = {
@@ -124,17 +119,14 @@ export class FarmScene extends Phaser.Scene {
     // Gate at top center
     this.add.rectangle(700, 50, 80, 24, 0x4a7a32).setDepth(2);
 
-    // === BUILDINGS ===
+    // === BUILDINGS (LimeZu sprites) ===
     FARM_BUILDINGS.forEach((b) => {
-      const bDepth = 10 + Math.round((b.y + b.h / 2) / 10);
-      // Building base
-      this.add.rectangle(b.x, b.y, b.w, b.h, b.color).setDepth(bDepth);
-      // Roof (triangle-ish via overlapping rect)
-      this.add.rectangle(b.x, b.y - b.h / 2 - 8, b.w + 20, 18, b.roofColor).setDepth(bDepth);
-      // Door
-      this.add.rectangle(b.x, b.y + b.h / 4, 20, b.h / 2, 0x4a3520).setDepth(bDepth);
+      const bDepth = 10 + Math.round((b.y + 40) / 10);
+      if (this.textures.exists(b.tex)) {
+        this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bDepth);
+      }
       // Label
-      this.add.text(b.x, b.y + b.h / 2 + 18, `${b.emoji} ${b.name}`, {
+      this.add.text(b.x, b.y + b.hitH / 2 + 10, b.name, {
         fontSize: '13px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
         backgroundColor: '#00000088', padding: { x: 8, y: 3 },
       }).setOrigin(0.5).setDepth(200);
@@ -145,12 +137,24 @@ export class FarmScene extends Phaser.Scene {
       const lastDone = this.save.farm.taskCooldowns[b.task] || 0;
       const isReady = (now - lastDone) >= task.cooldownMs;
       if (isReady) {
-        // Green glow/indicator
-        const glow = this.add.circle(b.x + b.w / 2 - 5, b.y - b.h / 2 - 5, 8, 0x44ff44, 0.8).setDepth(201);
+        const glow = this.add.circle(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, 10, 0x44ff44, 0.8).setDepth(201);
         this.tweens.add({ targets: glow, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
-        this.add.text(b.x + b.w / 2 - 5, b.y - b.h / 2 - 5, '!', {
-          fontSize: '10px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+        this.add.text(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, '!', {
+          fontSize: '12px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
         }).setOrigin(0.5).setDepth(202);
+      }
+    });
+
+    // === EXTRA PROPS (LimeZu) ===
+    const farmProps = [
+      { x: 500, y: 350, tex: 'farm_doghouse', scale: 2.5 },
+      { x: 900, y: 350, tex: 'farm_doghouse', scale: 2.5 },
+      { x: 350, y: 780, tex: 'farm_trough', scale: 3.0 },
+      { x: 1050, y: 780, tex: 'farm_trough', scale: 3.0 },
+    ];
+    farmProps.forEach((p) => {
+      if (this.textures.exists(p.tex)) {
+        this.add.image(p.x, p.y, p.tex).setScale(p.scale).setDepth(10 + Math.round(p.y / 10));
       }
     });
 
@@ -254,8 +258,8 @@ export class FarmScene extends Phaser.Scene {
 
       // Check building taps
       for (const b of FARM_BUILDINGS) {
-        if (wp.x >= b.x - b.w / 2 - 20 && wp.x <= b.x + b.w / 2 + 20 &&
-            wp.y >= b.y - b.h / 2 - 20 && wp.y <= b.y + b.h / 2 + 20) {
+        if (wp.x >= b.x - b.hitW / 2 - 20 && wp.x <= b.x + b.hitW / 2 + 20 &&
+            wp.y >= b.y - b.hitH / 2 - 20 && wp.y <= b.y + b.hitH / 2 + 20) {
           this.handleBuildingTap(b);
           return;
         }

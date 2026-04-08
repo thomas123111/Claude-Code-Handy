@@ -62,6 +62,16 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('farm_chicken', 'assets/farm/Chicken_Brown_16x16.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('farm_duckling', 'assets/farm/Duckling_Yellow_16x16.png', { frameWidth: 16, frameHeight: 16 });
 
+    // Farm building sprites (LimeZu Modern Farm, pre-composed singles)
+    this.load.image('farm_barn', 'assets/farm/Barn_Small_16x16.png');
+    this.load.image('farm_house', 'assets/farm/Farmer_House_1_16x16.png');
+    this.load.image('farm_stable', 'assets/farm/Stable_Example_Outside_16x16.png');
+    this.load.image('farm_coop', 'assets/farm/Chicken_Coop_16x16.png');
+    this.load.image('farm_henhouse', 'assets/farm/Henhouse_16x16.png');
+    this.load.image('farm_silo', 'assets/farm/Silos_1_16x16.png');
+    this.load.image('farm_doghouse', 'assets/farm/Doghouse_Bone_16x16.png');
+    this.load.image('farm_trough', 'assets/farm/Drinking_Trough_Horizontal_Full_16x16.png');
+
     // Town environment sprites
     this.load.image('env_fountain', 'assets/env_fountain.png');
     this.load.image('env_tree_big', 'assets/env_tree_big.png');
