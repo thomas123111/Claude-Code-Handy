@@ -40,12 +40,13 @@ export class BootScene extends Phaser.Scene {
     this.load.image('lz_car', 'assets/tiles/car.png');
 
     // Animated character spritesheets (LimeZu Modern Interiors Free)
-    // Each sheet: 384x224, frames 16x16, 24 cols × 14 rows
-    // Row 0-3: idle, Row 4-7: walk down/left/right/up (6 frames each)
-    this.load.spritesheet('char_adam', 'assets/chars/char_adam.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('char_amelia', 'assets/chars/char_amelia.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('char_alex', 'assets/chars/char_alex.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('char_bob', 'assets/chars/char_bob.png', { frameWidth: 16, frameHeight: 16 });
+    // Each sheet: 384x224, frames 16x32, 24 cols × 7 rows
+    // Row 0: idle, Row 1: walk (all 4 dirs in one row, 6 frames each)
+    // Direction order per row: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
+    this.load.spritesheet('char_adam', 'assets/chars/char_adam.png', { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet('char_amelia', 'assets/chars/char_amelia.png', { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet('char_alex', 'assets/chars/char_alex.png', { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet('char_bob', 'assets/chars/char_bob.png', { frameWidth: 16, frameHeight: 32 });
 
     // Farm animal spritesheets (LimeZu Modern Farm v1.2)
     // Dogs: 1152x416 → 48x32 frames, 24 cols × 13 rows (walk = row 4)
@@ -91,75 +92,31 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    // Create walk animations for characters
-    // LimeZu 16x16 sheets: 24 columns, 14 rows
-    // Walk animations are in specific rows. Standard RPG layout:
-    // The walk cycle uses 6 frames per direction
-    const chars = ['char_adam', 'char_amelia', 'char_alex', 'char_bob'];
-    chars.forEach((key) => {
-      if (!this.textures.exists(key)) return;
-      // Walk down: row 4 (frames 96-101 in a 24-col grid)
-      this.anims.create({
-        key: `${key}_walk_down`,
-        frames: this.anims.generateFrameNumbers(key, { start: 96, end: 101 }),
-        frameRate: 8, repeat: -1,
-      });
-      // Walk left: row 5
-      this.anims.create({
-        key: `${key}_walk_left`,
-        frames: this.anims.generateFrameNumbers(key, { start: 120, end: 125 }),
-        frameRate: 8, repeat: -1,
-      });
-      // Walk right: row 6
-      this.anims.create({
-        key: `${key}_walk_right`,
-        frames: this.anims.generateFrameNumbers(key, { start: 144, end: 149 }),
-        frameRate: 8, repeat: -1,
-      });
-      // Walk up: row 7
-      this.anims.create({
-        key: `${key}_walk_up`,
-        frames: this.anims.generateFrameNumbers(key, { start: 168, end: 173 }),
-        frameRate: 8, repeat: -1,
-      });
-      // Idle: frame 0
-      this.anims.create({
-        key: `${key}_idle`,
-        frames: [{ key, frame: 0 }],
-        frameRate: 1,
-      });
-    });
-
-    // Create walk animations for farm animals (LimeZu Modern Farm)
-    // Farm spritesheets: all 4 directions in ONE row (6 frames each)
-    // Direction order in each row: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
+    // === UNIFIED ANIMATION SETUP ===
+    // All LimeZu spritesheets use the same direction layout per row:
+    // 6 frames per direction, 4 directions per row = 24 frames per row
+    // Direction order: Left(0-5), Down(6-11), Right(12-17), Up(18-23)
     const COLS = 24;
 
-    // Dogs: 48x32 frames, 13 rows. Walk = row 4 (row0=preview, row1=IDLE label,
-    // row2=IDLE, row3=WALK label, row4=WALK data)
-    const dogKeys = ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'];
-    const DOG_WALK_ROW = 4;
-    dogKeys.forEach((key) => {
+    // Helper: create walk animations for a sprite key at a given row
+    const createWalkAnims = (key, walkRow) => {
       if (!this.textures.exists(key)) return;
-      const base = DOG_WALK_ROW * COLS;
+      const base = walkRow * COLS;
       this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
       this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
-    });
+      this.anims.create({ key: `${key}_idle`, frames: [{ key, frame: 0 }], frameRate: 1 });
+    };
 
-    // Small animals (rabbit, piglet, cow_baby): 32x32, 4 rows. Walk = row 1
-    // Tiny animals (chicken, duckling): 16x16, 4 rows. Walk = row 1
-    const smallKeys = ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'];
-    const SMALL_WALK_ROW = 1;
-    smallKeys.forEach((key) => {
-      if (!this.textures.exists(key)) return;
-      const base = SMALL_WALK_ROW * COLS;
-      this.anims.create({ key: `${key}_walk_left`, frames: this.anims.generateFrameNumbers(key, { start: base, end: base + 5 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_down`, frames: this.anims.generateFrameNumbers(key, { start: base + 6, end: base + 11 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_right`, frames: this.anims.generateFrameNumbers(key, { start: base + 12, end: base + 17 }), frameRate: 8, repeat: -1 });
-      this.anims.create({ key: `${key}_walk_up`, frames: this.anims.generateFrameNumbers(key, { start: base + 18, end: base + 23 }), frameRate: 8, repeat: -1 });
-    });
+    // Characters (16x32 frames, 7 rows): walk = row 1
+    ['char_adam', 'char_amelia', 'char_alex', 'char_bob'].forEach((k) => createWalkAnims(k, 1));
+
+    // Dogs (48x32 frames, 13 rows): walk = row 4 (after preview, IDLE label, IDLE, WALK label)
+    ['farm_dog_lab', 'farm_dog_shep', 'farm_dog_white'].forEach((k) => createWalkAnims(k, 4));
+
+    // Small animals (32x32, 4 rows) + Tiny animals (16x16, 4 rows): walk = row 1
+    ['farm_rabbit', 'farm_rabbit_w', 'farm_piglet', 'farm_cow_baby', 'farm_chicken', 'farm_duckling'].forEach((k) => createWalkAnims(k, 1));
 
     // Generate procedural textures for things without sprites
     const pg = this.add.graphics();
