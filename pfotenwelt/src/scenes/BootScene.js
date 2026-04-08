@@ -202,7 +202,17 @@ export class BootScene extends Phaser.Scene {
 
     pg.destroy();
 
-    // Skip menu — go straight to town world
-    this.scene.start('Town');
+    // Route: onboarding if new player, otherwise straight to town
+    try {
+      const raw = localStorage.getItem('pfotenwelt_save');
+      const save = raw ? JSON.parse(raw) : null;
+      if (save && save.onboardingDone) {
+        this.scene.start('Town');
+      } else {
+        this.scene.start('Onboarding');
+      }
+    } catch (e) {
+      this.scene.start('Onboarding');
+    }
   }
 }

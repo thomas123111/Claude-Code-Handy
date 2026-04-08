@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
+import { loadSave, writeSave, addXp, FARM_UNLOCK_ORDER } from '../data/SaveManager.js';
 import { startMusic, unlockAudio } from '../audio/MusicManager.js';
 
 // Farm world map: 1400x1200
@@ -117,29 +117,49 @@ export class FarmScene extends Phaser.Scene {
     // Gate at top center
     this.add.rectangle(700, 50, 80, 24, 0x4a7a32).setDepth(2);
 
-    // === BUILDINGS (LimeZu sprites) ===
+    // === BUILDINGS (progressive unlock via farm.buildings) ===
+    if (!this.save.farm.buildings) this.save.farm.buildings = { barn: true };
+    const farmBuildings = this.save.farm.buildings;
+
+    // Find next unlockable farm building
+    const nextFarmUnlock = FARM_UNLOCK_ORDER.find(fo => !farmBuildings[fo.id]);
+
     FARM_BUILDINGS.forEach((b) => {
+      const isUnlocked = !!farmBuildings[b.id];
+      const isNext = nextFarmUnlock && nextFarmUnlock.id === b.id;
       const bDepth = 10 + Math.round((b.y + 40) / 10);
+
       if (this.textures.exists(b.tex)) {
-        this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bDepth);
+        const img = this.add.image(b.x, b.y, b.tex).setScale(b.scale).setDepth(bDepth);
+        if (!isUnlocked) { img.setTint(0x444444); img.setAlpha(isNext ? 0.7 : 0.35); }
       }
-      // Label — ABOVE the building, large, readable
+      // Label
       this.add.text(b.x, b.y - b.hitH / 2 - 20, b.name, {
         fontSize: '18px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
         stroke: '#1a2a14', strokeThickness: 5,
       }).setOrigin(0.5).setDepth(200);
 
-      // Task status indicator
-      const task = FARM_TASKS[b.task];
-      const now = Date.now();
-      const lastDone = this.save.farm.taskCooldowns[b.task] || 0;
-      const isReady = (now - lastDone) >= task.cooldownMs;
-      if (isReady) {
-        const glow = this.add.circle(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, 10, 0x44ff44, 0.8).setDepth(201);
-        this.tweens.add({ targets: glow, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
-        this.add.text(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, '!', {
-          fontSize: '12px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
-        }).setOrigin(0.5).setDepth(202);
+      if (!isUnlocked) {
+        this.add.text(b.x, b.y - 10, '🔒', { fontSize: '28px' }).setOrigin(0.5).setDepth(201);
+        if (isNext) {
+          this.add.text(b.x, b.y + 40, `${nextFarmUnlock.cost}❤️ | Farm Lv.${nextFarmUnlock.minFarmLevel}`, {
+            fontSize: '12px', fontFamily: 'monospace', color: '#ffcc66', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 3,
+          }).setOrigin(0.5).setDepth(201);
+        }
+      } else {
+        // Task status indicator (only for unlocked buildings)
+        const task = FARM_TASKS[b.task];
+        const now = Date.now();
+        const lastDone = this.save.farm.taskCooldowns[b.task] || 0;
+        const isReady = (now - lastDone) >= task.cooldownMs;
+        if (isReady) {
+          const glow = this.add.circle(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, 10, 0x44ff44, 0.8).setDepth(201);
+          this.tweens.add({ targets: glow, alpha: 0.3, duration: 600, yoyo: true, repeat: -1 });
+          this.add.text(b.x + b.hitW / 2 - 5, b.y - b.hitH / 2 - 5, '!', {
+            fontSize: '12px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+          }).setOrigin(0.5).setDepth(202);
+        }
       }
     });
 
@@ -258,6 +278,44 @@ export class FarmScene extends Phaser.Scene {
   }
 
   handleBuildingTap(building) {
+    const farmBuildings = this.save.farm.buildings || { barn: true };
+    const isUnlocked = !!farmBuildings[building.id];
+
+    // Try to unlock locked building
+    if (!isUnlocked) {
+      const unlockInfo = FARM_UNLOCK_ORDER.find(fo => fo.id === building.id);
+      const nextUnlock = FARM_UNLOCK_ORDER.find(fo => !farmBuildings[fo.id]);
+      if (!unlockInfo || !nextUnlock || nextUnlock.id !== building.id) {
+        const popup = this.add.text(building.x, building.y - 30, 'Schalte zuerst andere Gebäude frei!', {
+          fontSize: '12px', fontFamily: 'Georgia, serif', color: '#ffcc44',
+          stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(300);
+        this.tweens.add({ targets: popup, y: popup.y - 25, alpha: 0, duration: 1500, onComplete: () => popup.destroy() });
+        return;
+      }
+      if (this.save.farm.level >= unlockInfo.minFarmLevel && this.save.hearts >= unlockInfo.cost) {
+        this.save.hearts -= unlockInfo.cost;
+        this.save.farm.buildings[building.id] = true;
+        writeSave(this.save);
+        // Celebration effect
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI * 2 / 6) * i;
+          const star = this.add.text(building.x, building.y, '⭐', { fontSize: '14px' }).setOrigin(0.5).setDepth(300);
+          this.tweens.add({ targets: star, x: building.x + Math.cos(angle) * 60, y: building.y + Math.sin(angle) * 60, alpha: 0, duration: 600, onComplete: () => star.destroy() });
+        }
+        this.time.delayedCall(700, () => this.scene.restart());
+        return;
+      }
+      const msg = this.save.farm.level < unlockInfo.minFarmLevel
+        ? `Brauchst Farm Lv.${unlockInfo.minFarmLevel}!` : `Brauchst ${unlockInfo.cost}❤️!`;
+      const popup = this.add.text(building.x, building.y - 30, msg, {
+        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ff6644', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(300);
+      this.tweens.add({ targets: popup, y: popup.y - 25, alpha: 0, duration: 1500, onComplete: () => popup.destroy() });
+      return;
+    }
+
     const task = FARM_TASKS[building.task];
     if (!task) return;
     const now = Date.now();
