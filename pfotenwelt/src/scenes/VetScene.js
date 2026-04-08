@@ -52,6 +52,15 @@ export class VetScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor(THEME.bg.scene);
 
+    // Background image (dimmed behind UI)
+    const bgKey = 'bg_vet';
+    if (this.textures.exists(bgKey)) {
+      const bg = this.add.image(width / 2, height / 2, bgKey);
+      bg.setDisplaySize(width, height);
+      bg.setAlpha(0.15);
+      bg.setDepth(-1);
+    }
+
     // Header
     drawHeader(this, '🏥 Tierarzt', save);
 
