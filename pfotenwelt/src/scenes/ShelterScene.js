@@ -225,7 +225,7 @@ export class ShelterScene extends Phaser.Scene {
 
     // === NEEDS SECTION ===
     const needsY = 345;
-    drawCard(this, cx, needsY + 60, width - 20, 160);
+    drawCard(this, cx, needsY + 70, width - 20, 180);
     this.add.text(cx, needsY, 'Bedürfnisse', {
       fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -279,29 +279,29 @@ export class ShelterScene extends Phaser.Scene {
       }
     });
 
-    // === BADGES SECTION ===
-    const badgeY = 480;
+    // === BADGES (inside needs card) ===
+    const badgeY = needsY + 145;
     let bx = 25;
     if (pet.insured) {
       this.add.text(bx, badgeY, '🛡️ Versichert', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#4488aa',
+        fontSize: '13px', fontFamily: 'monospace', color: '#4488aa',
       });
-      bx += 120;
+      bx += 110;
     }
     if (pet.groomed) {
-      this.add.text(bx, badgeY, '✨ Gepflegt (+25%)', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#9944ee',
+      this.add.text(bx, badgeY, '✨ Gepflegt', {
+        fontSize: '13px', fontFamily: 'monospace', color: '#9944ee',
       });
-      bx += 140;
+      bx += 100;
     }
     if (pet.tricks && pet.tricks.length > 0) {
       this.add.text(bx, badgeY, `🎓 ${pet.tricks.join(', ')}`, {
-        fontSize: '14px', fontFamily: 'monospace', color: '#44aa44',
+        fontSize: '13px', fontFamily: 'monospace', color: '#44aa44',
       });
     }
 
     // === ADOPTION SYSTEM (time-gated, interested buyers) ===
-    const actY = 530;
+    const actY = needsY + 170;
 
     // Initialize adopter queue if missing
     if (!pet.adopterQueue) pet.adopterQueue = [];
@@ -309,7 +309,7 @@ export class ShelterScene extends Phaser.Scene {
 
     // Generate new interested adopter every 15 minutes (max 3)
     const now = Date.now();
-    const ADOPTER_INTERVAL = 15 * 60 * 1000; // 15 minutes
+    const ADOPTER_INTERVAL = 15 * 60 * 1000;
     if (pet.happiness >= 60 && pet.adopterQueue.length < 3 && (now - pet.lastAdopterTime) >= ADOPTER_INTERVAL) {
       const names = ['Familie Müller', 'Herr Schmidt', 'Frau Weber', 'Familie Klein', 'Lisa & Tom', 'Opa Heinrich', 'Die Bergers', 'Frau Hoffman'];
       const rarityMult = { common: 1, rare: 1.5, epic: 2.5, legendary: 5 };
@@ -325,7 +325,7 @@ export class ShelterScene extends Phaser.Scene {
       writeSave(this.save);
     }
 
-    // Show adoption status
+    // Show adoption status + button to detail view
     if (pet.happiness < 60) {
       this.add.text(cx, actY, 'Glück zu niedrig für Vermittlung (min. 60%)', {
         fontSize: '12px', fontFamily: 'monospace', color: THEME.text.warning,
@@ -333,48 +333,21 @@ export class ShelterScene extends Phaser.Scene {
     } else if (pet.adopterQueue.length === 0) {
       const timeLeft = Math.max(0, ADOPTER_INTERVAL - (now - pet.lastAdopterTime));
       const mins = Math.ceil(timeLeft / 60000);
-      this.add.text(cx, actY, `Warte auf Interessenten... (${mins} Min)`, {
-        fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
-      }).setOrigin(0.5);
-      this.add.text(cx, actY + 18, `${pet.adopterQueue.length}/3 Interessenten`, {
-        fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted,
+      this.add.text(cx, actY, `⏳ Warte auf Interessenten... (${mins} Min)`, {
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
     } else {
-      // Show adopter offers
-      this.add.text(cx, actY - 5, `📋 ${pet.adopterQueue.length} Interessent${pet.adopterQueue.length > 1 ? 'en' : ''}:`, {
-        fontSize: '13px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
-      }).setOrigin(0.5);
-
-      pet.adopterQueue.forEach((adopter, ai) => {
-        const ay = actY + 18 + ai * 40;
-        const matchColor = adopter.matchScore >= 80 ? '#33aa55' : adopter.matchScore >= 65 ? '#dd8833' : '#aa6644';
-        // Adopter row
-        drawCard(this, cx, ay + 8, width - 30, 36);
-        this.add.text(18, ay - 2, `${adopter.name}`, {
-          fontSize: '12px', fontFamily: 'Georgia, serif', color: THEME.text.dark,
-        });
-        this.add.text(18, ay + 12, `${adopter.offer}❤️ · Match ${adopter.matchScore}%`, {
-          fontSize: '11px', fontFamily: 'monospace', color: matchColor,
-        });
-        // Accept button (right side)
-        drawButton(this, width - 65, ay + 8, 50, 28, '✓', { fontSize: '16px' });
-        this.addHitArea(width - 65, ay + 8, 50, 28, () => {
-          this.adoptPetToAdopter(petIdx, ai);
-        });
-        // Reject button
-        drawButton(this, width - 25, ay + 8, 30, 28, '✗', { type: 'secondary', fontSize: '14px' });
-        this.addHitArea(width - 25, ay + 8, 30, 28, () => {
-          pet.adopterQueue.splice(ai, 1);
-          writeSave(this.save);
-          this.drawUI();
-        });
+      // Button to view adopters with full profiles
+      const count = pet.adopterQueue.length;
+      drawButton(this, cx, actY, width - 60, 44, `📋 ${count} Interessent${count > 1 ? 'en' : ''} ansehen`);
+      this.addHitArea(cx, actY, width - 60, 44, () => {
+        this.scene.start('Adoption', { petIdx, petData: pet });
       });
     }
 
-    // Insurance button (if not insured) — positioned below adopter list
+    // Insurance button (if not insured)
     if (!pet.insured) {
-      const adopterCount = (pet.adopterQueue || []).length;
-      const insY = actY + 25 + Math.max(adopterCount * 40, 20);
+      const insY = actY + 38;
       const canAffordIns = save.hearts >= 30;
       drawButton(this, cx, insY, 240, 36, '🛡️ Versichern (30❤️)', {
         type: 'secondary',

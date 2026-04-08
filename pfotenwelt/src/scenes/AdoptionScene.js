@@ -19,14 +19,23 @@ export class AdoptionScene extends Phaser.Scene {
     this.confirming = false;
     this.showingFeedback = false;
 
-    // Generate 3 adopter candidates
-    this.adopters = [];
-    for (let i = 0; i < 3; i++) {
-      const adopter = generateAdopter();
-      adopter.matchScore = calculateMatchScore(this.petData, adopter);
-      adopter.matchLabel = getMatchLabel(adopter.matchScore);
-      this.adopters.push(adopter);
-    }
+    // Use existing adopter queue from pet, or generate fallback
+    const pet = this.save.pets[this.petIdx] || this.petData;
+    const queue = pet.adopterQueue || [];
+    this.adopters = queue.map((a) => ({
+      ...a,
+      // Add full profile data for display
+      emoji: ['👨', '👩', '👴', '👵', '👫', '🧑'][Math.floor(Math.random() * 6)],
+      age: a.age || (25 + Math.floor(Math.random() * 45)),
+      traits: a.traits || {
+        housing: ['Haus mit Garten', 'Wohnung', 'Bauernhof', 'Haus'][Math.floor(Math.random() * 4)],
+        experience: ['Erfahren', 'Anfänger', 'Etwas Erfahrung'][Math.floor(Math.random() * 3)],
+        household: ['Familie', 'Single', 'Paar', 'Senioren'][Math.floor(Math.random() * 4)],
+        activity: ['Sehr aktiv', 'Moderat', 'Ruhig'][Math.floor(Math.random() * 3)],
+      },
+      story: a.story || [`Sucht einen treuen Begleiter`, `Möchte einem Tier ein Zuhause geben`, `Hat schon lange einen ${pet.breed} gewollt`, `Die Kinder wünschen sich ein Haustier`][Math.floor(Math.random() * 4)],
+      matchLabel: getMatchLabel(a.matchScore),
+    }));
 
     this.drawUI();
   }
@@ -289,10 +298,8 @@ export class AdoptionScene extends Phaser.Scene {
     const pet = this.petData;
     const score = adopter.matchScore;
 
-    // Calculate reward
-    const baseReward = this.getBaseReward();
-    const multiplier = this.getMultiplier(score);
-    const reward = Math.floor(baseReward * multiplier);
+    // Reward = adopter's offer (already calculated based on rarity)
+    const reward = adopter.offer || 10;
 
     // Generate feedback
     this.feedbackText = getAdoptionFeedback(score, pet.name, adopter.name);
@@ -314,7 +321,7 @@ export class AdoptionScene extends Phaser.Scene {
       this.save.pets.splice(this.petIdx, 1);
     }
 
-    addXp(this.save, reward);
+    addXp(this.save, 15);
     writeSave(this.save);
 
     // Show feedback
