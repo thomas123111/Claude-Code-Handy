@@ -1,21 +1,28 @@
 import Phaser from 'phaser';
 import { THEME } from '../../ui/Theme.js';
 
-// Dirt spots — positions relative to the pet image center (0,0)
+// More dirt spots, spread wider — each needs multiple swipes to clean
 const DIRT_SPOTS = [
-  { x: -60, y: -40, r: 28 },
-  { x: 40, y: -60, r: 24 },
-  { x: -30, y: 20, r: 32 },
-  { x: 50, y: 10, r: 26 },
-  { x: -10, y: -80, r: 20 },
-  { x: 70, y: -30, r: 22 },
-  { x: -50, y: 60, r: 25 },
-  { x: 20, y: 50, r: 30 },
-  { x: -70, y: -10, r: 18 },
-  { x: 60, y: 60, r: 20 },
-  { x: 0, y: -50, r: 22 },
-  { x: -40, y: -70, r: 18 },
+  // Head area
+  { x: -40, y: -100, r: 22 }, { x: 20, y: -110, r: 20 }, { x: 50, y: -90, r: 18 },
+  // Ears
+  { x: -70, y: -80, r: 20 }, { x: 70, y: -70, r: 18 },
+  // Face
+  { x: -20, y: -60, r: 24 }, { x: 30, y: -50, r: 22 },
+  // Body upper
+  { x: -60, y: -20, r: 28 }, { x: 0, y: -10, r: 26 }, { x: 60, y: -15, r: 24 },
+  // Body middle
+  { x: -50, y: 20, r: 30 }, { x: 20, y: 30, r: 28 }, { x: 70, y: 25, r: 22 },
+  // Body lower
+  { x: -40, y: 60, r: 26 }, { x: 30, y: 55, r: 24 }, { x: -10, y: 80, r: 20 },
+  // Legs/paws
+  { x: -60, y: 90, r: 18 }, { x: 50, y: 85, r: 20 },
+  // Extra grime
+  { x: -30, y: -40, r: 16 }, { x: 40, y: 10, r: 18 },
+  { x: -10, y: 50, r: 16 }, { x: 60, y: 60, r: 14 },
 ];
+
+const SWIPES_TO_CLEAN = 25; // each spot needs many swipes — ~7x longer than original
 
 export class WashPuzzle extends Phaser.Scene {
   constructor() { super('WashPuzzle'); }
@@ -29,7 +36,7 @@ export class WashPuzzle extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     const cx = width / 2;
-    const cy = height * 0.4;
+    const cy = height * 0.38;
 
     this.cameras.main.setBackgroundColor('#e8f4fc');
 
@@ -42,42 +49,62 @@ export class WashPuzzle extends Phaser.Scene {
       fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
-    // === PET IMAGE with Tween animations ===
+    // === PET IMAGE ===
     const washKey = `wash_${this.breedId}`;
     const texKey = this.textures.exists(washKey) ? washKey : 'wash_labrador';
 
     if (this.textures.exists(texKey)) {
-      this.petImg = this.add.image(cx, cy, texKey).setScale(0.55);
+      this.petImg = this.add.image(cx, cy, texKey).setScale(0.55).setDepth(1);
     } else {
-      // Fallback: emoji
-      this.petImg = this.add.text(cx, cy, '🐕', { fontSize: '120px' }).setOrigin(0.5);
+      this.petImg = this.add.text(cx, cy, '🐕', { fontSize: '120px' }).setOrigin(0.5).setDepth(1);
     }
 
-    // Breathing animation (subtle scale pulse)
+    // Breathing animation
     this.tweens.add({
       targets: this.petImg, scaleY: { from: 0.55, to: 0.565 },
       duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.InOut',
     });
     // Gentle sway
     this.tweens.add({
-      targets: this.petImg, angle: { from: -1.5, to: 1.5 },
-      duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.InOut',
+      targets: this.petImg, angle: { from: -1.2, to: 1.2 },
+      duration: 2500, yoyo: true, repeat: -1, ease: 'Sine.InOut',
     });
 
-    // === DIRT OVERLAY — brown/grey circles on top of pet ===
-    this.dirtSpots = [];
-    this.totalDirt = DIRT_SPOTS.length;
-    this.cleanedCount = 0;
+    // === BLINKING EYES ===
+    // Two small eyelid overlays that close periodically
+    const eyeY = cy - 55;
+    const eyeL = this.add.ellipse(cx - 18, eyeY, 14, 2, 0xd4a854, 0).setDepth(5);
+    const eyeR = this.add.ellipse(cx + 18, eyeY, 14, 2, 0xd4a854, 0).setDepth(5);
+    this.eyeL = eyeL;
+    this.eyeR = eyeR;
+    // Blink every 2-5 seconds
+    this.time.addEvent({
+      delay: 2500,
+      loop: true,
+      callback: () => {
+        const blinkDelay = Phaser.Math.Between(0, 2000);
+        this.time.delayedCall(blinkDelay, () => this.doBlink());
+      },
+    });
 
-    DIRT_SPOTS.forEach((spot, i) => {
+    // === DIRT OVERLAY ===
+    this.dirtSpots = [];
+    this.totalCleanPoints = DIRT_SPOTS.length * SWIPES_TO_CLEAN;
+    this.cleanedPoints = 0;
+
+    DIRT_SPOTS.forEach((spot) => {
       const dx = cx + spot.x;
       const dy = cy + spot.y;
-      // Brown dirt circle (layered for texture)
-      const dirtOuter = this.add.circle(dx, dy, spot.r, 0x6B4226, 0.55).setDepth(10);
-      const dirtInner = this.add.circle(dx, dy, spot.r * 0.6, 0x8B5E3C, 0.4).setDepth(11);
-      // Slight random offset for organic look
-      const dirtSpeck = this.add.circle(dx + Phaser.Math.Between(-5, 5), dy + Phaser.Math.Between(-5, 5), spot.r * 0.3, 0x4a3520, 0.3).setDepth(12);
-      this.dirtSpots.push({ outer: dirtOuter, inner: dirtInner, speck: dirtSpeck, x: dx, y: dy, r: spot.r, cleaned: false });
+      // Multiple layers for thick dirt look
+      const dirtOuter = this.add.circle(dx, dy, spot.r, 0x5a3a1a, 0.6).setDepth(10);
+      const dirtMid = this.add.circle(dx + 2, dy + 1, spot.r * 0.7, 0x7a5a3a, 0.45).setDepth(11);
+      const dirtInner = this.add.circle(dx - 1, dy - 1, spot.r * 0.4, 0x3a2a10, 0.35).setDepth(12);
+      this.dirtSpots.push({
+        layers: [dirtOuter, dirtMid, dirtInner],
+        x: dx, y: dy, r: spot.r,
+        swipesLeft: SWIPES_TO_CLEAN,
+        maxSwipes: SWIPES_TO_CLEAN,
+      });
     });
 
     // === PROGRESS BAR ===
@@ -90,7 +117,7 @@ export class WashPuzzle extends Phaser.Scene {
       fontSize: '14px', fontFamily: 'monospace', color: THEME.text.body,
     }).setOrigin(0.5);
 
-    // === TOUCH INPUT — wipe to clean ===
+    // === TOUCH INPUT ===
     this.lastPointerX = 0;
     this.lastPointerY = 0;
 
@@ -102,21 +129,19 @@ export class WashPuzzle extends Phaser.Scene {
 
     this.input.on('pointermove', (pointer) => {
       if (!pointer.isDown) return;
-      const dx = pointer.x - this.lastPointerX;
-      const dy = pointer.y - this.lastPointerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      // Only clean if actually swiping (not just holding)
-      if (dist > 5) {
+      const ddx = pointer.x - this.lastPointerX;
+      const ddy = pointer.y - this.lastPointerY;
+      const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dist > 8) {
         this.checkClean(pointer.x, pointer.y);
         this.spawnSoapBubble(pointer.x, pointer.y);
-        // Trigger pet reaction based on touch position
         this.petReaction(pointer.x, pointer.y, cx, cy);
       }
       this.lastPointerX = pointer.x;
       this.lastPointerY = pointer.y;
     });
 
-    // Back button
+    // Cancel button
     this.add.text(cx, height - 40, '← Abbrechen', {
       fontSize: '15px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
     }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
@@ -125,81 +150,96 @@ export class WashPuzzle extends Phaser.Scene {
     });
   }
 
-  checkClean(px, py) {
-    this.dirtSpots.forEach((spot) => {
-      if (spot.cleaned) return;
-      const dist = Phaser.Math.Distance.Between(px, py, spot.x, spot.y);
-      if (dist < spot.r + 15) {
-        // Clean this spot!
-        spot.cleaned = true;
-        this.cleanedCount++;
+  doBlink() {
+    // Close eyes
+    this.tweens.add({ targets: [this.eyeL, this.eyeR], scaleY: 6, alpha: 1, duration: 80, yoyo: true, hold: 60 });
+  }
 
-        // Fade out dirt with satisfying animation
-        [spot.outer, spot.inner, spot.speck].forEach((obj) => {
-          this.tweens.add({
-            targets: obj, alpha: 0, scale: 0.3, duration: 300,
-            onComplete: () => obj.destroy(),
-          });
+  checkClean(px, py) {
+    let cleaned = false;
+    this.dirtSpots.forEach((spot) => {
+      if (spot.swipesLeft <= 0) return;
+      const dist = Phaser.Math.Distance.Between(px, py, spot.x, spot.y);
+      if (dist < spot.r + 12) {
+        spot.swipesLeft--;
+        this.cleanedPoints++;
+        cleaned = true;
+
+        // Fade dirt layers progressively
+        const progress = 1 - (spot.swipesLeft / spot.maxSwipes);
+        spot.layers.forEach((layer, li) => {
+          const targetAlpha = Math.max(0, layer.alpha - (1 / spot.maxSwipes));
+          this.tweens.add({ targets: layer, alpha: targetAlpha, duration: 150 });
         });
 
-        // Sparkle effect at clean spot
-        for (let i = 0; i < 4; i++) {
-          const sparkle = this.add.circle(
-            spot.x + Phaser.Math.Between(-15, 15),
-            spot.y + Phaser.Math.Between(-15, 15),
-            3, 0xffffff, 0.8
-          ).setDepth(20);
-          this.tweens.add({
-            targets: sparkle, alpha: 0, scale: 2, y: sparkle.y - 15,
-            duration: 400, delay: i * 50,
-            onComplete: () => sparkle.destroy(),
+        // Small splash at wipe point
+        const splash = this.add.circle(px, py, 4, 0xaaddff, 0.5).setDepth(20);
+        this.tweens.add({
+          targets: splash, scale: 2, alpha: 0, duration: 200,
+          onComplete: () => splash.destroy(),
+        });
+
+        // Fully cleaned?
+        if (spot.swipesLeft <= 0) {
+          spot.layers.forEach((layer) => {
+            this.tweens.add({
+              targets: layer, alpha: 0, scale: 0.2, duration: 250,
+              onComplete: () => layer.destroy(),
+            });
           });
+          // Sparkle
+          for (let i = 0; i < 3; i++) {
+            const sp = this.add.circle(
+              spot.x + Phaser.Math.Between(-10, 10),
+              spot.y + Phaser.Math.Between(-10, 10),
+              2, 0xffffff, 0.8
+            ).setDepth(20);
+            this.tweens.add({
+              targets: sp, alpha: 0, scale: 3, y: sp.y - 12,
+              duration: 350, delay: i * 40,
+              onComplete: () => sp.destroy(),
+            });
+          }
         }
 
         this.updateProgress();
       }
     });
+    return cleaned;
   }
 
   spawnSoapBubble(x, y) {
-    if (Math.random() > 0.4) return; // not every move
+    if (Math.random() > 0.35) return;
     const bubble = this.add.circle(
-      x + Phaser.Math.Between(-20, 20),
-      y + Phaser.Math.Between(-10, 10),
-      Phaser.Math.Between(3, 8),
-      0xeeffff, 0.6
-    ).setDepth(15).setStrokeStyle(1, 0xccddee, 0.4);
-
+      x + Phaser.Math.Between(-15, 15),
+      y + Phaser.Math.Between(-8, 8),
+      Phaser.Math.Between(3, 7), 0xeeffff, 0.5
+    ).setDepth(15).setStrokeStyle(1, 0xccddee, 0.3);
     this.tweens.add({
-      targets: bubble,
-      y: bubble.y - Phaser.Math.Between(20, 50),
-      alpha: 0, scale: { from: 1, to: 0.3 },
-      duration: Phaser.Math.Between(500, 1000),
+      targets: bubble, y: bubble.y - Phaser.Math.Between(20, 45),
+      alpha: 0, scale: 0.3, duration: Phaser.Math.Between(500, 900),
       onComplete: () => bubble.destroy(),
     });
   }
 
   petReaction(px, py, cx, cy) {
     if (!this.petImg) return;
-    // Head area (top) — tilt away from touch
     const relX = (px - cx) / 100;
-    const relY = (py - cy) / 100;
-
-    // Slight lean away from where you're scrubbing
     this.tweens.add({
-      targets: this.petImg,
-      x: cx - relX * 8,
+      targets: this.petImg, x: cx - relX * 6,
       duration: 200, ease: 'Quad.Out',
     });
+    // Blink if touching face area
+    if (py < cy - 30 && Math.random() > 0.7) {
+      this.doBlink();
+    }
   }
 
   updateProgress() {
-    const pct = this.cleanedCount / this.totalDirt;
+    const pct = this.cleanedPoints / this.totalCleanPoints;
     this.progressFill.width = this.progressMaxW * pct;
     this.progressText.setText(`${Math.round(pct * 100)}% sauber`);
-
     if (pct >= 1.0) {
-      // All clean! Success!
       this.time.delayedCall(300, () => this.showSuccess());
     }
   }
@@ -207,25 +247,17 @@ export class WashPuzzle extends Phaser.Scene {
   showSuccess() {
     const { width, height } = this.scale;
     const cx = width / 2;
-
-    // Big sparkle burst
     for (let i = 0; i < 12; i++) {
       const angle = (Math.PI * 2 / 12) * i;
-      const star = this.add.text(cx, height * 0.4, '✨', { fontSize: '20px' }).setOrigin(0.5).setDepth(30);
+      const star = this.add.text(cx, height * 0.38, '✨', { fontSize: '20px' }).setOrigin(0.5).setDepth(30);
       this.tweens.add({
-        targets: star,
-        x: cx + Math.cos(angle) * 100,
-        y: height * 0.4 + Math.sin(angle) * 100,
-        alpha: 0, duration: 800,
-        onComplete: () => star.destroy(),
+        targets: star, x: cx + Math.cos(angle) * 100, y: height * 0.38 + Math.sin(angle) * 100,
+        alpha: 0, duration: 800, onComplete: () => star.destroy(),
       });
     }
-
-    // Success text
-    this.add.text(cx, height * 0.65, '✨ Blitzsauber! ✨', {
+    this.add.text(cx, height * 0.62, '✨ Blitzsauber! ✨', {
       fontSize: '26px', fontFamily: 'Georgia, serif', color: '#33aa55', fontStyle: 'bold',
     }).setOrigin(0.5).setDepth(30);
-
     this.time.delayedCall(1500, () => {
       this.registry.set('puzzleResult', { success: true, score: 100 });
       this.scene.start(this.onCompleteScene);
