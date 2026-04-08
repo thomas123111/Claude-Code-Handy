@@ -225,7 +225,7 @@ export class ShelterScene extends Phaser.Scene {
 
     // === NEEDS SECTION ===
     const needsY = 345;
-    drawCard(this, cx, needsY + 55, width - 20, 140);
+    drawCard(this, cx, needsY + 60, width - 20, 160);
     this.add.text(cx, needsY, 'Bedürfnisse', {
       fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
