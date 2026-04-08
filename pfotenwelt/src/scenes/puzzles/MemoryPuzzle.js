@@ -8,12 +8,30 @@ export class MemoryPuzzle extends Phaser.Scene {
     this.onCompleteScene = data.onComplete || 'Shelter';
     this.need = data.need || 'hygiene';
 
-    this.COLS = 4;
-    this.ROWS = 3;
-    this.CARD_SIZE = 80;
-    this.CARD_GAP = 10;
-    this.EMOJIS = ['🍖', '🧼', '🎾', '💊', '🛁', '🧸'];
-    this.TIME_LIMIT = 45;
+    // --- Variable grid sizes based on difficulty ---
+    const diff = data.difficulty || 1;
+    const GRID_CONFIGS = [
+      { cols: 3, rows: 2, pairs: 3, time: 30 },
+      { cols: 4, rows: 3, pairs: 6, time: 45 },
+      { cols: 4, rows: 4, pairs: 8, time: 60 },
+    ];
+    const config = GRID_CONFIGS[Math.min(diff - 1, 2)];
+    this.COLS = config.cols;
+    this.ROWS = config.rows;
+    this.totalPairs = config.pairs;
+    this.TIME_LIMIT = config.time;
+    this.CARD_SIZE = diff >= 3 ? 70 : 80;
+    this.CARD_GAP = diff >= 3 ? 8 : 10;
+
+    // --- Themed card sets ---
+    const CARD_THEMES = [
+      ['🐕', '🐱', '🐰', '🐹', '🐦', '🐢', '🦎', '🐠'],
+      ['🍖', '🧼', '🎾', '💊', '🛁', '🧸', '🪮', '🦴'],
+      ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '💐', '🌵'],
+      ['⭐', '🌙', '☀️', '🌈', '💎', '🔮', '🎀', '🍀'],
+    ];
+    const themeIndex = Phaser.Math.Between(0, CARD_THEMES.length - 1);
+    this.EMOJIS = CARD_THEMES[themeIndex].slice(0, this.totalPairs);
 
     this.cards = [];
     this.cardTexts = [];
@@ -25,8 +43,13 @@ export class MemoryPuzzle extends Phaser.Scene {
     this.gameOver = false;
     this.score = 0;
     this.matchesFound = 0;
-    this.totalPairs = 6;
     this.timer = this.TIME_LIMIT;
+
+    // Streak tracking
+    this.streak = 0;
+
+    // Wrong streak tracking for hint system
+    this.wrongStreak = 0;
   }
 
   create() {
@@ -56,22 +79,32 @@ export class MemoryPuzzle extends Phaser.Scene {
       fontSize: '18px', color: '#33aa55', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
+    // Streak text (hidden initially, shown when streak > 1)
+    this.streakText = this.add.text(width / 2, 145, '', {
+      fontSize: '18px', color: '#e85020', fontFamily: 'Arial'
+    }).setOrigin(0.5, 0).setAlpha(0);
+
     // Give up button
-    const giveUpBtn = this.add.text(width / 2, 155, '❌ Aufgeben', {
+    const giveUpBtn = this.add.text(width / 2, height - 30, '❌ Aufgeben', {
       fontSize: '18px', color: '#cc4444', fontFamily: 'Arial',
       backgroundColor: '#f5e0e0', padding: { x: 12, y: 4 }
-    }).setOrigin(0.5, 0);
+    }).setOrigin(0.5, 1);
 
     // Build card deck (pairs)
     this.buildDeck();
     this.renderCards();
 
-    // Timer
-    this.timerEvent = this.time.addEvent({
-      delay: 1000,
-      callback: this.tickTimer,
-      callbackScope: this,
-      loop: true
+    // --- Preview flash: show all cards for 1.5s, then hide ---
+    this.locked = true;
+    this.showPreview(() => {
+      this.locked = false;
+      // Start timer AFTER preview ends
+      this.timerEvent = this.time.addEvent({
+        delay: 1000,
+        callback: this.tickTimer,
+        callbackScope: this,
+        loop: true
+      });
     });
 
     // Pointer input
@@ -98,6 +131,49 @@ export class MemoryPuzzle extends Phaser.Scene {
         this.locked = true;
         this.checkMatch();
       }
+    });
+  }
+
+  // --- Preview flash: briefly show all cards face-up ---
+  showPreview(onComplete) {
+    // Show all card emojis immediately (no flip animation, just set text)
+    for (let i = 0; i < this.cards.length; i++) {
+      const emoji = this.EMOJIS[this.cards[i]];
+      this.cardTexts[i].setText(emoji);
+      this.revealed[i] = true;
+
+      // Light background for revealed
+      const col = i % this.COLS;
+      const row = Math.floor(i / this.COLS);
+      const x = this.boardX + col * (this.CARD_SIZE + this.CARD_GAP);
+      const y = this.boardY + row * (this.CARD_SIZE + this.CARD_GAP);
+      const bg = this.cardBgs[i];
+      bg.clear();
+      bg.fillStyle(0xe8e0f2, 1);
+      bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+      bg.lineStyle(2, 0xc8b0e0, 1);
+      bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+    }
+
+    // After 1.5 seconds, flip all back
+    this.time.delayedCall(1500, () => {
+      for (let i = 0; i < this.cards.length; i++) {
+        this.cardTexts[i].setText('❓');
+        this.revealed[i] = false;
+
+        const col = i % this.COLS;
+        const row = Math.floor(i / this.COLS);
+        const x = this.boardX + col * (this.CARD_SIZE + this.CARD_GAP);
+        const y = this.boardY + row * (this.CARD_SIZE + this.CARD_GAP);
+        const bg = this.cardBgs[i];
+        bg.clear();
+        bg.fillStyle(0xddd0e8, 1);
+        bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+        bg.lineStyle(2, 0xc0a8d4, 1);
+        bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+      }
+
+      if (onComplete) onComplete();
     });
   }
 
@@ -138,8 +214,9 @@ export class MemoryPuzzle extends Phaser.Scene {
       // Card text (hidden initially)
       const cx = x + this.CARD_SIZE / 2;
       const cy = y + this.CARD_SIZE / 2;
+      const fontSize = this.CARD_SIZE >= 80 ? '36px' : '30px';
       const t = this.add.text(cx, cy, '❓', {
-        fontSize: '36px', fontFamily: 'Arial'
+        fontSize, fontFamily: 'Arial'
       }).setOrigin(0.5);
       this.cardTexts.push(t);
     }
@@ -226,10 +303,19 @@ export class MemoryPuzzle extends Phaser.Scene {
       this.matched[i1] = true;
       this.matched[i2] = true;
       this.matchesFound++;
-      this.score += 20;
+
+      // Streak bonus
+      this.streak++;
+      this.score += 20 + this.streak * 5;
+      this.wrongStreak = 0;
 
       this.matchText.setText(`Paare: ${this.matchesFound} / ${this.totalPairs}`);
       this.scoreText.setText(`Punkte: ${this.score}`);
+
+      // Show streak text if streak > 1
+      if (this.streak > 1) {
+        this.showStreakText();
+      }
 
       // Animate matched cards
       this.time.delayedCall(300, () => {
@@ -262,6 +348,10 @@ export class MemoryPuzzle extends Phaser.Scene {
         }
       });
     } else {
+      // No match
+      this.streak = 0;
+      this.wrongStreak++;
+
       // No match - flip back after delay
       this.time.delayedCall(500, () => {
         this.flipCard(i1, false);
@@ -271,9 +361,94 @@ export class MemoryPuzzle extends Phaser.Scene {
           this.firstCard = null;
           this.secondCard = null;
           this.locked = false;
+
+          // Hint system: after 3 consecutive wrong guesses, flash a hint
+          if (this.wrongStreak >= 3) {
+            this.showHint();
+            this.wrongStreak = 0;
+          }
         });
       });
     }
+  }
+
+  // --- Streak bonus display ---
+  showStreakText() {
+    this.streakText.setText(`🔥 ${this.streak}er Serie!`);
+    this.streakText.setAlpha(1);
+
+    // Fade out after a moment
+    this.tweens.add({
+      targets: this.streakText,
+      alpha: 0,
+      delay: 800,
+      duration: 400,
+    });
+  }
+
+  // --- Hint system: flash one unmatched pair briefly ---
+  showHint() {
+    // Find the first unmatched pair
+    const unmatchedValues = [];
+    for (let i = 0; i < this.cards.length; i++) {
+      if (!this.matched[i]) {
+        const val = this.cards[i];
+        if (!unmatchedValues.includes(val)) {
+          unmatchedValues.push(val);
+        }
+      }
+    }
+    if (unmatchedValues.length === 0) return;
+
+    // Pick a random unmatched value
+    const hintVal = unmatchedValues[Phaser.Math.Between(0, unmatchedValues.length - 1)];
+
+    // Find the two card indices for this value
+    const hintIndices = [];
+    for (let i = 0; i < this.cards.length; i++) {
+      if (this.cards[i] === hintVal && !this.matched[i]) {
+        hintIndices.push(i);
+      }
+    }
+    if (hintIndices.length < 2) return;
+
+    // Lock input during hint
+    this.locked = true;
+
+    // Briefly show the pair
+    const emoji = this.EMOJIS[hintVal];
+    hintIndices.forEach(idx => {
+      this.cardTexts[idx].setText(emoji);
+      // Highlight background in hint color (soft yellow)
+      const col = idx % this.COLS;
+      const row = Math.floor(idx / this.COLS);
+      const x = this.boardX + col * (this.CARD_SIZE + this.CARD_GAP);
+      const y = this.boardY + row * (this.CARD_SIZE + this.CARD_GAP);
+      const bg = this.cardBgs[idx];
+      bg.clear();
+      bg.fillStyle(0xfff0c0, 1);
+      bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+      bg.lineStyle(2, 0xe8c850, 1);
+      bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+    });
+
+    // Hide after 0.3 seconds
+    this.time.delayedCall(300, () => {
+      hintIndices.forEach(idx => {
+        this.cardTexts[idx].setText('❓');
+        const col = idx % this.COLS;
+        const row = Math.floor(idx / this.COLS);
+        const x = this.boardX + col * (this.CARD_SIZE + this.CARD_GAP);
+        const y = this.boardY + row * (this.CARD_SIZE + this.CARD_GAP);
+        const bg = this.cardBgs[idx];
+        bg.clear();
+        bg.fillStyle(0xddd0e8, 1);
+        bg.fillRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+        bg.lineStyle(2, 0xc0a8d4, 1);
+        bg.strokeRoundedRect(x, y, this.CARD_SIZE, this.CARD_SIZE, 10);
+      });
+      this.locked = false;
+    });
   }
 
   tickTimer() {
