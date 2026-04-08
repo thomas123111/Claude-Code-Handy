@@ -2,7 +2,7 @@ name: Deploy Pfotenwelt to GitHub Pages
 
 on:
   push:
-    branches: ['claude/mobile-arena-game-DZAAt', 'main']
+    branches: ['claude/mobile-arena-game-DZAAt', 'main', 'claude/pfotenwelt-game-status-HxC4K']
     paths:
       - 'pfotenwelt/**'
       - '.github/workflows/deploy-game.yml'
