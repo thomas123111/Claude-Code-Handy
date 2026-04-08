@@ -1,3 +1,11 @@
+const ITEM_THEMES = {
+  medical: ['💊', '💉', '🩹', '🧴', '🩺', '🌡️'],
+  food: ['🍖', '🐟', '🥕', '🧀', '🍎', '🥩'],
+  grooming: ['🧼', '🪮', '✂️', '🧴', '🪥', '🧽'],
+  toys: ['🎾', '🧸', '🎀', '🦴', '🪃', '🧩'],
+  general: ['⭐', '💎', '🔮', '🌸', '🍀', '🌈'],
+};
+
 export class Match3Puzzle extends Phaser.Scene {
   constructor() {
     super('Match3Puzzle');
@@ -8,12 +16,17 @@ export class Match3Puzzle extends Phaser.Scene {
     this.onCompleteScene = data.onComplete || 'Vet';
     this.cost = data.cost || 20;
 
-    this.COLS = 5;
-    this.ROWS = 5;
-    this.CELL = 60;
-    this.TYPES = ['💊', '💉', '🩹', '🧴', '🩺'];
-    this.GOAL = 100;
-    this.TIME_LIMIT = 30;
+    // Themed item sets
+    this.theme = data.theme || 'medical';
+    this.TYPES = ITEM_THEMES[this.theme] || ITEM_THEMES.general;
+
+    // Dynamic difficulty (1-3)
+    const diff = data.difficulty || 1;
+    this.COLS = diff >= 3 ? 6 : 5;
+    this.ROWS = diff >= 3 ? 6 : 5;
+    this.CELL = diff >= 3 ? 52 : 60;
+    this.GOAL = 80 + diff * 30; // 110, 140, 170
+    this.TIME_LIMIT = 35 - diff * 3; // 32, 29, 26
 
     this.score = 0;
     this.timer = this.TIME_LIMIT;
@@ -22,6 +35,12 @@ export class Match3Puzzle extends Phaser.Scene {
     this.selected = null;
     this.locked = false;
     this.gameOver = false;
+
+    // Combo counter
+    this.comboCount = 0;
+
+    // Move counter
+    this.moveCount = 0;
   }
 
   create() {
@@ -37,8 +56,13 @@ export class Match3Puzzle extends Phaser.Scene {
       fontSize: '22px', color: '#4a3560', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
-    this.timerText = this.add.text(width / 2, 55, `⏱ ${this.timer}s`, {
+    this.timerText = this.add.text(width / 2 - 60, 55, `⏱ ${this.timer}s`, {
       fontSize: '24px', color: '#e89030', fontFamily: 'Arial'
+    }).setOrigin(0.5, 0);
+
+    // Move counter display
+    this.moveText = this.add.text(width / 2 + 60, 55, `🔄 0 Züge`, {
+      fontSize: '20px', color: '#8866aa', fontFamily: 'Arial'
     }).setOrigin(0.5, 0);
 
     this.scoreText = this.add.text(width / 2, 85, `Punkte: 0 / ${this.GOAL}`, {
@@ -211,7 +235,13 @@ export class Match3Puzzle extends Phaser.Scene {
       return;
     }
 
-    // Valid swap - animate and resolve
+    // Valid swap - increment move counter and animate
+    this.moveCount++;
+    this.moveText.setText(`🔄 ${this.moveCount} Züge`);
+
+    // Reset combo for a new player-initiated chain
+    this.comboCount = 0;
+
     this.updateCellPositions();
     this.resolveMatches(matches);
   }
@@ -251,17 +281,187 @@ export class Match3Puzzle extends Phaser.Scene {
     });
   }
 
+  /**
+   * Detect special matches (4-in-a-row or 5-in-a-row) for power-ups.
+   * Returns an array of { type: 'bomb'|'rainbow', r, c, length } objects.
+   */
+  checkSpecialMatches() {
+    const specials = [];
+
+    // Check horizontal runs
+    for (let r = 0; r < this.ROWS; r++) {
+      let c = 0;
+      while (c < this.COLS) {
+        const t = this.grid[r][c];
+        if (t < 0) { c++; continue; }
+        let len = 1;
+        while (c + len < this.COLS && this.grid[r][c + len] === t) len++;
+        if (len >= 5) {
+          specials.push({ type: 'rainbow', r, c: c + Math.floor(len / 2), length: len });
+        } else if (len >= 4) {
+          specials.push({ type: 'bomb', r, c: c + Math.floor(len / 2), length: len });
+        }
+        c += len;
+      }
+    }
+
+    // Check vertical runs
+    for (let c = 0; c < this.COLS; c++) {
+      let r = 0;
+      while (r < this.ROWS) {
+        const t = this.grid[r][c];
+        if (t < 0) { r++; continue; }
+        let len = 1;
+        while (r + len < this.ROWS && this.grid[r + len][c] === t) len++;
+        if (len >= 5) {
+          specials.push({ type: 'rainbow', r: r + Math.floor(len / 2), c, length: len });
+        } else if (len >= 4) {
+          specials.push({ type: 'bomb', r: r + Math.floor(len / 2), c, length: len });
+        }
+        r += len;
+      }
+    }
+
+    return specials;
+  }
+
+  /**
+   * Apply a bomb power-up: clear a 3x3 area around (row, col).
+   * Returns the set of additional cells cleared as [{r, c}, ...].
+   */
+  applyBomb(row, col) {
+    const extra = [];
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const nr = row + dr;
+        const nc = col + dc;
+        if (nr >= 0 && nr < this.ROWS && nc >= 0 && nc < this.COLS && this.grid[nr][nc] >= 0) {
+          extra.push({ r: nr, c: nc });
+        }
+      }
+    }
+    return extra;
+  }
+
+  /**
+   * Apply a rainbow power-up: clear all items of a random type.
+   * Returns the set of additional cells cleared as [{r, c}, ...].
+   */
+  applyRainbow() {
+    // Pick a random type that exists on the board
+    const typesOnBoard = new Set();
+    for (let r = 0; r < this.ROWS; r++) {
+      for (let c = 0; c < this.COLS; c++) {
+        if (this.grid[r][c] >= 0) typesOnBoard.add(this.grid[r][c]);
+      }
+    }
+    if (typesOnBoard.size === 0) return [];
+
+    const typeArr = Array.from(typesOnBoard);
+    const target = typeArr[Phaser.Math.Between(0, typeArr.length - 1)];
+
+    const extra = [];
+    for (let r = 0; r < this.ROWS; r++) {
+      for (let c = 0; c < this.COLS; c++) {
+        if (this.grid[r][c] === target) {
+          extra.push({ r, c });
+        }
+      }
+    }
+    return extra;
+  }
+
+  /**
+   * Show a brief floating emoji effect at a grid position.
+   */
+  showPowerUpEffect(row, col, emoji) {
+    const x = this.boardX + col * this.CELL + this.CELL / 2;
+    const y = this.boardY + row * this.CELL + this.CELL / 2;
+    const fx = this.add.text(x, y, emoji, {
+      fontSize: '48px', fontFamily: 'Arial'
+    }).setOrigin(0.5).setDepth(100);
+
+    this.tweens.add({
+      targets: fx,
+      scale: 2,
+      alpha: 0,
+      y: y - 40,
+      duration: 500,
+      onComplete: () => fx.destroy()
+    });
+  }
+
+  /**
+   * Show the combo counter text briefly.
+   */
+  showComboText(comboNum) {
+    const { width } = this.scale;
+    const comboLabel = this.add.text(width / 2, this.boardY - 20, `${comboNum}x COMBO!`, {
+      fontSize: '28px', color: '#ffaa00', fontFamily: 'Arial',
+      fontStyle: 'bold',
+      stroke: '#996600',
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(100);
+
+    this.tweens.add({
+      targets: comboLabel,
+      scale: 1.5,
+      alpha: 0,
+      y: comboLabel.y - 30,
+      duration: 700,
+      onComplete: () => comboLabel.destroy()
+    });
+  }
+
   resolveMatches(matches) {
-    const count = matches.length;
-    this.score += count * 10;
+    // Increment combo
+    this.comboCount++;
+
+    // Show combo text if chain > 1
+    if (this.comboCount > 1) {
+      this.showComboText(this.comboCount);
+    }
+
+    // Check for special matches (4+ or 5+) BEFORE clearing the grid
+    const specials = this.checkSpecialMatches();
+
+    // Collect additional cells from power-ups
+    const allMatched = new Set(matches.map(({ r, c }) => `${r},${c}`));
+    let bonusMultiplier = 1;
+
+    for (const special of specials) {
+      if (special.type === 'rainbow') {
+        bonusMultiplier = Math.max(bonusMultiplier, 3);
+        const extras = this.applyRainbow();
+        extras.forEach(({ r, c }) => allMatched.add(`${r},${c}`));
+        this.showPowerUpEffect(special.r, special.c, '🌈');
+      } else if (special.type === 'bomb') {
+        bonusMultiplier = Math.max(bonusMultiplier, 2);
+        const extras = this.applyBomb(special.r, special.c);
+        extras.forEach(({ r, c }) => allMatched.add(`${r},${c}`));
+        this.showPowerUpEffect(special.r, special.c, '💥');
+      }
+    }
+
+    // Convert back to array of {r, c}
+    const allMatchedArr = Array.from(allMatched).map(s => {
+      const [r, c] = s.split(',').map(Number);
+      return { r, c };
+    });
+
+    // Score with combo multiplier and power-up bonus
+    const comboMult = Math.min(this.comboCount, 4);
+    const count = allMatchedArr.length;
+    this.score += count * 10 * comboMult * bonusMultiplier;
+
     this.scoreText.setText(`Punkte: ${this.score} / ${this.GOAL}`);
     this.updateProgressBar(
-      (540 - 300) / 2, 120, 300, 16
+      (this.scale.width - 300) / 2, 120, 300, 16
     );
 
     // Animate matched cells
-    matches.forEach(({ r, c }) => {
-      if (this.cells[r][c]) {
+    allMatchedArr.forEach(({ r, c }) => {
+      if (this.cells[r] && this.cells[r][c]) {
         this.tweens.add({
           targets: this.cells[r][c],
           scale: 1.4,
@@ -324,6 +524,9 @@ export class Match3Puzzle extends Phaser.Scene {
       if (newMatches.length > 0) {
         this.resolveMatches(newMatches);
       } else {
+        // No more chain matches - reset combo
+        this.comboCount = 0;
+
         // Check if any moves remain
         if (!this.hasValidMoves()) {
           this.endGame(false);
