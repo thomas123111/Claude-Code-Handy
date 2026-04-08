@@ -22,7 +22,7 @@ export class ShelterScene extends Phaser.Scene {
     const pet = this.save.pets[pending.petIdx];
     if (pet && result.success) {
       this.save.hearts -= pending.cost;
-      pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 40);
+      pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 55);
       pet.happiness = calculateHappiness(pet);
       addXp(this.save, 10);
       writeSave(this.save);
@@ -409,7 +409,7 @@ export class ShelterScene extends Phaser.Scene {
       this.scene.start('MemoryPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
     } else {
       this.save.hearts -= cost;
-      pet.needs[need] = Math.min(100, pet.needs[need] + 30);
+      pet.needs[need] = Math.min(100, pet.needs[need] + 55);
       pet.happiness = calculateHappiness(pet);
       addXp(this.save, 5);
       writeSave(this.save);
