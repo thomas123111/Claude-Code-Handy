@@ -7,33 +7,35 @@ import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 const MAP_W = 1800;
 const MAP_H = 1500;
 
-// Town buildings — all at path endpoints (never blocking paths)
+// Buildings positioned clockwise from Tierheim (top center)
+// Unlock order: shelter→merge→vet→salon→futterladen→school→hotel→spielplatz→cafe→guild
+// This way fog recedes clockwise from the shelter outward
 const BUILDINGS = [
-  // Top center
+  // TOP CENTER — always visible
   { id: 'shelter', key: 'Shelter', name: 'Tierheim', tex: 'bld_shelter',
     x: 900, y: 180, scale: 1.2 },
-  // Left row (top to bottom)
+  // CLOCKWISE: right side (top → bottom)
   { id: 'merge', key: 'MergeBoard', name: 'Werkstatt', tex: 'bld_workshop',
-    x: 150, y: 400, scale: 1.0 },
-  { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
-    x: 150, y: 800, scale: 1.0 },
-  { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
-    x: 150, y: 1150, scale: 1.0 },
-  // Right row (top to bottom)
-  { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
     x: 1650, y: 400, scale: 1.0 },
-  { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
+  { id: 'vet', key: 'Vet', name: 'Tierarzt', tex: 'bld_vet',
     x: 1650, y: 800, scale: 1.0 },
-  { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
+  { id: 'salon', key: 'Salon', name: 'Salon', tex: 'bld_salon',
     x: 1650, y: 1150, scale: 1.0 },
-  // New buildings — on their own branch paths (not blocking main paths)
+  // BOTTOM CENTER
   { id: 'futterladen', key: 'Futterladen', name: 'Futterladen', tex: 'bld_cafe',
-    x: 500, y: 180, scale: 1.0 },
-  { id: 'spielplatz', key: 'Spielplatz', name: 'Spielplatz', tex: 'bld_school',
-    x: 1300, y: 180, scale: 1.0 },
-  // Bottom center
-  { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
     x: 900, y: 1250, scale: 1.0 },
+  // LEFT side (bottom → top)
+  { id: 'school', key: 'School', name: 'Schule', tex: 'bld_school',
+    x: 150, y: 1150, scale: 1.0 },
+  { id: 'hotel', key: 'Hotel', name: 'Pension', tex: 'bld_hotel',
+    x: 150, y: 800, scale: 1.0 },
+  { id: 'spielplatz', key: 'Spielplatz', name: 'Spielplatz', tex: 'bld_school',
+    x: 150, y: 400, scale: 1.0 },
+  // BACK TO TOP (completing the circle)
+  { id: 'cafe', key: 'Cafe', name: 'Café', tex: 'bld_cafe',
+    x: 500, y: 180, scale: 1.0 },
+  { id: 'guild', key: 'Guild', name: 'Gilde', tex: 'bld_guild',
+    x: 1300, y: 180, scale: 1.0 },
 ];
 
 // Trees scattered around the wider map
@@ -136,23 +138,40 @@ export class TownScene extends Phaser.Scene {
       this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 0x331a00, 0.12).setDepth(400);
     }
 
-    // === PATHS (depth -1, always below everything else) ===
+    // === PATHS — only draw to visible (unlocked/next) buildings ===
     const pc = 0xc4a76c;
-    // Central vertical spine
-    this.drawPath(900, 260, 900, 1280, pc);
-    // Horizontal branches — long paths to buildings at edges
-    this.drawPath(200, 400, 900, 400, pc);
-    this.drawPath(900, 400, 1600, 400, pc);
-    this.drawPath(200, 800, 900, 800, pc);
-    this.drawPath(900, 800, 1600, 800, pc);
-    // Branch paths to Futterladen (top-left) and Spielplatz (top-right)
-    this.drawPath(500, 260, 500, 400, pc);
-    this.drawPath(1300, 260, 1300, 400, pc);
-    this.drawPath(200, 1150, 900, 1150, pc);
-    this.drawPath(900, 1150, 1600, 1150, pc);
-    // Fountain plaza
-    this.add.circle(900, 700, 120, pc, 0.35).setDepth(-1);
-    this.add.circle(900, 700, 130, 0x8a7a5a, 0.1).setDepth(-1);
+    const nextUnlock = BUILDING_UNLOCK_ORDER.find(bo =>
+      !(this.save.stations[bo.id] && this.save.stations[bo.id].unlocked));
+    const isVisible = (id) => {
+      const unlocked = this.save.stations[id] && this.save.stations[id].unlocked;
+      const isNext = nextUnlock && nextUnlock.id === id;
+      return unlocked || isNext;
+    };
+    // Central spine (always visible — connects top to wherever player has reached)
+    const rightVisible = isVisible('merge') || isVisible('vet') || isVisible('salon');
+    const leftVisible = isVisible('school') || isVisible('hotel') || isVisible('spielplatz');
+    const bottomVisible = isVisible('futterladen');
+    // Vertical spine grows as buildings unlock
+    let spineBottom = 260;
+    if (rightVisible || leftVisible) spineBottom = 400;
+    if (isVisible('vet') || isVisible('hotel')) spineBottom = 800;
+    if (isVisible('salon') || isVisible('school') || bottomVisible) spineBottom = 1280;
+    this.drawPath(900, 260, 900, spineBottom, pc);
+    // Right branches
+    if (rightVisible) this.drawPath(900, 400, 1600, 400, pc);
+    if (isVisible('vet')) this.drawPath(900, 800, 1600, 800, pc);
+    if (isVisible('salon')) this.drawPath(900, 1150, 1600, 1150, pc);
+    // Left branches
+    if (leftVisible) this.drawPath(200, 400, 900, 400, pc);
+    if (isVisible('hotel')) this.drawPath(200, 800, 900, 800, pc);
+    if (isVisible('school')) this.drawPath(200, 1150, 900, 1150, pc);
+    // Horizontal at each row (connect left-right if both sides visible)
+    if (rightVisible && !leftVisible) this.drawPath(900, 400, 1600, 400, pc);
+    // Top branches for cafe/guild
+    if (isVisible('cafe')) this.drawPath(500, 260, 500, 400, pc);
+    if (isVisible('guild')) this.drawPath(1300, 260, 1300, 400, pc);
+    // Fountain plaza (always visible — center of town)
+    this.add.circle(900, 700, 100, pc, 0.3).setDepth(-1);
 
     // === FARM PORTAL at bottom (only if farm is unlocked) ===
     const farmUnlocked = this.save.stations.farm && this.save.stations.farm.unlocked;
@@ -230,30 +249,64 @@ export class TownScene extends Phaser.Scene {
       }
     });
 
-    // === FOG OF WAR — hide unexplored areas ===
-    // Calculate the furthest unlocked Y position to determine visible area
-    let maxUnlockedY = 300; // shelter area always visible
-    BUILDINGS.forEach((b) => {
-      const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
-      const isNext = nextUnlock && nextUnlock.id === b.id;
-      if (isUnlocked || isNext) maxUnlockedY = Math.max(maxUnlockedY, b.y + 150);
-    });
-    // Clamp fog to not go above the map
-    const fogY = Math.min(maxUnlockedY + 100, MAP_H);
-    if (fogY < MAP_H - 50) {
-      // Main fog rectangle covering unexplored south
-      const fogH = MAP_H - fogY;
-      this.add.rectangle(MAP_W / 2, fogY + fogH / 2, MAP_W, fogH, 0x3a5a2a, 0.85).setDepth(399);
-      // Soft gradient edge (multiple semi-transparent strips)
-      for (let i = 0; i < 5; i++) {
-        const stripY = fogY - 20 + i * 10;
-        this.add.rectangle(MAP_W / 2, stripY, MAP_W, 12, 0x3a5a2a, 0.12 * (i + 1)).setDepth(399);
+    // === FOG OF WAR — mysterious fog on unexplored sectors ===
+    // Sectors: right side, bottom, left side (clockwise from shelter)
+    const fogDepth = 398;
+    const fogColor = 0x1a2a18;
+    const drawFogZone = (x, y, w, h, label) => {
+      // Base fog (dark, opaque)
+      this.add.rectangle(x, y, w, h, fogColor, 0.82).setDepth(fogDepth);
+      // Layered mist (lighter, animated)
+      for (let i = 0; i < 4; i++) {
+        const mx = x + Phaser.Math.Between(-w * 0.3, w * 0.3);
+        const my = y + Phaser.Math.Between(-h * 0.2, h * 0.2);
+        const mist = this.add.circle(mx, my, Phaser.Math.Between(60, 140), 0x2a4a28, 0.3).setDepth(fogDepth + 1);
+        this.tweens.add({ targets: mist, x: mx + Phaser.Math.Between(-40, 40), alpha: 0.1, scale: 1.5, duration: Phaser.Math.Between(3000, 6000), yoyo: true, repeat: -1 });
       }
-      // Mystery text
-      this.add.text(MAP_W / 2, fogY + 60, '🌫️ Unentdecktes Gebiet', {
-        fontSize: '16px', fontFamily: 'Georgia, serif', color: '#8a9a7a', fontStyle: 'italic',
-        stroke: '#2a3a1a', strokeThickness: 3,
-      }).setOrigin(0.5).setDepth(399);
+      // Sparkle particles (mysterious)
+      for (let i = 0; i < 3; i++) {
+        const sx = x + Phaser.Math.Between(-w * 0.3, w * 0.3);
+        const sy = y + Phaser.Math.Between(-h * 0.2, h * 0.2);
+        const spark = this.add.circle(sx, sy, 2, 0x88ff88, 0.4).setDepth(fogDepth + 2);
+        this.tweens.add({ targets: spark, alpha: 0, y: sy - 20, duration: 2000, delay: Phaser.Math.Between(0, 3000), repeat: -1, repeatDelay: Phaser.Math.Between(1000, 4000) });
+      }
+      // Label
+      if (label) {
+        this.add.text(x, y, label, {
+          fontSize: '14px', fontFamily: 'Georgia, serif', color: '#6a8a6a', fontStyle: 'italic',
+          stroke: '#1a2a18', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(fogDepth + 2);
+      }
+      // Soft gradient edges (8 strips fading outward)
+      for (let i = 0; i < 6; i++) {
+        const edgeAlpha = 0.12 * (6 - i);
+        // Top edge
+        this.add.rectangle(x, y - h / 2 - i * 8, w + i * 16, 10, fogColor, edgeAlpha).setDepth(fogDepth);
+        // Bottom edge
+        this.add.rectangle(x, y + h / 2 + i * 8, w + i * 16, 10, fogColor, edgeAlpha).setDepth(fogDepth);
+      }
+    };
+
+    // Right sector fog (visible when merge/vet/salon NOT unlocked)
+    if (!isVisible('vet') && !isVisible('salon')) {
+      drawFogZone(1400, 800, 800, 800, '🌫️ ???');
+    }
+    if (!isVisible('salon') && isVisible('vet')) {
+      drawFogZone(1400, 1100, 800, 400, '🌫️');
+    }
+    // Bottom sector fog
+    if (!bottomVisible) {
+      drawFogZone(900, 1300, MAP_W, 400, '🌫️ Unentdeckt');
+    }
+    // Left sector fog
+    if (!leftVisible) {
+      drawFogZone(400, 800, 800, 800, '🌫️ ???');
+    }
+    if (leftVisible && !isVisible('hotel')) {
+      drawFogZone(400, 800, 800, 400, '🌫️');
+    }
+    if (isVisible('hotel') && !isVisible('spielplatz')) {
+      drawFogZone(400, 400, 800, 400, '🌫️');
     }
 
     // === AMBIENT EFFECTS ===
