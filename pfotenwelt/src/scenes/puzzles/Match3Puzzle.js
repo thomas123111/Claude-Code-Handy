@@ -111,7 +111,10 @@ export class Match3Puzzle extends Phaser.Scene {
       loop: true
     });
 
-    // Pointer input
+    // === DRAG & DROP INPUT ===
+    this.dragSource = null;
+    this.dragSprite = null;
+
     this.input.on('pointerdown', (pointer) => {
       if (this.locked || this.gameOver) return;
 
@@ -124,25 +127,53 @@ export class Match3Puzzle extends Phaser.Scene {
 
       const col = Math.floor((pointer.x - this.boardX) / this.CELL);
       const row = Math.floor((pointer.y - this.boardY) / this.CELL);
+      if (col < 0 || col >= this.COLS || row < 0 || row >= this.ROWS) return;
+      if (this.grid[row][col] < 0) return;
 
+      this.dragSource = { col, row };
+      this.highlightCell(col, row);
+
+      // Create floating drag sprite
+      const emoji = this.TYPES[this.grid[row][col]];
+      this.dragSprite = this.add.text(pointer.x, pointer.y, emoji, {
+        fontSize: '40px', fontFamily: 'Arial',
+      }).setOrigin(0.5).setDepth(50).setAlpha(0.8);
+
+      // Dim the original cell
+      if (this.cells[row] && this.cells[row][col]) {
+        this.cells[row][col].setAlpha(0.3);
+      }
+    });
+
+    this.input.on('pointermove', (pointer) => {
+      if (!this.dragSprite) return;
+      this.dragSprite.setPosition(pointer.x, pointer.y);
+    });
+
+    this.input.on('pointerup', (pointer) => {
+      if (!this.dragSprite || !this.dragSource) return;
+
+      this.dragSprite.destroy();
+      this.dragSprite = null;
+      this.clearHighlight();
+
+      const src = this.dragSource;
+      this.dragSource = null;
+
+      // Restore original cell alpha
+      if (this.cells[src.row] && this.cells[src.row][src.col]) {
+        this.cells[src.row][src.col].setAlpha(1);
+      }
+
+      const col = Math.floor((pointer.x - this.boardX) / this.CELL);
+      const row = Math.floor((pointer.y - this.boardY) / this.CELL);
       if (col < 0 || col >= this.COLS || row < 0 || row >= this.ROWS) return;
 
-      if (this.selected === null) {
-        this.selected = { col, row };
-        this.highlightCell(col, row);
-      } else {
-        const prev = this.selected;
-        const dx = Math.abs(col - prev.col);
-        const dy = Math.abs(row - prev.row);
-
-        if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-          this.clearHighlight();
-          this.trySwap(prev.col, prev.row, col, row);
-        } else {
-          this.clearHighlight();
-          this.selected = { col, row };
-          this.highlightCell(col, row);
-        }
+      // Must be adjacent
+      const dx = Math.abs(col - src.col);
+      const dy = Math.abs(row - src.row);
+      if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+        this.trySwap(src.col, src.row, col, row);
       }
     });
   }
