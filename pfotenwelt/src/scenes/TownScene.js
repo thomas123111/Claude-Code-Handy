@@ -199,8 +199,6 @@ export class TownScene extends Phaser.Scene {
     });
 
     // === BUILDINGS (sequential unlock — hidden until unlocked or next) ===
-    const nextUnlock = BUILDING_UNLOCK_ORDER.find(bo =>
-      !(this.save.stations[bo.id] && this.save.stations[bo.id].unlocked));
 
     BUILDINGS.forEach((b) => {
       const isUnlocked = this.save.stations[b.id] && this.save.stations[b.id].unlocked;
