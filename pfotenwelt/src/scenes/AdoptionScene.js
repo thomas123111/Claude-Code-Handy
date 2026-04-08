@@ -81,8 +81,9 @@ export class AdoptionScene extends Phaser.Scene {
 
     // === ADOPTER CARDS ===
     const cardStartY = 240;
-    const cardH = 200;
-    const cardGap = 10;
+    const availH = height - 70 - cardStartY; // leave room for back button
+    const cardGap = 8;
+    const cardH = Math.floor((availH - (this.adopters.length - 1) * cardGap) / this.adopters.length);
 
     this.adopters.forEach((adopter, idx) => {
       const cy = cardStartY + idx * (cardH + cardGap) + cardH / 2;
@@ -116,19 +117,19 @@ export class AdoptionScene extends Phaser.Scene {
       .setStrokeStyle(2, scoreColor);
 
     // Emoji + name + age
-    this.add.text(25, cy - cardH / 2 + 12, adopter.emoji, { fontSize: '28px' });
-    this.add.text(65, cy - cardH / 2 + 10, adopter.name, {
-      fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
+    this.add.text(20, cy - cardH / 2 + 8, adopter.emoji, { fontSize: '22px' });
+    this.add.text(52, cy - cardH / 2 + 6, adopter.name, {
+      fontSize: '15px', fontFamily: 'Georgia, serif', color: THEME.text.dark, fontStyle: 'bold',
     });
-    this.add.text(65, cy - cardH / 2 + 30, `${adopter.age} Jahre`, {
-      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
+    this.add.text(52, cy - cardH / 2 + 24, `${adopter.age} Jahre`, {
+      fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
     });
 
     // Traits as tags
     const traits = adopter.traits;
     const tagValues = [traits.housing, traits.experience, traits.household, traits.activity, traits.workSchedule];
-    let tagX = 25;
-    const tagY = cy - cardH / 2 + 55;
+    let tagX = 20;
+    const tagY = cy - cardH / 2 + 44;
     const tagColors = [0xe8ddf5, 0xddf5e8, 0xf5edd8, 0xdde8f5, 0xf5dde8];
 
     tagValues.forEach((val, ti) => {
@@ -153,18 +154,20 @@ export class AdoptionScene extends Phaser.Scene {
     });
 
     // Pet type preference
-    this.add.text(25, cy + 15, `Sucht: ${adopter.preferences.petType} (${adopter.preferences.sizePreference})`, {
-      fontSize: '13px', fontFamily: 'monospace', color: THEME.text.muted,
+    this.add.text(20, cy + 5, `Sucht: ${adopter.preferences.petType} (${adopter.preferences.sizePreference})`, {
+      fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
     });
 
-    // Story
-    this.add.text(25, cy + 32, `"${adopter.story}"`, {
-      fontSize: '11px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
-      fontStyle: 'italic', wordWrap: { width: cardW - 30 },
-    });
+    // Story (only show if card is tall enough)
+    if (cardH >= 150) {
+      this.add.text(20, cy + 20, `"${adopter.story}"`, {
+        fontSize: '11px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
+        fontStyle: 'italic', wordWrap: { width: cardW - 30 },
+      });
+    }
 
     // Match score bar
-    const barY = cy + cardH / 2 - 35;
+    const barY = cy + cardH / 2 - 28;
     const barW = cardW - 50;
     this.add.rectangle(cx, barY, barW, 14, THEME.bg.barBg).setStrokeStyle(1, THEME.bg.barBorder);
     const fillW = Math.max(1, barW * (adopter.matchScore / 100));
@@ -197,8 +200,8 @@ export class AdoptionScene extends Phaser.Scene {
     this.add.rectangle(cx, height / 2, width, height, THEME.bg.overlay, 0.85);
 
     // Confirmation card
-    const cardY = height / 2 - 40;
-    drawCard(this, cx, cardY, width - 40, 320, {
+    const cardY = height / 2 - 30;
+    drawCard(this, cx, cardY, width - 30, Math.min(320, height - 160), {
       borderColor: Phaser.Display.Color.HexStringToColor(match.color).color,
     });
 
