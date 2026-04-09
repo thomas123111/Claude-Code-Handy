@@ -101,6 +101,9 @@ export function drawPetAvatar(scene, x, y, breedId, scale) {
 
 // Draw header bar with optional stats (hearts, level)
 export function drawHeader(scene, title, save) {
+  // Hide HTML HUD when inside a building scene
+  const hud = document.getElementById('hud');
+  if (hud) hud.classList.remove('visible');
   const { width } = scene.scale;
   scene.add.rectangle(width / 2, 0, width, 58, THEME.bg.header, 0.98).setOrigin(0.5, 0);
   scene.add.rectangle(width / 2, 58, width, 2, THEME.bg.headerBorder).setOrigin(0.5, 0);

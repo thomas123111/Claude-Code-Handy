@@ -135,11 +135,11 @@ export class AdoptionScene extends Phaser.Scene {
     });
 
     // Traits as tags
-    const traits = adopter.traits;
-    const tagValues = [traits.housing, traits.experience, traits.household, traits.activity, traits.workSchedule];
+    const traits = adopter.traits || {};
+    const tagValues = [traits.housing, traits.experience, traits.household, traits.activity].filter(Boolean);
     let tagX = 20;
     const tagY = cy - cardH / 2 + 44;
-    const tagColors = [0xe8ddf5, 0xddf5e8, 0xf5edd8, 0xdde8f5, 0xf5dde8];
+    const tagColors = [0xe8ddf5, 0xddf5e8, 0xf5edd8, 0xdde8f5];
 
     tagValues.forEach((val, ti) => {
       const textObj = this.add.text(0, 0, val, {
@@ -150,22 +150,25 @@ export class AdoptionScene extends Phaser.Scene {
 
       // Wrap to next line if needed
       if (tagX + tw > cardW + 10) {
-        tagX = 25;
+        tagX = 20;
       }
 
-      this.add.rectangle(tagX + tw / 2, tagY + (ti > 2 ? 20 : 0), tw, 16, tagColors[ti], 0.8)
+      this.add.rectangle(tagX + tw / 2, tagY + (ti > 1 ? 20 : 0), tw, 16, tagColors[ti % tagColors.length], 0.8)
         .setStrokeStyle(1, THEME.bg.cardBorder);
-      this.add.text(tagX + tw / 2, tagY + (ti > 2 ? 20 : 0), val, {
+      this.add.text(tagX + tw / 2, tagY + (ti > 1 ? 20 : 0), val, {
         fontSize: '11px', fontFamily: 'monospace', color: THEME.text.body,
       }).setOrigin(0.5);
       tagX += tw + 5;
-      if (ti === 2) tagX = 25; // reset for second row
+      if (ti === 1) tagX = 20;
     });
 
-    // Pet type preference
-    this.add.text(20, cy + 5, `Sucht: ${adopter.preferences.petType} (${adopter.preferences.sizePreference})`, {
-      fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
-    });
+    // Offer + story
+    const offerY = cy + 5;
+    if (adopter.offer) {
+      this.add.text(20, offerY, `Bietet: ${adopter.offer}❤️`, {
+        fontSize: '13px', fontFamily: 'monospace', color: THEME.text.hearts, fontStyle: 'bold',
+      });
+    }
 
     // Story (only show if card is tall enough)
     if (cardH >= 150) {

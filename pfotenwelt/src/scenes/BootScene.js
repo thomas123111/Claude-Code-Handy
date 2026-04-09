@@ -206,8 +206,14 @@ export class BootScene extends Phaser.Scene {
 
     pg.destroy();
 
-    // Force reset — remove after testing!
-    localStorage.removeItem('pfotenwelt_save');
+    // Migrate old saves (no profile field = pre-v3.0)
+    try {
+      const raw = localStorage.getItem('pfotenwelt_save');
+      const save = raw ? JSON.parse(raw) : null;
+      if (save && typeof save.profile === 'undefined') {
+        localStorage.removeItem('pfotenwelt_save');
+      }
+    } catch (e) { /* ignore */ }
 
     // Route: onboarding if new player, otherwise straight to town
     try {

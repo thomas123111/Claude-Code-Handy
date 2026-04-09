@@ -380,6 +380,15 @@ export class ShelterScene extends Phaser.Scene {
       this.scene.start('SortPuzzle', { petName: pet.name, onComplete: 'Shelter', need });
     } else if (need === 'hygiene') {
       this.scene.start('WashPuzzle', { petName: pet.name, breedId: pet.breedId, onComplete: 'Shelter', need });
+    } else if (need === 'play') {
+      // Random puzzle from pool for playing
+      const playPuzzles = ['SortPuzzle', 'MemoryPuzzle', 'Match3Puzzle', 'SwipePuzzle', 'TimingPuzzle'];
+      const lastPuzzle = this.save._lastPlayPuzzle || '';
+      const available = playPuzzles.filter(p => p !== lastPuzzle);
+      const puzzle = available[Math.floor(Math.random() * available.length)];
+      this.save._lastPlayPuzzle = puzzle;
+      writeSave(this.save);
+      this.scene.start(puzzle, { petName: pet.name, onComplete: 'Shelter', need });
     } else {
       this.save.hearts -= cost;
       pet.needs[need] = Math.min(100, pet.needs[need] + 55);
