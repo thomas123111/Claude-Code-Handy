@@ -27,15 +27,109 @@
     #hud.visible { opacity: 1; }
     #hud-hearts { color: #ffaabb; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
     #hud-day { color: #ffe088; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+    #hud-right { display: flex; align-items: center; gap: 10px; }
     #hud-level { color: #88ccff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+    #hud-settings {
+      pointer-events: auto; cursor: pointer;
+      font-size: 18px; opacity: 0.8;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    #hud-settings:active { opacity: 1; transform: scale(1.2); }
+    /* Settings overlay */
+    #settings-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 200; background: rgba(20,12,30,0.85);
+      display: none; align-items: center; justify-content: center;
+    }
+    #settings-overlay.open { display: flex; }
+    #settings-panel {
+      background: #f8f2fc; border-radius: 16px; padding: 24px;
+      width: 85%; max-width: 360px; text-align: center;
+      font-family: Georgia, serif; color: #4a3560;
+    }
+    #settings-panel h2 { font-size: 22px; color: #6b4c8a; margin-bottom: 16px; }
+    .setting-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #e0c8e8;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 16px; }
+    .setting-toggle {
+      width: 52px; height: 28px; border-radius: 14px;
+      background: #d0c0d8; border: none; cursor: pointer;
+      position: relative; transition: background 0.2s;
+    }
+    .setting-toggle.on { background: #8866cc; }
+    .setting-toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 22px; height: 22px; border-radius: 11px;
+      background: white; transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .setting-toggle.on::after { left: 27px; }
+    #settings-close {
+      margin-top: 16px; padding: 10px 32px;
+      background: #8866cc; color: white; border: none;
+      border-radius: 8px; font-family: Georgia, serif;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+    }
+    #settings-close:active { background: #7755bb; }
   </style>
 </head>
 <body>
   <div id="hud">
     <span id="hud-hearts">❤️ 100</span>
     <span id="hud-day">☀️ Tag 1</span>
-    <span id="hud-level">Lv.1</span>
+    <span id="hud-right">
+      <span id="hud-level">Lv.1</span>
+      <span id="hud-settings">⚙️</span>
+    </span>
   </div>
+  <div id="settings-overlay">
+    <div id="settings-panel">
+      <h2>⚙️ Einstellungen</h2>
+      <div class="setting-row">
+        <span class="setting-label">🔊 Sound</span>
+        <button class="setting-toggle on" id="toggle-sound"></button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">🎵 Musik</span>
+        <button class="setting-toggle on" id="toggle-music"></button>
+      </div>
+      <button id="settings-close">Schließen</button>
+    </div>
+  </div>
+  <script>
+    // Settings menu logic (pure DOM, no Phaser dependency)
+    document.getElementById('hud-settings').addEventListener('click', () => {
+      document.getElementById('settings-overlay').classList.add('open');
+      // Sync toggle states from localStorage
+      try {
+        const save = JSON.parse(localStorage.getItem('pfotenwelt_save') || '{}');
+        document.getElementById('toggle-sound').className = 'setting-toggle' + (save.soundOn !== false ? ' on' : '');
+        document.getElementById('toggle-music').className = 'setting-toggle' + (save.musicOn !== false ? ' on' : '');
+      } catch(e) {}
+    });
+    document.getElementById('settings-close').addEventListener('click', () => {
+      document.getElementById('settings-overlay').classList.remove('open');
+    });
+    document.getElementById('toggle-sound').addEventListener('click', function() {
+      this.classList.toggle('on');
+      try {
+        const save = JSON.parse(localStorage.getItem('pfotenwelt_save') || '{}');
+        save.soundOn = this.classList.contains('on');
+        localStorage.setItem('pfotenwelt_save', JSON.stringify(save));
+      } catch(e) {}
+    });
+    document.getElementById('toggle-music').addEventListener('click', function() {
+      this.classList.toggle('on');
+      try {
+        const save = JSON.parse(localStorage.getItem('pfotenwelt_save') || '{}');
+        save.musicOn = this.classList.contains('on');
+        localStorage.setItem('pfotenwelt_save', JSON.stringify(save));
+      } catch(e) {}
+    });
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

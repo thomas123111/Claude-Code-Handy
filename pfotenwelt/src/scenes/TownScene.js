@@ -95,10 +95,10 @@ export class TownScene extends Phaser.Scene {
       return;
     }
 
-    // Day-based events (every 2 in-game days)
+    // Day-based events (every 2 in-game days) — show as popup!
+    this.pendingEvent = null;
     if (shouldTriggerEvent(this.save) && this.save.pets.length > 0) {
       this.save.lastEventDay = this.save.gameDay;
-      writeSave(this.save);
       const evt = getRandomEvent();
       if (evt.effect.hearts) this.save.hearts += evt.effect.hearts;
       if (evt.effect.need) {
@@ -107,6 +107,7 @@ export class TownScene extends Phaser.Scene {
         });
       }
       writeSave(this.save);
+      this.pendingEvent = evt;
     }
 
     // === DAY/NIGHT VISUAL ===
@@ -484,9 +485,30 @@ export class TownScene extends Phaser.Scene {
       hud.classList.add('visible');
     }
 
-    // Music (no visual button — just auto-start)
+    // Music (auto-start)
     if (this.save.musicOn !== false) {
       this.input.once('pointerdown', () => { unlockAudio(); startMusic('town'); });
+    }
+
+    // Show event popup if one occurred
+    if (this.pendingEvent) {
+      const evt = this.pendingEvent;
+      this.time.delayedCall(800, () => {
+        const camCenter = this.cameras.main.getWorldPoint(width / 2, height * 0.3);
+        const evtBg = this.add.rectangle(camCenter.x, camCenter.y, 350, 70, 0xffffff, 0.92)
+          .setStrokeStyle(2, 0xe0c8e8).setDepth(450);
+        const evtText = this.add.text(camCenter.x, camCenter.y - 8, `${evt.emoji} ${evt.text}`, {
+          fontSize: '13px', fontFamily: 'Georgia, serif', color: '#4a3560',
+          wordWrap: { width: 320 }, align: 'center',
+        }).setOrigin(0.5).setDepth(451);
+        const evtReward = this.add.text(camCenter.x, camCenter.y + 22, evt.effect.hearts ? `+${evt.effect.hearts}❤️` : '', {
+          fontSize: '14px', fontFamily: 'monospace', color: '#cc4466', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(451);
+        // Auto-dismiss after 3 seconds
+        this.tweens.add({ targets: [evtBg, evtText, evtReward], alpha: 0, y: '-=30', duration: 500, delay: 3000,
+          onComplete: () => { evtBg.destroy(); evtText.destroy(); evtReward.destroy(); },
+        });
+      });
     }
   }
 
