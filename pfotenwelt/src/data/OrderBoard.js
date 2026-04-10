@@ -2,34 +2,34 @@
 // Orders refresh each game day, 2-3 active at a time
 
 const ORDER_TEMPLATES = [
-  // Food chain orders
-  { items: [{ id: 'food_1', qty: 2 }], reward: 6, label: '2x Krümel liefern' },
-  { items: [{ id: 'food_2', qty: 1 }], reward: 8, label: '1x Leckerli liefern' },
-  { items: [{ id: 'food_2', qty: 2 }], reward: 14, label: '2x Leckerli liefern' },
-  { items: [{ id: 'food_3', qty: 1 }], reward: 15, label: '1x Futternapf liefern' },
-  { items: [{ id: 'food_1', qty: 3 }, { id: 'toy_1', qty: 1 }], reward: 10, label: '3x Krümel + 1x Faden' },
-  // Toy chain orders
-  { items: [{ id: 'toy_1', qty: 2 }], reward: 6, label: '2x Faden liefern' },
-  { items: [{ id: 'toy_2', qty: 1 }], reward: 8, label: '1x Ball liefern' },
-  { items: [{ id: 'toy_2', qty: 2 }], reward: 14, label: '2x Ball liefern' },
-  { items: [{ id: 'toy_3', qty: 1 }], reward: 15, label: '1x Plüschtier liefern' },
-  // Bed chain orders
-  { items: [{ id: 'bed_1', qty: 2 }], reward: 6, label: '2x Decke liefern' },
-  { items: [{ id: 'bed_2', qty: 1 }], reward: 8, label: '1x Kissen liefern' },
-  { items: [{ id: 'bed_1', qty: 2 }, { id: 'hyg_1', qty: 2 }], reward: 10, label: '2x Decke + 2x Wasser' },
-  // Medicine chain orders
-  { items: [{ id: 'med_1', qty: 2 }], reward: 6, label: '2x Pflaster liefern' },
-  { items: [{ id: 'med_2', qty: 1 }], reward: 8, label: '1x Salbe liefern' },
-  { items: [{ id: 'med_1', qty: 3 }, { id: 'med_2', qty: 1 }], reward: 15, label: '3x Pflaster + 1x Salbe' },
-  // Hygiene chain orders
-  { items: [{ id: 'hyg_1', qty: 2 }], reward: 6, label: '2x Wasser liefern' },
-  { items: [{ id: 'hyg_2', qty: 1 }], reward: 8, label: '1x Seife liefern' },
-  { items: [{ id: 'hyg_2', qty: 2 }], reward: 14, label: '2x Seife liefern' },
-  // Mixed orders (higher value)
-  { items: [{ id: 'food_2', qty: 1 }, { id: 'toy_2', qty: 1 }], reward: 18, label: '1x Leckerli + 1x Ball' },
-  { items: [{ id: 'bed_2', qty: 1 }, { id: 'med_2', qty: 1 }], reward: 18, label: '1x Kissen + 1x Salbe' },
-  { items: [{ id: 'food_3', qty: 1 }, { id: 'hyg_2', qty: 1 }], reward: 22, label: '1x Futternapf + 1x Seife' },
-  { items: [{ id: 'food_1', qty: 2 }, { id: 'toy_1', qty: 2 }, { id: 'bed_1', qty: 2 }], reward: 15, label: '2x Krümel + 2x Faden + 2x Decke' },
+  // Food chain
+  { items: [{ id: 'food_1', qty: 2 }], reward: 6, label: 'Stelle 2x Krümel her' },
+  { items: [{ id: 'food_2', qty: 1 }], reward: 8, label: 'Stelle 1x Leckerli her' },
+  { items: [{ id: 'food_2', qty: 2 }], reward: 14, label: 'Stelle 2x Leckerli her' },
+  { items: [{ id: 'food_3', qty: 1 }], reward: 15, label: 'Stelle 1x Futternapf her' },
+  { items: [{ id: 'food_1', qty: 3 }, { id: 'toy_1', qty: 1 }], reward: 10, label: 'Merge 3x Krümel + 1x Faden' },
+  // Toy chain
+  { items: [{ id: 'toy_1', qty: 2 }], reward: 6, label: 'Stelle 2x Faden her' },
+  { items: [{ id: 'toy_2', qty: 1 }], reward: 8, label: 'Stelle 1x Ball her' },
+  { items: [{ id: 'toy_2', qty: 2 }], reward: 14, label: 'Stelle 2x Ball her' },
+  { items: [{ id: 'toy_3', qty: 1 }], reward: 15, label: 'Stelle 1x Plüschtier her' },
+  // Bed chain
+  { items: [{ id: 'bed_1', qty: 2 }], reward: 6, label: 'Stelle 2x Decke her' },
+  { items: [{ id: 'bed_2', qty: 1 }], reward: 8, label: 'Stelle 1x Kissen her' },
+  { items: [{ id: 'bed_1', qty: 2 }, { id: 'hyg_1', qty: 2 }], reward: 10, label: 'Merge 2x Decke + 2x Wasser' },
+  // Medicine chain
+  { items: [{ id: 'med_1', qty: 2 }], reward: 6, label: 'Stelle 2x Pflaster her' },
+  { items: [{ id: 'med_2', qty: 1 }], reward: 8, label: 'Stelle 1x Salbe her' },
+  { items: [{ id: 'med_1', qty: 3 }, { id: 'med_2', qty: 1 }], reward: 15, label: 'Merge 3x Pflaster + 1x Salbe' },
+  // Hygiene chain
+  { items: [{ id: 'hyg_1', qty: 2 }], reward: 6, label: 'Stelle 2x Wasser her' },
+  { items: [{ id: 'hyg_2', qty: 1 }], reward: 8, label: 'Stelle 1x Seife her' },
+  { items: [{ id: 'hyg_2', qty: 2 }], reward: 14, label: 'Stelle 2x Seife her' },
+  // Mixed (higher value)
+  { items: [{ id: 'food_2', qty: 1 }, { id: 'toy_2', qty: 1 }], reward: 18, label: 'Merge 1x Leckerli + 1x Ball' },
+  { items: [{ id: 'bed_2', qty: 1 }, { id: 'med_2', qty: 1 }], reward: 18, label: 'Merge 1x Kissen + 1x Salbe' },
+  { items: [{ id: 'food_3', qty: 1 }, { id: 'hyg_2', qty: 1 }], reward: 22, label: 'Merge 1x Futternapf + 1x Seife' },
+  { items: [{ id: 'food_1', qty: 2 }, { id: 'toy_1', qty: 2 }, { id: 'bed_1', qty: 2 }], reward: 15, label: 'Merge je 2x Krümel, Faden & Decke' },
 ];
 
 // Generate 2-3 orders for a game day
@@ -43,6 +43,8 @@ export function generateOrders(gameDay) {
     ...t,
     id: `order_${gameDay}_${i}`,
     fulfilled: false,
+    // Track progress: how many of each item have been merged SINCE order was created
+    progress: t.items.map(() => 0),
   }));
 }
 
@@ -57,30 +59,20 @@ export function refreshOrders(save) {
   return save.orders;
 }
 
-// Check if player has items on merge board to fulfill an order
-export function canFulfillOrder(order, board) {
-  if (!board) return false;
-  // Count items on board by ID
-  const counts = {};
-  for (const row of board) {
-    for (const cell of row) {
-      if (cell) counts[cell] = (counts[cell] || 0) + 1;
-    }
-  }
-  return order.items.every(req => (counts[req.id] || 0) >= req.qty);
+// Called when a merge produces a new item — check if any order needs it
+export function onItemMerged(save, itemId) {
+  if (!save.orders || !save.orders.list) return;
+  save.orders.list.forEach(order => {
+    if (order.fulfilled) return;
+    order.items.forEach((req, idx) => {
+      if (req.id === itemId && order.progress[idx] < req.qty) {
+        order.progress[idx]++;
+      }
+    });
+  });
 }
 
-// Remove items from board to fulfill order
-export function fulfillOrder(order, board) {
-  for (const req of order.items) {
-    let remaining = req.qty;
-    for (let r = 0; r < board.length && remaining > 0; r++) {
-      for (let c = 0; c < board[r].length && remaining > 0; c++) {
-        if (board[r][c] === req.id) {
-          board[r][c] = null;
-          remaining--;
-        }
-      }
-    }
-  }
+// Check if an order is complete (all items merged since order was posted)
+export function isOrderComplete(order) {
+  return order.items.every((req, idx) => order.progress[idx] >= req.qty);
 }

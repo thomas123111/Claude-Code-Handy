@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy, addXp } from '../data/SaveManager.js';
 import { incrementDailyStat } from '../data/DailyTasks.js';
+import { onItemMerged } from '../data/OrderBoard.js';
 import { BOARD_COLS, BOARD_ROWS, getItem, getMergeResult, createInitialBoard, randomItem, findEmptyCell } from '../data/MergeData.js';
 import { generatePet } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
@@ -281,6 +282,8 @@ export class MergeBoardScene extends Phaser.Scene {
     incrementDailyStat(this.save, 'merged', 1);
     incrementDailyStat(this.save, 'hearts_earned', hearts);
     incrementDailyStat(this.save, 'visited_merge', 1);
+    // Track for Dorftafel orders — counts items merged AFTER order was posted
+    onItemMerged(this.save, result.id);
     if (result.level >= 3) incrementDailyStat(this.save, 'merged_lv3', 1);
     if (result.level >= 4) incrementDailyStat(this.save, 'merged_lv4', 1);
 

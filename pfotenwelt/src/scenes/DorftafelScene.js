@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { refreshDailyTasks, claimDailyRewards } from '../data/DailyTasks.js';
-import { refreshOrders, canFulfillOrder, fulfillOrder } from '../data/OrderBoard.js';
+import { refreshOrders, isOrderComplete } from '../data/OrderBoard.js';
 import { getBoardEvent, applyEventChoice } from '../data/BoardEvents.js';
 import { getItem } from '../data/MergeData.js';
 import { THEME, drawButton, drawCard } from '../ui/Theme.js';
@@ -82,12 +82,19 @@ export class DorftafelScene extends Phaser.Scene {
     const dt = refreshDailyTasks(this.save);
     writeSave(this.save);
 
-    this.add.text(cx, startY, `Tag ${this.save.gameDay} — Tägliche Aufgaben`, {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#8a7a6a',
+    // Timer: hours until midnight (real time reset)
+    const now = new Date();
+    const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
+    const hoursLeft = Math.ceil((midnight - now) / 3600000);
+    this.add.text(cx, startY, 'Tägliche Aufgaben', {
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: '#6b4c8a', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.add.text(cx, startY + 16, `⏰ Neue Aufgaben in ${hoursLeft}h`, {
+      fontSize: '11px', fontFamily: 'monospace', color: '#9888a8',
     }).setOrigin(0.5);
 
     dt.tasks.forEach((task, i) => {
-      const ty = startY + 25 + i * 52;
+      const ty = startY + 38 + i * 52;
       const current = dt.stats[task.stat] || 0;
       const done = task.claimed || current >= task.target;
 
@@ -139,16 +146,18 @@ export class DorftafelScene extends Phaser.Scene {
         this.add.rectangle(cx, oy + 30, width - 29, 81, 0xeeffee, 0.5);
       }
 
-      // Items needed
+      // Items needed with progress
       let ix = 20;
-      order.items.forEach(req => {
+      order.items.forEach((req, ri) => {
         const item = getItem(req.id);
         const emoji = item ? item.emoji : '?';
         const name = item ? item.name : req.id;
-        this.add.text(ix, oy + 8, `${emoji} ${req.qty}x ${name}`, {
-          fontSize: '12px', fontFamily: 'monospace', color: '#4a3560',
+        const prog = order.progress ? order.progress[ri] : 0;
+        const done = prog >= req.qty;
+        this.add.text(ix, oy + 8, `${done ? '✅' : '⬜'} ${emoji} ${prog}/${req.qty} ${name}`, {
+          fontSize: '11px', fontFamily: 'monospace', color: done ? '#33aa55' : '#4a3560',
         });
-        ix += 140;
+        ix += 150;
       });
 
       // Reward
@@ -156,25 +165,25 @@ export class DorftafelScene extends Phaser.Scene {
         fontSize: '14px', fontFamily: 'Georgia, serif', color: '#cc8844', fontStyle: 'bold',
       }).setOrigin(1, 0);
 
+      const complete = isOrderComplete(order);
       if (fulfilled) {
-        this.add.text(cx, oy + 42, '✅ Geliefert!', {
+        this.add.text(cx, oy + 42, '✅ Erledigt!', {
           fontSize: '14px', fontFamily: 'Georgia, serif', color: '#33aa55', fontStyle: 'bold',
         }).setOrigin(0.5);
-      } else {
-        const canDo = canFulfillOrder(order, this.save.mergeBoard);
-        drawButton(this, cx, oy + 45, 160, 30, canDo ? '📦 Liefern!' : '❌ Fehlen Items', {
-          fontSize: '12px', disabled: !canDo,
+      } else if (complete) {
+        drawButton(this, cx, oy + 45, 160, 30, '✨ Abholen!', { fontSize: '13px' });
+        this.addHitArea(cx, oy + 45, 160, 30, () => {
+          order.fulfilled = true;
+          this.save.hearts += order.reward;
+          addXp(this.save, 5);
+          writeSave(this.save);
+          this.drawUI();
         });
-        if (canDo) {
-          this.addHitArea(cx, oy + 45, 160, 30, () => {
-            fulfillOrder(order, this.save.mergeBoard);
-            order.fulfilled = true;
-            this.save.hearts += order.reward;
-            addXp(this.save, 5);
-            writeSave(this.save);
-            this.drawUI();
-          });
-        }
+      } else {
+        // Show progress hint
+        this.add.text(cx, oy + 45, '🔨 Merge die Items in der Werkstatt!', {
+          fontSize: '10px', fontFamily: 'monospace', color: '#9888a8',
+        }).setOrigin(0.5);
       }
     });
   }
