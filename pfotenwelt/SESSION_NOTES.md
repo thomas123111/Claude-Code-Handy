@@ -1,4 +1,4 @@
-# Pfotenwelt v3.0.0 — Session-Zusammenfassung
+# Pfotenwelt v3.1.0 — Session-Zusammenfassung (aktualisiert)
 
 ## Projekt
 Pfotenwelt ist ein Kawaii-Tierpflege-Mobilspiel (Phaser 3.80, Vite, JavaScript).
@@ -98,14 +98,51 @@ Nebel mit animierten Mist-Kreisen + grünen Sparkle-Partikeln.
 | `src/data/StoryData.js` | 14 Story-Kapitel, Event-System |
 | `src/ui/Theme.js` | UI-Helpers (drawHeader, drawButton, etc.) |
 
+## Seit v3.0 hinzugefügt
+
+### Neue Puzzles & Systeme
+- **ArrowPuzzle** (`puzzles/ArrowPuzzle.js`) — Pfeil-Logik-Rätsel (Pfeile in richtiger Reihenfolge entfernen)
+- **WashPuzzle** (`puzzles/WashPuzzle.js`) — Nintendogs-artiges Tier-Waschen (Dreck-Overlay wegwischen)
+- **PuzzleRotator** (`data/PuzzleRotator.js`) — `getRandomPuzzle(save, contextKey)` rotiert durch Pool, nie 2x gleich
+- **Puzzle-Pool**: SortPuzzle, MemoryPuzzle, Match3Puzzle, SwipePuzzle, TimingPuzzle, ArrowPuzzle
+
+### Puzzle-Zuordnung
+| Aktion | Puzzle | Rotation? |
+|---|---|---|
+| Hunger/Füttern | SortPuzzle | Nein (fest) |
+| Pflege | WashPuzzle | Nein (fest) |
+| Tierarzt | Drag & Drop | Nein (fest) |
+| Spielen | Zufällig aus Pool | Ja |
+| Hundeschule (je Trick) | Zufällig aus Pool | Ja |
+| Farm (alle Tasks) | Zufällig aus Pool | Ja |
+
+### Economy-Balance (v3.1)
+- Start-Herzen: 20 (war 100)
+- Merge-Rewards: 1/2/4/8/15❤ pro Level (kein Combo)
+- XP-Kurve: 200*level^1.7
+- Daily Rewards: 10-75❤
+- Tier-Needs starten bei 5-20% (Tiere kommen in schlechtem Zustand)
+- +55 pro Pflege-Aktion (2 Aktionen = 100%)
+- Adoption: zeitgesteuert, 1 Interessent pro 15 Min real time, max 3
+
+### UI/UX
+- **Settings-Menü**: ⚙️ Zahnrad in HTML-HUD → Sound/Musik toggles
+- **Event-Popups**: Zufällige Events als sichtbare Karte in TownScene
+- **Tutorial-Wizard**: Pulsierender Highlight auf Werkstatt nach Onboarding
+- **HTML-HUD** wird in Gebäude-Scenes ausgeblendet (kein Doppel-Header)
+
+### Wash-Image Assets
+- `wash_labrador_a.png` — Einzelbild (Nano Banana 2, kawaii Labrador in Badewanne)
+- `wash_labrador_b.png` — 7-Frame Spritesheet (Vergleich, nicht verwendet)
+
 ## Bekannte offene Punkte
-- Companion-Pet wird im Onboarding gewählt aber nicht in der Overworld angezeigt (Feature entfernt wegen Jumpiness — könnte als statischer NPC am Tierheim stehen)
-- Puzzles werden ohne difficulty-Parameter aufgerufen (immer default 1)
-- Puzzle-Themes werden nicht aus dem Kontext übergeben
-- MergeBoard, Guild, Collection, DailyReward, Adoption, Event, Story Scenes haben KEINE Hintergründe
-- Breed-Portraits (breed_*.png) könnten verbessert werden
-- Kein Sound/Musik implementiert (MusicManager existiert aber keine Audio-Dateien)
-- MenuScene wird übersprungen (Boot → direkt Town), könnte als Hauptmenü dienen
+- **Wasch-Bilder** für alle 19 Rassen generieren (nur Labrador existiert)
+- Companion-Pet in Overworld (Feature entfernt wegen Jumpiness)
+- Difficulty-Parameter wird nicht aus Spielfortschritt berechnet
+- Hintergründe fehlen für: MergeBoard, Guild, Collection, DailyReward, Story
+- Breed-Portraits könnten verbessert werden
+- Sound/Musik: MusicManager existiert, Audio-Dateien fehlen
+- MenuScene wird übersprungen (Boot → direkt Town)
 
 ## Spritesheet-Referenz (NICHT ÄNDERN!)
 ```
