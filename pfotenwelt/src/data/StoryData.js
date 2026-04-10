@@ -70,6 +70,17 @@ export const STORY_CHAPTERS = [
     ],
   },
   {
+    id: 'ch5c_arena',
+    title: 'Die Arena öffnet!',
+    trigger: { type: 'level', value: 8 },
+    dialogues: [
+      { speaker: '🏟️', text: 'Großartig! Die Pfotendorf-Arena öffnet ihre Tore!' },
+      { speaker: '🏟️', text: 'Jeden Montag bis Samstag kannst du 3 Runden spielen.' },
+      { speaker: '🏆', text: 'Am Sonntag wird ausgewertet — die Besten gewinnen tolle Preise!' },
+      { speaker: '🐾', text: 'Zeig was du drauf hast!' },
+    ],
+  },
+  {
     id: 'ch6_school',
     title: 'Die Hundeschule',
     trigger: { type: 'station_unlock', value: 'school' },

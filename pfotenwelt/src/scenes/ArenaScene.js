@@ -3,7 +3,14 @@ import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { getRandomPuzzle } from '../data/PuzzleRotator.js';
 import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
-// NPC competitors with names and skill levels
+const ARENA_MIN_LEVEL = 8;
+const ROUNDS_PER_DAY = 3;
+const REWARDS = {
+  1: { hearts: 150, xp: 60, label: '🥇 150❤ + 60 XP' },
+  2: { hearts: 75, xp: 30, label: '🥈 75❤ + 30 XP' },
+  3: { hearts: 30, xp: 15, label: '🥉 30❤ + 15 XP' },
+};
+
 const NPC_COMPETITORS = [
   { name: 'Luna', emoji: '👩', skill: 60 },
   { name: 'Max', emoji: '👦', skill: 70 },
@@ -15,6 +22,8 @@ const NPC_COMPETITORS = [
   { name: 'Clara', emoji: '👧', skill: 75 },
 ];
 
+const DAY_NAMES = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
 export class ArenaScene extends Phaser.Scene {
   constructor() { super('Arena'); }
 
@@ -24,7 +33,6 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    // Hide HTML HUD
     const hud = document.getElementById('hud');
     if (hud) hud.classList.remove('visible');
     const bb = document.getElementById('bottom-bar');
@@ -33,37 +41,45 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(THEME.bg.scene);
     drawHeader(this, '🏟️ Arena', this.save);
 
-    // Check tournament state
+    // Init arena state
     if (!this.save.arena) this.save.arena = {};
     const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Sunday
     const weekNum = this.getWeekNumber(now);
+    const todayStr = now.toDateString();
+    const isSunday = dayOfWeek === 0;
 
-    // Check for returning from a puzzle round
-    const puzzleResult = this.registry.get('puzzleResult');
-    if (puzzleResult && this.save.arena.inTournament) {
-      this.registry.remove('puzzleResult');
-      this.handleRoundResult(puzzleResult);
+    // Ensure this week's data exists
+    if (this.save.arena.week !== weekNum) {
+      this.save.arena = {
+        week: weekNum,
+        dailyScores: {}, // { "Mon Apr 7": [score, score, score], ... }
+        opponents: this.pickOpponents(weekNum),
+        rewardClaimed: false,
+      };
+      writeSave(this.save);
     }
 
-    const tournament = this.save.arena;
-    const isThisWeek = tournament.week === weekNum;
-    const isComplete = isThisWeek && tournament.completed;
-    const isInProgress = isThisWeek && tournament.inTournament;
-    const hasEnteredThisWeek = isThisWeek && (tournament.completed || tournament.inTournament);
+    // Check puzzle return
+    const puzzleResult = this.registry.get('puzzleResult');
+    if (puzzleResult && this.save.arena._pendingDay) {
+      this.registry.remove('puzzleResult');
+      const score = puzzleResult.success ? (puzzleResult.score || 80) : Math.floor(Math.random() * 20);
+      const pendingDay = this.save.arena._pendingDay;
+      if (!this.save.arena.dailyScores[pendingDay]) this.save.arena.dailyScores[pendingDay] = [];
+      this.save.arena.dailyScores[pendingDay].push(score);
+      delete this.save.arena._pendingDay;
+      writeSave(this.save);
+    }
 
-    // Tournament info
-    const nextMonday = this.getNextMonday(now);
-    const daysLeft = Math.ceil((nextMonday - now) / 86400000);
+    const todayScores = this.save.arena.dailyScores[todayStr] || [];
+    const todayRoundsLeft = ROUNDS_PER_DAY - todayScores.length;
+    const totalPlayerScore = Object.values(this.save.arena.dailyScores).flat().reduce((a, b) => a + b, 0);
 
-    if (isComplete) {
-      // Show results
-      this.drawResults(cx, width, height, tournament);
-    } else if (isInProgress) {
-      // Continue tournament
-      this.drawInProgress(cx, width, height, tournament);
+    if (isSunday) {
+      this.drawSunday(cx, width, height, totalPlayerScore);
     } else {
-      // Entry screen
-      this.drawEntry(cx, width, height, weekNum, daysLeft);
+      this.drawWeekday(cx, width, height, todayScores, todayRoundsLeft, totalPlayerScore, todayStr);
     }
 
     // Back button
@@ -80,101 +96,86 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
-  drawEntry(cx, width, height, weekNum, daysLeft) {
-    this.add.text(cx, 85, '🏆 Wöchentliches Turnier', {
+  drawWeekday(cx, width, height, todayScores, roundsLeft, totalScore, todayStr) {
+    const now = new Date();
+    const dayName = DAY_NAMES[now.getDay()];
+
+    this.add.text(cx, 80, '🏆 Wöchentliches Turnier', {
+      fontSize: '16px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.add.text(cx, 100, `${dayName} — Auswertung am Sonntag`, {
+      fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted,
+    }).setOrigin(0.5);
+
+    // Weekly progress card
+    drawCard(this, cx, 155, width - 30, 70);
+    const playedDays = Object.keys(this.save.arena.dailyScores).length;
+    const totalRounds = Object.values(this.save.arena.dailyScores).flat().length;
+    this.add.text(cx, 135, `Gesamt: ${totalScore} Punkte (${totalRounds} Runden, ${playedDays} Tage)`, {
+      fontSize: '12px', fontFamily: 'monospace', color: '#6b4c8a',
+    }).setOrigin(0.5);
+    this.add.text(cx, 155, `Preise: ${REWARDS[1].label}  ${REWARDS[2].label}  ${REWARDS[3].label}`, {
+      fontSize: '9px', fontFamily: 'monospace', color: '#cc8844',
+    }).setOrigin(0.5);
+    // NPC opponents
+    const opponents = this.save.arena.opponents || [];
+    let ox = cx - 70;
+    opponents.forEach(npc => {
+      this.add.text(ox, 172, `${npc.emoji} ${npc.name}`, {
+        fontSize: '9px', fontFamily: 'monospace', color: THEME.text.muted,
+      });
+      ox += 50;
+    });
+
+    // Today's rounds
+    const roundsY = 210;
+    this.add.text(cx, roundsY, `Heute: ${todayScores.length}/${ROUNDS_PER_DAY} Runden gespielt`, {
+      fontSize: '14px', fontFamily: 'Georgia, serif', color: THEME.text.body, fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    // Show today's scores
+    todayScores.forEach((score, i) => {
+      this.add.text(cx - 80 + i * 80, roundsY + 25, `Runde ${i + 1}: ${score}`, {
+        fontSize: '11px', fontFamily: 'monospace', color: score > 50 ? '#33aa55' : '#cc8844',
+      }).setOrigin(0.5);
+    });
+
+    // Play button
+    if (roundsLeft > 0) {
+      const btnY = roundsY + 60;
+      drawButton(this, cx, btnY, width - 60, 48, `▶️ Runde ${todayScores.length + 1} spielen!`);
+      this.addHitArea(cx, btnY, width - 60, 48, () => {
+        this.save.arena._pendingDay = todayStr;
+        const puzzle = getRandomPuzzle(this.save, 'arena');
+        writeSave(this.save);
+        this.scene.start(puzzle, { petName: 'Turnier', onComplete: 'Arena', need: 'play' });
+      });
+    } else {
+      this.add.text(cx, roundsY + 55, '✅ Alle Runden für heute gespielt!', {
+        fontSize: '13px', fontFamily: 'Georgia, serif', color: '#33aa55',
+      }).setOrigin(0.5);
+      this.add.text(cx, roundsY + 75, 'Komm morgen wieder für 3 neue Runden.', {
+        fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted,
+      }).setOrigin(0.5);
+    }
+  }
+
+  drawSunday(cx, width, height, totalPlayerScore) {
+    this.add.text(cx, 80, '🏆 Turnier-Auswertung!', {
       fontSize: '18px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
     }).setOrigin(0.5);
-
-    this.add.text(cx, 110, `Woche ${weekNum} — noch ${daysLeft} Tage`, {
-      fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
+    this.add.text(cx, 102, 'Sonntag — Ergebnisse der Woche', {
+      fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted,
     }).setOrigin(0.5);
 
-    drawCard(this, cx, 200, width - 40, 160);
-    this.add.text(cx, 145, '3 Runden, 3 zufällige Puzzles', {
-      fontSize: '13px', fontFamily: 'Georgia, serif', color: THEME.text.body,
-    }).setOrigin(0.5);
-    this.add.text(cx, 170, 'Tritt gegen andere Tierschützer an!', {
-      fontSize: '12px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
-    }).setOrigin(0.5);
-
-    // Show NPC opponents preview
-    const opponents = this.pickOpponents(weekNum);
-    opponents.forEach((npc, i) => {
-      this.add.text(cx - 80 + i * 55, 205, npc.emoji, { fontSize: '24px' }).setOrigin(0.5);
-      this.add.text(cx - 80 + i * 55, 225, npc.name, {
-        fontSize: '9px', fontFamily: 'monospace', color: THEME.text.muted,
-      }).setOrigin(0.5);
-    });
-
-    this.add.text(cx, 255, 'Preise:', {
-      fontSize: '12px', fontFamily: 'Georgia, serif', color: THEME.text.body, fontStyle: 'bold',
-    }).setOrigin(0.5);
-    this.add.text(cx, 275, '🥇 50❤ + 20 XP   🥈 25❤   🥉 10❤', {
-      fontSize: '11px', fontFamily: 'monospace', color: '#cc8844',
-    }).setOrigin(0.5);
-
-    // Entry button
-    const canEnter = this.save.hearts >= 10;
-    drawButton(this, cx, 330, width - 60, 48, '🏟️ Teilnehmen (10❤)', { disabled: !canEnter });
-    if (canEnter) {
-      this.addHitArea(cx, 330, width - 60, 48, () => {
-        this.save.hearts -= 10;
-        this.save.arena = {
-          week: weekNum,
-          inTournament: true,
-          completed: false,
-          round: 0,
-          scores: [],
-          opponents: this.pickOpponents(weekNum),
-        };
-        writeSave(this.save);
-        this.scene.restart();
-      });
-    }
-    if (!canEnter) {
-      this.add.text(cx, 360, 'Brauchst 10❤ zum Teilnehmen', {
-        fontSize: '11px', fontFamily: 'monospace', color: THEME.text.error,
-      }).setOrigin(0.5);
-    }
-  }
-
-  drawInProgress(cx, width, height, tournament) {
-    const round = tournament.round + 1;
-    this.add.text(cx, 85, `🏆 Runde ${round} von 3`, {
-      fontSize: '20px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    // Previous round scores
-    if (tournament.scores.length > 0) {
-      this.add.text(cx, 115, 'Bisherige Punkte:', {
-        fontSize: '12px', fontFamily: 'monospace', color: THEME.text.muted,
-      }).setOrigin(0.5);
-      tournament.scores.forEach((s, i) => {
-        this.add.text(cx, 135 + i * 18, `Runde ${i + 1}: ${s} Punkte`, {
-          fontSize: '11px', fontFamily: 'monospace', color: s > 50 ? '#33aa55' : '#cc8844',
-        }).setOrigin(0.5);
-      });
-    }
-
-    // Start next round
-    const btnY = 220 + tournament.scores.length * 18;
-    drawButton(this, cx, btnY, width - 60, 48, `▶️ Runde ${round} starten!`);
-    this.addHitArea(cx, btnY, width - 60, 48, () => {
-      const puzzle = getRandomPuzzle(this.save, 'arena');
-      writeSave(this.save);
-      this.scene.start(puzzle, { petName: 'Turnier', onComplete: 'Arena', need: 'play' });
-    });
-  }
-
-  drawResults(cx, width, height, tournament) {
-    // Calculate placement
-    const playerTotal = tournament.scores.reduce((a, b) => a + b, 0);
-    const opponents = tournament.opponents || [];
+    // Calculate final standings
+    const opponents = this.save.arena.opponents || [];
+    const maxPossible = 6 * ROUNDS_PER_DAY * 100; // 6 days * 3 rounds * max 100
     const allScores = [
-      { name: this.save.profile?.name || 'Du', score: playerTotal, isPlayer: true },
+      { name: this.save.profile?.name || 'Du', score: totalPlayerScore, isPlayer: true },
       ...opponents.map(npc => ({
-        name: npc.name,
-        score: Math.floor(npc.skill * 3 * (0.7 + Math.random() * 0.6)),
+        name: npc.name, emoji: npc.emoji,
+        score: Math.floor(npc.skill * 18 * (0.6 + Math.random() * 0.5)),
         isPlayer: false,
       })),
     ].sort((a, b) => b.score - a.score);
@@ -182,76 +183,62 @@ export class ArenaScene extends Phaser.Scene {
     const playerRank = allScores.findIndex(s => s.isPlayer) + 1;
     const medals = ['🥇', '🥈', '🥉', '4.'];
 
-    this.add.text(cx, 85, '🏆 Turnier-Ergebnis', {
-      fontSize: '18px', fontFamily: 'Georgia, serif', color: THEME.text.title, fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    this.add.text(cx, 115, `Du bist ${medals[playerRank - 1] || `${playerRank}.`} geworden!`, {
-      fontSize: '16px', fontFamily: 'Georgia, serif',
+    // Placement
+    this.add.text(cx, 130, `${medals[playerRank - 1] || `${playerRank}.`} Platz!`, {
+      fontSize: '24px', fontFamily: 'Georgia, serif',
       color: playerRank === 1 ? '#ddaa33' : playerRank <= 3 ? '#8888cc' : '#888888',
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
     // Leaderboard
     allScores.forEach((entry, i) => {
-      const ey = 150 + i * 35;
-      const medal = medals[i] || `${i + 1}.`;
-      drawCard(this, cx, ey, width - 40, 30, {
+      const ey = 170 + i * 38;
+      drawCard(this, cx, ey, width - 35, 32, {
         borderColor: entry.isPlayer ? 0xddaa33 : THEME.bg.cardBorder,
       });
-      if (entry.isPlayer) this.add.rectangle(cx, ey, width - 44, 26, 0xfff8e0, 0.5);
-      this.add.text(25, ey - 6, `${medal} ${entry.name}`, {
-        fontSize: '13px', fontFamily: 'Georgia, serif',
+      if (entry.isPlayer) this.add.rectangle(cx, ey, width - 39, 28, 0xfff8e0, 0.5);
+      this.add.text(22, ey - 7, `${medals[i] || `${i + 1}.`} ${entry.emoji || '🐾'} ${entry.name}`, {
+        fontSize: '12px', fontFamily: 'Georgia, serif',
         color: entry.isPlayer ? '#6b4c8a' : THEME.text.body,
         fontStyle: entry.isPlayer ? 'bold' : 'normal',
       });
-      this.add.text(width - 25, ey - 6, `${entry.score} Pkt`, {
-        fontSize: '12px', fontFamily: 'monospace', color: '#cc8844',
+      this.add.text(width - 22, ey - 7, `${entry.score} Pkt`, {
+        fontSize: '11px', fontFamily: 'monospace', color: '#cc8844',
       }).setOrigin(1, 0);
     });
 
-    // Reward info
-    const rewards = { 1: { hearts: 50, xp: 20 }, 2: { hearts: 25, xp: 10 }, 3: { hearts: 10, xp: 5 } };
-    const reward = rewards[playerRank];
-    if (reward && !tournament.rewardClaimed) {
-      const ry = 150 + allScores.length * 35 + 20;
-      this.add.text(cx, ry, `Dein Preis: +${reward.hearts}❤️ + ${reward.xp} XP`, {
+    // Reward
+    const reward = REWARDS[playerRank];
+    const ry = 170 + allScores.length * 38 + 15;
+    if (reward && !this.save.arena.rewardClaimed) {
+      this.add.text(cx, ry, `Dein Preis: ${reward.label}`, {
         fontSize: '14px', fontFamily: 'Georgia, serif', color: '#33aa55', fontStyle: 'bold',
       }).setOrigin(0.5);
-      drawButton(this, cx, ry + 35, 180, 38, '🎁 Preis abholen!');
-      this.addHitArea(cx, ry + 35, 180, 38, () => {
+      drawButton(this, cx, ry + 35, 200, 42, '🎁 Preis abholen!');
+      this.addHitArea(cx, ry + 35, 200, 42, () => {
         this.save.hearts += reward.hearts;
         addXp(this.save, reward.xp);
-        tournament.rewardClaimed = true;
+        this.save.arena.rewardClaimed = true;
         this.save.totalTournaments = (this.save.totalTournaments || 0) + 1;
         writeSave(this.save);
         this.scene.restart();
       });
-    } else if (tournament.rewardClaimed) {
-      const ry = 150 + allScores.length * 35 + 20;
-      this.add.text(cx, ry, '✅ Preis bereits abgeholt', {
+    } else if (this.save.arena.rewardClaimed) {
+      this.add.text(cx, ry, '✅ Preis abgeholt!', {
         fontSize: '13px', fontFamily: 'monospace', color: '#33aa55',
       }).setOrigin(0.5);
-      this.add.text(cx, ry + 22, 'Nächstes Turnier nächste Woche!', {
+      this.add.text(cx, ry + 20, 'Neues Turnier startet morgen (Montag)!', {
         fontSize: '11px', fontFamily: 'monospace', color: THEME.text.muted,
       }).setOrigin(0.5);
+    } else {
+      // No placement reward (4th place)
+      this.add.text(cx, ry, 'Leider kein Preis. Nächste Woche mehr Glück!', {
+        fontSize: '12px', fontFamily: 'Georgia, serif', color: THEME.text.muted,
+      }).setOrigin(0.5);
     }
-  }
-
-  handleRoundResult(result) {
-    const tournament = this.save.arena;
-    const score = result.success ? (result.score || 80) : Math.floor(Math.random() * 30);
-    tournament.scores.push(score);
-    tournament.round++;
-    if (tournament.round >= 3) {
-      tournament.inTournament = false;
-      tournament.completed = true;
-    }
-    writeSave(this.save);
   }
 
   pickOpponents(weekNum) {
-    // Deterministic pick of 3 opponents based on week
     const shuffled = [...NPC_COMPETITORS].sort((a, b) =>
       ((weekNum * 31 + a.name.charCodeAt(0)) % 100) - ((weekNum * 31 + b.name.charCodeAt(0)) % 100)
     );
@@ -263,15 +250,6 @@ export class ArenaScene extends Phaser.Scene {
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  }
-
-  getNextMonday(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? 1 : 8 - day;
-    d.setDate(d.getDate() + diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
   }
 
   addHitArea(x, y, w, h, cb) {
