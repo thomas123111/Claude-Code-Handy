@@ -97,8 +97,18 @@ export class BootScene extends Phaser.Scene {
     this.load.image('ui_energy', 'assets/ui_energy.png');
     this.load.image('ui_star', 'assets/ui_star.png');
 
-    // Wash minigame assets
-    this.load.image('wash_labrador', 'assets/wash_labrador_a.png');
+    // Wash minigame assets (per breed, Nano Banana 2 generated)
+    const washBreeds = [
+      'labrador', 'dackel', 'schaeferhund', 'golden', 'husky',
+      'pudel', 'corgi', 'dalmatiner', 'samojede',
+      'hauskatze', 'tiger_katze', 'schwarze', 'perser',
+      'maine_coon', 'siam', 'bengal',
+      'kaninchen', 'hamster', 'meerschwein',
+    ];
+    washBreeds.forEach((b) => {
+      const file = b === 'labrador' ? `wash_labrador_a.jpg` : `wash_${b}.jpg`;
+      this.load.image(`wash_${b}`, `assets/${file}`);
+    });
     this.load.image('ui_coin', 'assets/ui_coin.png');
     this.load.image('ui_paw', 'assets/ui_paw.png');
 
