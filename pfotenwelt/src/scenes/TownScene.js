@@ -4,6 +4,7 @@ import { startMusic, stopMusic, unlockAudio } from '../audio/MusicManager.js';
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
 import { refreshDailyTasks, claimDailyRewards, incrementDailyStat } from '../data/DailyTasks.js';
 import { checkAchievements } from '../data/Achievements.js';
+import { getBoardEvent } from '../data/BoardEvents.js';
 
 // Wider town: 1800x1500 — buildings at far ends of long paths
 const MAP_W = 1800;
@@ -97,20 +98,8 @@ export class TownScene extends Phaser.Scene {
       return;
     }
 
-    // Day-based events (every 2 in-game days) — show as popup!
+    // Events are now handled via Dorftafel (bulletin board) — no more auto-trigger
     this.pendingEvent = null;
-    if (shouldTriggerEvent(this.save) && this.save.pets.length > 0) {
-      this.save.lastEventDay = this.save.gameDay;
-      const evt = getRandomEvent();
-      if (evt.effect.hearts) this.save.hearts += evt.effect.hearts;
-      if (evt.effect.need) {
-        this.save.pets.forEach((p) => {
-          p.needs[evt.effect.need] = Math.max(0, Math.min(100, p.needs[evt.effect.need] + evt.effect.change));
-        });
-      }
-      writeSave(this.save);
-      this.pendingEvent = evt;
-    }
 
     // === DAY/NIGHT VISUAL ===
     const timeOfDay = getTimeOfDay(this.save);
@@ -315,6 +304,32 @@ export class TownScene extends Phaser.Scene {
     }
 
     // === AMBIENT EFFECTS ===
+    // === DORFTAFEL (bulletin board) at fountain ===
+    const boardX = 900, boardY = 590;
+    this.add.rectangle(boardX, boardY, 60, 80, 0x6B4226, 0.9).setDepth(10 + Math.round(boardY / 10));
+    this.add.rectangle(boardX, boardY - 8, 56, 50, 0xfffff0, 0.9).setDepth(10 + Math.round(boardY / 10) + 1);
+    // Colored note pins
+    this.add.circle(boardX - 15, boardY - 22, 3, 0xff4444).setDepth(10 + Math.round(boardY / 10) + 2);
+    this.add.circle(boardX + 10, boardY - 18, 3, 0x4444ff).setDepth(10 + Math.round(boardY / 10) + 2);
+    this.add.circle(boardX - 5, boardY - 5, 3, 0x44aa44).setDepth(10 + Math.round(boardY / 10) + 2);
+    this.add.text(boardX, boardY - 48, '📌', { fontSize: '16px' }).setOrigin(0.5).setDepth(10 + Math.round(boardY / 10) + 2);
+    this.add.text(boardX, boardY + 30, 'Dorftafel', {
+      fontSize: '12px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+      stroke: '#2a1520', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(200);
+
+    // Notification dot if unclaimed tasks or new event
+    const dt = this.save.dailyTasks;
+    const hasUnclaimedTasks = dt && dt.tasks.some(t => !t.claimed && (dt.stats[t.stat] || 0) >= t.target);
+    const hasNewEvent = getBoardEvent(this.save.gameDay) && (this.save.lastHandledEventDay || 0) < this.save.gameDay;
+    if (hasUnclaimedTasks || hasNewEvent) {
+      const notif = this.add.circle(boardX + 25, boardY - 35, 8, 0xff4466).setDepth(300);
+      this.add.text(boardX + 25, boardY - 35, '!', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#ffffff', fontStyle: 'bold',
+      }).setOrigin(0.5).setDepth(301);
+      this.tweens.add({ targets: notif, scale: 1.2, duration: 500, yoyo: true, repeat: -1 });
+    }
+
     if (this.textures.exists('env_fountain')) {
       this.time.addEvent({ delay: 500, loop: true, callback: () => {
         const sp = this.add.circle(900 + Phaser.Math.Between(-15, 15), 690 + Phaser.Math.Between(-8, 8), 2, 0x88ddff, 0.6).setDepth(200);
@@ -423,6 +438,13 @@ export class TownScene extends Phaser.Scene {
       this.isDragging = false; this.lastPinchDist = 0;
       if (this.dragMoved || this.inputBlocked) return;
       const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+
+      // Check Dorftafel tap (bulletin board at fountain)
+      if (wp.x >= 870 && wp.x <= 930 && wp.y >= 550 && wp.y <= 640) {
+        this.cameras.main.fadeOut(200, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Dorftafel'));
+        return;
+      }
 
       // Check farm portal tap (only if farm unlocked)
       if (farmUnlocked && wp.x >= 750 && wp.x <= 1050 && wp.y >= 1400 && wp.y <= 1470) {
