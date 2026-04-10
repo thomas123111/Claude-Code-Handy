@@ -330,7 +330,9 @@ export class TownScene extends Phaser.Scene {
       this.tweens.add({ targets: notif, scale: 1.2, duration: 500, yoyo: true, repeat: -1 });
     }
 
-    // === ARENA (right of fountain) ===
+    // === ARENA (right of fountain, unlocked at level 8) ===
+    const arenaUnlocked = this.save.level >= 8;
+    if (arenaUnlocked) {
     const arenaX = 1100, arenaY = 700;
     const arenaDepth = 10 + Math.round(arenaY / 10);
     // Arena visual: small colosseum
@@ -349,6 +351,7 @@ export class TownScene extends Phaser.Scene {
       this.add.text(arenaX + 30, arenaY - 30, '🏆', { fontSize: '10px' }).setOrigin(0.5).setDepth(301);
       this.tweens.add({ targets: aNotif, scale: 1.2, duration: 600, yoyo: true, repeat: -1 });
     }
+    } // end arenaUnlocked
 
     if (this.textures.exists('env_fountain')) {
       this.time.addEvent({ delay: 500, loop: true, callback: () => {
@@ -466,8 +469,8 @@ export class TownScene extends Phaser.Scene {
         return;
       }
 
-      // Check Arena tap
-      if (wp.x >= 1060 && wp.x <= 1140 && wp.y >= 660 && wp.y <= 740) {
+      // Check Arena tap (only if level 8+)
+      if (arenaUnlocked && wp.x >= 1060 && wp.x <= 1140 && wp.y >= 660 && wp.y <= 740) {
         this.cameras.main.fadeOut(200, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Arena'));
         return;
