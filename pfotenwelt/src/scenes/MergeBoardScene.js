@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy, addXp } from '../data/SaveManager.js';
+import { incrementDailyStat } from '../data/DailyTasks.js';
 import { BOARD_COLS, BOARD_ROWS, getItem, getMergeResult, createInitialBoard, randomItem, findEmptyCell } from '../data/MergeData.js';
 import { generatePet } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
@@ -277,6 +278,11 @@ export class MergeBoardScene extends Phaser.Scene {
     const hearts = heartsTable[result.level - 1] || 1;
     this.save.hearts += hearts;
     addXp(this.save, result.level * 2);
+    incrementDailyStat(this.save, 'merged', 1);
+    incrementDailyStat(this.save, 'hearts_earned', hearts);
+    incrementDailyStat(this.save, 'visited_merge', 1);
+    if (result.level >= 3) incrementDailyStat(this.save, 'merged_lv3', 1);
+    if (result.level >= 4) incrementDailyStat(this.save, 'merged_lv4', 1);
 
     const reward = this.add.text(x, y - 25, `+${hearts}❤️`, {
       fontSize: '16px', fontFamily: 'monospace', color: THEME.text.hearts, fontStyle: 'bold',

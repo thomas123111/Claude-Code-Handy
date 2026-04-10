@@ -97,6 +97,11 @@
         <button class="setting-toggle on" id="toggle-music"></button>
       </div>
       <button id="settings-close">Schließen</button>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e0c8e8;">
+        <button id="settings-reset" style="background:#dd4444;color:white;border:none;border-radius:8px;padding:8px 20px;font-family:Georgia,serif;font-size:13px;cursor:pointer;">
+          🗑️ Spielstand löschen
+        </button>
+      </div>
     </div>
   </div>
   <script>
@@ -128,6 +133,13 @@
         save.musicOn = this.classList.contains('on');
         localStorage.setItem('pfotenwelt_save', JSON.stringify(save));
       } catch(e) {}
+    });
+  </script>
+    document.getElementById('settings-reset').addEventListener('click', function() {
+      if (confirm('Spielstand wirklich löschen? Das kann nicht rückgängig gemacht werden!')) {
+        localStorage.removeItem('pfotenwelt_save');
+        location.reload();
+      }
     });
   </script>
   <script type="module" src="/src/main.js"></script>

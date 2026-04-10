@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
 import { getRandomPuzzle } from '../data/PuzzleRotator.js';
+import { incrementDailyStat } from '../data/DailyTasks.js';
 import { calculateHappiness, decayNeeds, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard, drawBackButton, drawProgressBar } from '../ui/Theme.js';
 
@@ -9,6 +10,7 @@ export class ShelterScene extends Phaser.Scene {
 
   create() {
     this.save = loadSave();
+    incrementDailyStat(this.save, 'visited_shelter', 1);
     this.checkPuzzleResult();
     this.selectedPet = null;
     this.drawUI();
@@ -24,6 +26,11 @@ export class ShelterScene extends Phaser.Scene {
     if (pet && result.success) {
       this.save.hearts -= pending.cost;
       pet.needs[pending.need] = Math.min(100, pet.needs[pending.need] + 55);
+      // Track stats for daily tasks
+      if (pending.need === 'hunger') { incrementDailyStat(this.save, 'fed', 1); this.save.totalFed = (this.save.totalFed || 0) + 1; }
+      if (pending.need === 'hygiene') { incrementDailyStat(this.save, 'washed', 1); this.save.totalWashed = (this.save.totalWashed || 0) + 1; }
+      if (pending.need === 'play') { incrementDailyStat(this.save, 'puzzles_played', 1); incrementDailyStat(this.save, 'puzzles_won', 1); }
+      this.save.totalPuzzles = (this.save.totalPuzzles || 0) + 1;
       pet.happiness = calculateHappiness(pet);
       addXp(this.save, 10);
       writeSave(this.save);
