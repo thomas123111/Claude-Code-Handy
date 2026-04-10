@@ -330,6 +330,26 @@ export class TownScene extends Phaser.Scene {
       this.tweens.add({ targets: notif, scale: 1.2, duration: 500, yoyo: true, repeat: -1 });
     }
 
+    // === ARENA (right of fountain) ===
+    const arenaX = 1100, arenaY = 700;
+    const arenaDepth = 10 + Math.round(arenaY / 10);
+    // Arena visual: small colosseum
+    this.add.circle(arenaX, arenaY, 40, 0xd4a854, 0.8).setDepth(arenaDepth);
+    this.add.circle(arenaX, arenaY, 32, 0xe8d8a8, 0.9).setDepth(arenaDepth + 1);
+    this.add.text(arenaX, arenaY - 5, '🏟️', { fontSize: '28px' }).setOrigin(0.5).setDepth(arenaDepth + 2);
+    this.add.text(arenaX, arenaY + 35, 'Arena', {
+      fontSize: '13px', fontFamily: 'Georgia, serif', color: '#fff8e8', fontStyle: 'bold',
+      stroke: '#2a1520', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(200);
+    // Weekly indicator
+    const weekNum = (() => { const d = new Date(); const s = new Date(Date.UTC(d.getFullYear(), 0, 1)); return Math.ceil((((d - s) / 86400000) + 1) / 7); })();
+    const arenaCompleted = this.save.arena && this.save.arena.week === weekNum && this.save.arena.completed;
+    if (!arenaCompleted) {
+      const aNotif = this.add.circle(arenaX + 30, arenaY - 30, 7, 0xddaa33).setDepth(300);
+      this.add.text(arenaX + 30, arenaY - 30, '🏆', { fontSize: '10px' }).setOrigin(0.5).setDepth(301);
+      this.tweens.add({ targets: aNotif, scale: 1.2, duration: 600, yoyo: true, repeat: -1 });
+    }
+
     if (this.textures.exists('env_fountain')) {
       this.time.addEvent({ delay: 500, loop: true, callback: () => {
         const sp = this.add.circle(900 + Phaser.Math.Between(-15, 15), 690 + Phaser.Math.Between(-8, 8), 2, 0x88ddff, 0.6).setDepth(200);
@@ -443,6 +463,13 @@ export class TownScene extends Phaser.Scene {
       if (wp.x >= 870 && wp.x <= 930 && wp.y >= 550 && wp.y <= 640) {
         this.cameras.main.fadeOut(200, 0, 0, 0);
         this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Dorftafel'));
+        return;
+      }
+
+      // Check Arena tap
+      if (wp.x >= 1060 && wp.x <= 1140 && wp.y >= 660 && wp.y <= 740) {
+        this.cameras.main.fadeOut(200, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Arena'));
         return;
       }
 
