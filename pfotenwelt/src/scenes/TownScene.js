@@ -231,15 +231,19 @@ export class TownScene extends Phaser.Scene {
       }
 
       if (!isUnlocked && isNext) {
-        // Locked next building — show mystery + unlock cost
-        this.add.text(b.x, b.y - 10, '❓', { fontSize: '32px' }).setOrigin(0.5).setDepth(201);
-        this.add.text(b.x, b.y + 45, `${nextUnlock.cost}❤️ | Lv.${nextUnlock.minLevel}`, {
-          fontSize: '13px', fontFamily: 'monospace', color: '#ffcc66', fontStyle: 'bold',
+        // Locked next building — show mystery + unlock cost (BIG & readable)
+        this.add.text(b.x, b.y - 15, '❓', { fontSize: '48px' }).setOrigin(0.5).setDepth(201);
+        this.add.text(b.x, b.y + 50, `${nextUnlock.cost}❤️`, {
+          fontSize: '22px', fontFamily: 'Georgia, serif', color: '#ffcc66', fontStyle: 'bold',
+          stroke: '#000000', strokeThickness: 4,
+        }).setOrigin(0.5).setDepth(201);
+        this.add.text(b.x, b.y + 78, `ab Level ${nextUnlock.minLevel}`, {
+          fontSize: '16px', fontFamily: 'Georgia, serif', color: '#ddbb88',
           stroke: '#000000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(201);
-        // Pulsing glow to attract attention
-        const glow = this.add.circle(b.x, b.y, 60, 0xffcc44, 0.15).setDepth(201 - 1);
-        this.tweens.add({ targets: glow, alpha: 0.05, scale: 1.3, duration: 1200, yoyo: true, repeat: -1 });
+        // Pulsing glow
+        const glow = this.add.circle(b.x, b.y, 75, 0xffcc44, 0.15).setDepth(200);
+        this.tweens.add({ targets: glow, alpha: 0.05, scale: 1.4, duration: 1200, yoyo: true, repeat: -1 });
       } else if (b.id === 'shelter' && this.save.pets.length > 0) {
         this.add.circle(b.x + 55, b.y - 55, 14, 0xff4466).setDepth(202);
         this.add.text(b.x + 55, b.y - 55, `${this.save.pets.length}`, {
@@ -447,11 +451,11 @@ export class TownScene extends Phaser.Scene {
                 const msg = this.save.level < unlockInfo.minLevel
                   ? `Brauchst Level ${unlockInfo.minLevel}!`
                   : `Brauchst ${unlockInfo.cost}❤️!`;
-                const popup = this.add.text(b.x, b.y - 30, msg, {
-                  fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ff6644', fontStyle: 'bold',
-                  stroke: '#000000', strokeThickness: 3,
+                const popup = this.add.text(b.x, b.y - 40, msg, {
+                  fontSize: '20px', fontFamily: 'Georgia, serif', color: '#ff6644', fontStyle: 'bold',
+                  stroke: '#000000', strokeThickness: 4,
                 }).setOrigin(0.5).setDepth(500);
-                this.tweens.add({ targets: popup, y: popup.y - 30, alpha: 0, duration: 1500, onComplete: () => popup.destroy() });
+                this.tweens.add({ targets: popup, y: popup.y - 40, alpha: 0, duration: 2000, onComplete: () => popup.destroy() });
               }
             } else {
               // Not the next building — show "unlock order" hint
