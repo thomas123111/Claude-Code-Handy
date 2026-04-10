@@ -28,6 +28,7 @@ import { SortPuzzle } from './scenes/puzzles/SortPuzzle.js';
 import { SwipePuzzle } from './scenes/puzzles/SwipePuzzle.js';
 import { TimingPuzzle } from './scenes/puzzles/TimingPuzzle.js';
 import { WashPuzzle } from './scenes/puzzles/WashPuzzle.js';
+import { ArrowPuzzle } from './scenes/puzzles/ArrowPuzzle.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -54,7 +55,7 @@ const config = {
     FutterladenScene, HundespielplatzScene,
     StoryScene, CollectionScene, AdoptionScene,
     EventScene, EventResultScene, GuildScene, FarmScene,
-    Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle, WashPuzzle,
+    Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle, WashPuzzle, ArrowPuzzle,
   ],
 };
 

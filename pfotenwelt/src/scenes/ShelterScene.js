@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
+import { getRandomPuzzle } from '../data/PuzzleRotator.js';
 import { calculateHappiness, decayNeeds, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard, drawBackButton, drawProgressBar } from '../ui/Theme.js';
 
@@ -381,12 +382,7 @@ export class ShelterScene extends Phaser.Scene {
     } else if (need === 'hygiene') {
       this.scene.start('WashPuzzle', { petName: pet.name, breedId: pet.breedId, onComplete: 'Shelter', need });
     } else if (need === 'play') {
-      // Random puzzle from pool for playing
-      const playPuzzles = ['SortPuzzle', 'MemoryPuzzle', 'Match3Puzzle', 'SwipePuzzle', 'TimingPuzzle'];
-      const lastPuzzle = this.save._lastPlayPuzzle || '';
-      const available = playPuzzles.filter(p => p !== lastPuzzle);
-      const puzzle = available[Math.floor(Math.random() * available.length)];
-      this.save._lastPlayPuzzle = puzzle;
+      const puzzle = getRandomPuzzle(this.save, 'play');
       writeSave(this.save);
       this.scene.start(puzzle, { petName: pet.name, onComplete: 'Shelter', need });
     } else {

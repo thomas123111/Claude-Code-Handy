@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp, FARM_UNLOCK_ORDER } from '../data/SaveManager.js';
+import { getRandomPuzzle } from '../data/PuzzleRotator.js';
 import { startMusic, unlockAudio } from '../audio/MusicManager.js';
 
 // Farm world map: 1400x1200
@@ -334,9 +335,11 @@ export class FarmScene extends Phaser.Scene {
       return;
     }
 
-    // Start puzzle
+    // Start random puzzle from rotation pool
     this.registry.set('pendingFarmTask', { taskId: building.task, reward: task.reward });
-    this.scene.start(task.puzzle, { petName: `Bauernhof: ${task.name}`, onComplete: 'Farm', farmTask: true });
+    const puzzle = getRandomPuzzle(this.save, `farm_${building.task}`);
+    writeSave(this.save);
+    this.scene.start(puzzle, { petName: `Bauernhof: ${task.name}`, onComplete: 'Farm', farmTask: true });
   }
 
   checkFarmResult() {
