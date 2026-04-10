@@ -59,12 +59,16 @@ export function getDailyTasks(gameDay) {
   return picked;
 }
 
-// Initialize or refresh daily tasks in save
+// Initialize or refresh daily tasks — resets once per REAL day (not game day)
 export function refreshDailyTasks(save) {
-  if (!save.dailyTasks || save.dailyTasks.day !== save.gameDay) {
+  const today = new Date().toDateString();
+  if (!save.dailyTasks || save.dailyTasks.realDate !== today) {
+    // Use real date as seed for deterministic task selection
+    const seed = new Date().getFullYear() * 10000 + (new Date().getMonth() + 1) * 100 + new Date().getDate();
     save.dailyTasks = {
-      day: save.gameDay,
-      tasks: getDailyTasks(save.gameDay),
+      realDate: today,
+      day: save.gameDay, // for display
+      tasks: getDailyTasks(seed),
       stats: {},
     };
   }
