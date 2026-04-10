@@ -510,6 +510,38 @@ export class TownScene extends Phaser.Scene {
         });
       });
     }
+
+    // === TUTORIAL WIZARD (one-time, after first story) ===
+    if (this.save.onboardingDone && !this.save.tutorialDone && this.save.seenStories && this.save.seenStories.length > 0) {
+      this.time.delayedCall(this.pendingEvent ? 4500 : 1000, () => {
+        const werkstatt = BUILDINGS.find(b => b.id === 'merge');
+        if (!werkstatt || !werkstatt._sprite) return;
+
+        // Pulsing highlight on Werkstatt
+        const glow = this.add.circle(werkstatt.x, werkstatt.y, 80, 0xffdd44, 0.25).setDepth(450);
+        this.tweens.add({ targets: glow, alpha: 0.08, scale: 1.4, duration: 800, yoyo: true, repeat: 3 });
+
+        // Arrow pointing to Werkstatt
+        const arrow = this.add.text(werkstatt.x, werkstatt.y - 120, '👇', { fontSize: '36px' }).setOrigin(0.5).setDepth(451);
+        this.tweens.add({ targets: arrow, y: werkstatt.y - 100, duration: 500, yoyo: true, repeat: 5 });
+
+        // Tooltip bubble
+        const tipBg = this.add.rectangle(werkstatt.x, werkstatt.y - 160, 260, 50, 0xffffff, 0.95)
+          .setStrokeStyle(2, 0xe0c8e8).setDepth(451);
+        const tipText = this.add.text(werkstatt.x, werkstatt.y - 160, 'Tippe auf die Werkstatt!\nHier stellst du Items her.', {
+          fontSize: '12px', fontFamily: 'Georgia, serif', color: '#4a3560', align: 'center',
+        }).setOrigin(0.5).setDepth(452);
+
+        // Auto-dismiss + mark done
+        this.time.delayedCall(6000, () => {
+          [glow, arrow, tipBg, tipText].forEach(o => {
+            if (o && o.active) this.tweens.add({ targets: o, alpha: 0, duration: 400, onComplete: () => o.destroy() });
+          });
+          this.save.tutorialDone = true;
+          writeSave(this.save);
+        });
+      });
+    }
   }
 
   drawPath(x1, y1, x2, y2, color) {

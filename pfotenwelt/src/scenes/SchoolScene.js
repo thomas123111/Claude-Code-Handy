@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { loadSave, writeSave, addXp } from '../data/SaveManager.js';
+import { getRandomPuzzle } from '../data/PuzzleRotator.js';
 import { BREEDS, RARITY_COLORS, RARITY_LABELS } from '../data/PetData.js';
 import { THEME, drawHeader, drawButton, drawCard } from '../ui/Theme.js';
 
@@ -171,9 +172,11 @@ export class SchoolScene extends Phaser.Scene {
     if (!pet.tricks) pet.tricks = [];
     if (pet.tricks.includes(trick.name)) return;
 
-    // Launch timing puzzle
+    // Launch random puzzle from rotation pool
     this.registry.set('pendingTrick', { petIdx, trickName: trick.name, cost: trick.cost });
-    this.scene.start('TimingPuzzle', {
+    const puzzle = getRandomPuzzle(this.save, 'school');
+    writeSave(this.save);
+    this.scene.start(puzzle, {
       petName: pet.name,
       trickName: trick.name,
       onComplete: 'School',
