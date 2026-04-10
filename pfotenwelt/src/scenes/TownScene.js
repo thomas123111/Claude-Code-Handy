@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { loadSave, writeSave, regenerateEnergy, checkDailyLogin, updateDayCycle, getDayProgress, getTimeOfDay, shouldTriggerEvent, BUILDING_UNLOCK_ORDER } from '../data/SaveManager.js';
 import { startMusic, stopMusic, unlockAudio } from '../audio/MusicManager.js';
 import { checkStoryTrigger, getRandomEvent } from '../data/StoryData.js';
+import { refreshDailyTasks, claimDailyRewards, incrementDailyStat } from '../data/DailyTasks.js';
+import { checkAchievements } from '../data/Achievements.js';
 
 // Wider town: 1800x1500 — buildings at far ends of long paths
 const MAP_W = 1800;
@@ -546,6 +548,198 @@ export class TownScene extends Phaser.Scene {
         });
       });
     }
+
+    // === DAILY TASKS + ACHIEVEMENTS — refresh & check ===
+    refreshDailyTasks(this.save);
+    incrementDailyStat(this.save, 'logged_in', 1);
+    const claimed = claimDailyRewards(this.save);
+    if (claimed > 0) {
+      this.save.totalDailyCompleted = (this.save.totalDailyCompleted || 0) +
+        this.save.dailyTasks.tasks.filter(t => t.claimed).length;
+    }
+    const newAchievements = checkAchievements(this.save);
+    writeSave(this.save);
+
+    // Show achievement popup if new ones unlocked
+    if (newAchievements.length > 0) {
+      const delay = this.pendingEvent ? 5000 : 1500;
+      newAchievements.forEach((ach, i) => {
+        this.time.delayedCall(delay + i * 2000, () => {
+          const ac = this.cameras.main.getWorldPoint(width / 2, height * 0.15);
+          const bg = this.add.rectangle(ac.x, ac.y, 300, 55, 0xfff8e0, 0.95)
+            .setStrokeStyle(2, 0xddaa33).setDepth(460);
+          const txt = this.add.text(ac.x, ac.y - 8, `🏆 ${ach.name}`, {
+            fontSize: '16px', fontFamily: 'Georgia, serif', color: '#6b4c8a', fontStyle: 'bold',
+          }).setOrigin(0.5).setDepth(461);
+          const sub = this.add.text(ac.x, ac.y + 14, `${ach.desc} — +${ach.reward}❤️`, {
+            fontSize: '11px', fontFamily: 'monospace', color: '#8a7399',
+          }).setOrigin(0.5).setDepth(461);
+          this.tweens.add({ targets: [bg, txt, sub], alpha: 0, y: '-=25', duration: 500, delay: 2500,
+            onComplete: () => { bg.destroy(); txt.destroy(); sub.destroy(); },
+          });
+        });
+      });
+    }
+
+    // === BOTTOM HUD BUTTONS (Daily Tasks + Achievements) ===
+    // These are screen-space buttons, need to work despite camera zoom
+    // Add to HTML overlay instead
+    this.updateBottomButtons(width, height);
+
+    // === COMPANION GUIDE (contextual tips) ===
+    this.showCompanionTip(width, height);
+  }
+
+  updateBottomButtons(width, height) {
+    // Create or update HTML bottom buttons
+    let bottomBar = document.getElementById('bottom-bar');
+    if (!bottomBar) {
+      bottomBar = document.createElement('div');
+      bottomBar.id = 'bottom-bar';
+      bottomBar.style.cssText = 'position:fixed;bottom:8px;left:0;right:0;z-index:100;display:flex;justify-content:center;gap:10px;pointer-events:none;';
+      document.body.appendChild(bottomBar);
+    }
+    // Daily tasks button
+    const dt = this.save.dailyTasks;
+    const completed = dt ? dt.tasks.filter(t => t.claimed).length : 0;
+    const total = dt ? dt.tasks.length : 5;
+    bottomBar.innerHTML = `
+      <button id="btn-daily" style="pointer-events:auto;background:rgba(255,255,255,0.9);border:2px solid #e0c8e8;border-radius:12px;padding:6px 14px;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#6b4c8a;cursor:pointer;">
+        📋 Aufgaben ${completed}/${total}
+      </button>
+      <button id="btn-achieve" style="pointer-events:auto;background:rgba(255,255,255,0.9);border:2px solid #ddaa33;border-radius:12px;padding:6px 14px;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#6b4c8a;cursor:pointer;">
+        🏆 Erfolge
+      </button>
+    `;
+    document.getElementById('btn-daily').onclick = () => this.showDailyTasksPopup();
+    document.getElementById('btn-achieve').onclick = () => {
+      document.getElementById('bottom-bar').style.display = 'none';
+      this.scene.start('Achievements');
+    };
+  }
+
+  showDailyTasksPopup() {
+    const { width, height } = this.scale;
+    const cam = this.cameras.main;
+    const cx = cam.scrollX + width / cam.zoom / 2;
+    const cy = cam.scrollY + height / cam.zoom / 2;
+    const dt = this.save.dailyTasks;
+    if (!dt) return;
+
+    // Overlay
+    const overlay = this.add.rectangle(cx, cy, 400, 340, 0xffffff, 0.97)
+      .setStrokeStyle(2, 0xe0c8e8).setDepth(470);
+    const title = this.add.text(cx, cy - 145, `📋 Tägliche Aufgaben (Tag ${this.save.gameDay})`, {
+      fontSize: '15px', fontFamily: 'Georgia, serif', color: '#6b4c8a', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(471);
+
+    const items = [];
+    dt.tasks.forEach((task, i) => {
+      const ty = cy - 100 + i * 48;
+      const current = dt.stats[task.stat] || 0;
+      const done = task.claimed || current >= task.target;
+      const col = done ? '#33aa55' : '#4a3560';
+      const check = done ? (task.claimed ? '✅' : '☑️') : '⬜';
+      const bg = this.add.rectangle(cx, ty, 340, 40, done ? 0xeeffee : 0xf8f2fc, 0.9)
+        .setStrokeStyle(1, 0xe0c8e8).setDepth(471);
+      const txt = this.add.text(cx - 155, ty - 8, `${check} ${task.icon} ${task.text}`, {
+        fontSize: '12px', fontFamily: 'Georgia, serif', color: col,
+      }).setDepth(472);
+      const rew = this.add.text(cx + 155, ty - 8, `+${task.reward}❤️`, {
+        fontSize: '12px', fontFamily: 'monospace', color: done ? '#33aa55' : '#cc8844', fontStyle: 'bold',
+      }).setOrigin(1, 0).setDepth(472);
+      const prog = this.add.text(cx - 155, ty + 8, `${Math.min(current, task.target)}/${task.target}`, {
+        fontSize: '10px', fontFamily: 'monospace', color: '#9888a8',
+      }).setDepth(472);
+      items.push(bg, txt, rew, prog);
+    });
+
+    // Claim all button
+    const unclaimed = dt.tasks.filter(t => !t.claimed && (dt.stats[t.stat] || 0) >= t.target);
+    if (unclaimed.length > 0) {
+      const claimBtn = this.add.rectangle(cx, cy + 130, 180, 36, 0x55aa66, 0.9)
+        .setStrokeStyle(2, 0x44884a).setDepth(471).setInteractive();
+      const claimTxt = this.add.text(cx, cy + 130, `✨ ${unclaimed.length}x abholen!`, {
+        fontSize: '14px', fontFamily: 'Georgia, serif', color: '#ffffff', fontStyle: 'bold',
+      }).setOrigin(0.5).setDepth(472);
+      items.push(claimBtn, claimTxt);
+      claimBtn.on('pointerdown', () => {
+        const reward = claimDailyRewards(this.save);
+        this.save.totalDailyCompleted = (this.save.totalDailyCompleted || 0) + unclaimed.length;
+        writeSave(this.save);
+        closePopup();
+        // Update HUD
+        const hud = document.getElementById('hud');
+        if (hud) document.getElementById('hud-hearts').textContent = `❤️ ${this.save.hearts}`;
+        this.updateBottomButtons(width, height);
+      });
+    }
+
+    // Close button
+    const closeBtn = this.add.text(cx + 170, cy - 150, '✕', {
+      fontSize: '20px', fontFamily: 'monospace', color: '#999',
+    }).setOrigin(0.5).setDepth(472).setInteractive();
+    items.push(closeBtn);
+
+    const closePopup = () => {
+      [overlay, title, closeBtn, ...items].forEach(o => { if (o && o.active) o.destroy(); });
+    };
+    closeBtn.on('pointerdown', closePopup);
+  }
+
+  showCompanionTip(width, height) {
+    const companions = this.save.companions || [];
+    if (companions.length === 0) return;
+
+    // Determine contextual tip
+    let tip = null;
+    const pets = this.save.pets || [];
+    const hungryPets = pets.filter(p => p.needs && p.needs.hunger < 30);
+    const dirtyPets = pets.filter(p => p.needs && p.needs.hygiene < 30);
+    const sadPets = pets.filter(p => {
+      if (!p.needs) return false;
+      const h = (p.needs.hunger + p.needs.hygiene + p.needs.play + p.needs.health) / 4;
+      return h < 40;
+    });
+
+    if (pets.length === 0) {
+      tip = 'Geh zur Werkstatt und stelle Items her — so bekommst du dein erstes Tier!';
+    } else if (hungryPets.length > 0) {
+      tip = `${hungryPets[0].name} hat Hunger! Tippe aufs Tierheim.`;
+    } else if (dirtyPets.length > 0) {
+      tip = `${dirtyPets[0].name} braucht ein Bad! 🧼`;
+    } else if (sadPets.length > 0) {
+      tip = `${sadPets[0].name} ist traurig. Kümmere dich um ${sadPets[0].name}!`;
+    } else if (this.save.level >= 3 && !(this.save.stations.vet && this.save.stations.vet.unlocked)) {
+      tip = 'Du kannst jetzt den Tierarzt freischalten!';
+    }
+
+    if (!tip) return;
+
+    // Show companion bubble after a delay
+    this.time.delayedCall(2000, () => {
+      // Pick first companion (or both names)
+      const names = companions.map(c => c.name);
+      const label = names.length > 1 ? `${names[0]} & ${names[1]}` : names[0];
+
+      const cam = this.cameras.main;
+      const bx = cam.scrollX + width / cam.zoom * 0.5;
+      const by = cam.scrollY + height / cam.zoom * 0.85;
+
+      const bubble = this.add.rectangle(bx, by, 320, 55, 0xffffff, 0.93)
+        .setStrokeStyle(2, 0xd0b8e8).setDepth(440);
+      const nameTag = this.add.text(bx - 145, by - 18, `🐾 ${label}:`, {
+        fontSize: '11px', fontFamily: 'Georgia, serif', color: '#9966cc', fontStyle: 'bold',
+      }).setDepth(441);
+      const tipText = this.add.text(bx, by + 5, tip, {
+        fontSize: '11px', fontFamily: 'Georgia, serif', color: '#4a3560',
+        wordWrap: { width: 300 }, align: 'center',
+      }).setOrigin(0.5, 0).setDepth(441);
+
+      this.tweens.add({ targets: [bubble, nameTag, tipText], alpha: 0, duration: 500, delay: 5000,
+        onComplete: () => { bubble.destroy(); nameTag.destroy(); tipText.destroy(); },
+      });
+    });
   }
 
   drawPath(x1, y1, x2, y2, color) {

@@ -16,6 +16,7 @@ import { CafeScene } from './scenes/CafeScene.js';
 import { FutterladenScene } from './scenes/FutterladenScene.js';
 import { HundespielplatzScene } from './scenes/HundespielplatzScene.js';
 import { StoryScene } from './scenes/StoryScene.js';
+import { AchievementsScene } from './scenes/AchievementsScene.js';
 import { CollectionScene } from './scenes/CollectionScene.js';
 import { AdoptionScene } from './scenes/AdoptionScene.js';
 import { EventScene, EventResultScene } from './scenes/EventScene.js';
@@ -53,7 +54,7 @@ const config = {
     MergeBoardScene, ShelterScene, DailyRewardScene,
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
     FutterladenScene, HundespielplatzScene,
-    StoryScene, CollectionScene, AdoptionScene,
+    StoryScene, AchievementsScene, CollectionScene, AdoptionScene,
     EventScene, EventResultScene, GuildScene, FarmScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle, WashPuzzle, ArrowPuzzle,
   ],
