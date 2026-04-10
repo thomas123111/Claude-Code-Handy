@@ -23,6 +23,7 @@ import { EventScene, EventResultScene } from './scenes/EventScene.js';
 import { GuildScene } from './scenes/GuildScene.js';
 import { FarmScene } from './scenes/FarmScene.js';
 import { DorftafelScene } from './scenes/DorftafelScene.js';
+import { ArenaScene } from './scenes/ArenaScene.js';
 // Mini-puzzles
 import { Match3Puzzle } from './scenes/puzzles/Match3Puzzle.js';
 import { MemoryPuzzle } from './scenes/puzzles/MemoryPuzzle.js';
@@ -56,7 +57,7 @@ const config = {
     StationsScene, VetScene, SalonScene, SchoolScene, HotelScene, CafeScene,
     FutterladenScene, HundespielplatzScene,
     StoryScene, AchievementsScene, CollectionScene, AdoptionScene,
-    EventScene, EventResultScene, GuildScene, FarmScene, DorftafelScene,
+    EventScene, EventResultScene, GuildScene, FarmScene, DorftafelScene, ArenaScene,
     Match3Puzzle, MemoryPuzzle, SortPuzzle, SwipePuzzle, TimingPuzzle, WashPuzzle, ArrowPuzzle,
   ],
 };
